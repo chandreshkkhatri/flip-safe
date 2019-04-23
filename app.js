@@ -3,6 +3,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var cors = require('cors')
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -19,16 +20,32 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+///////////~
+const KiteConnect = require("kiteconnect").KiteConnect;
+const authRouter = require('./scripts/routers/auth-router')
+const dbRouter = require('./scripts/routers/db-router')
+const kcRouter = require('./scripts/routers/kc-router')
+const tickerRouter = require('./scripts/routers/ticker-router')
+app.locals.cred = require('./app-cred.json')
+app.locals.reset = () => { app.locals.kc = new KiteConnect({ api_key: app.locals.cred.api_key }); }
+app.locals.reset()
+//////////////!
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-
+//////////////~
+app.use('/auth', authRouter)
+app.use('/db', dbRouter)
+app.use('/ticker', tickerRouter)
+app.use('/kc', kcRouter)
+app.use(cors())
+//////////////!
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use((req, res, next) => {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use((err, req, res, next) => {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
