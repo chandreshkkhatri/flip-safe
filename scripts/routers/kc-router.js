@@ -1,8 +1,13 @@
 const express = require('express')
 const cors = require('cors')
 const bodyParser = require('body-parser');
+const Bottleneck = require("bottleneck/es5");
 const db = require('../db-module')
 const router = express.Router()
+
+const limiter = new Bottleneck({
+    minTime: 333
+});
 
 router.use(bodyParser.json()); // for parsing application/json
 router.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
@@ -128,10 +133,7 @@ router.get('/request-simulation-data', async (req, res) => {
         res.send({ status: true, data: data.doc })
     }
     else {
-        lastReqTimeStamp = Math.floor((new Date()).getTime() / 1000)
-        console.log(lastReqTimeStamp)
-        // setTimeout(() => {
-        req.app.locals.kc.getHistoricalData(instrument_token, interval, from_date, to_date)
+        limiter.schedule(() => req.app.locals.kc.getHistoricalData(instrument_token, interval, from_date, to_date))
             .then((response) => {
                 db.storeSimulationData(instrument_token, interval, date, response)
                 res.send({ status: true, data: response })
@@ -140,7 +142,6 @@ router.get('/request-simulation-data', async (req, res) => {
                 console.log(err)
                 res.send({ status: false, data: err })
             })
-        // }, 300)
     }
 })
 router.get('/flush-simulation-data', async (req, res) => {
