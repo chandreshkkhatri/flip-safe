@@ -37,9 +37,9 @@ router.get("/is-connected", async (req, res) => {
 });
 router.get("/connect", async (req, res) => {
   startStoringTicks()
-  if (req.app.locals.ticker_access_token_in_use !== session.kc.access_token) {
+  if (session.active_ticker_access_token !== session.kc.access_token) {
     initializeTicker(cred.api_key, session.kc.access_token)
-    req.app.locals.ticker_access_token_in_use = session.kc.access_token
+    session.active_ticker_access_token = session.kc.access_token
   }
   let connected = await ticker.connected()
   if (!connected) {

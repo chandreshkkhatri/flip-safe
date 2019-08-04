@@ -13,15 +13,11 @@ app.use(logger('dev'));
 app.use(cookieParser());
 
 require('./db-modules/db-connection')
-const KiteConnect = require("kiteconnect").KiteConnect;
 const alertsRouter = require('./routes/alerts-router')
 const authRouter = require('./routes/auth-router')
 const dbRouter = require('./routes/db-router')
 const kcRouter = require('./routes/kc-router')
 const tickerRouter = require('./routes/ticker-router')
-app.locals.cred = require('./app-cred.json')
-app.locals.reset = () => { app.locals.kc = new KiteConnect({ api_key: app.locals.cred.api_key }); }
-app.locals.reset()
 app.use('/alerts', alertsRouter)
 app.use('/auth', authRouter)
 app.use('/db', dbRouter)
