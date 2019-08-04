@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const cors = require('cors')
-const dbModule = require('../db-module/db-module')
+const dbModule = require('../db-modules/kc-session-management')
 const sessionMethods = { storeSession: dbModule.storeSession, retrieveSession: dbModule.retrieveSession, clearSession: dbModule.clearSession }
 let client_url
 router.use(cors())

@@ -2,7 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const bodyParser = require('body-parser');
 const Bottleneck = require("bottleneck/es5");
-const db = require('../db-module/db-module')
+const simulator = require('../db-modules/simulator-module')
 const router = express.Router()
 
 const limiter = new Bottleneck({
@@ -128,14 +128,14 @@ router.get('/request-simulation-data', async (req, res) => {
     let to_date = date + ' 23:59:00'
     let interval = 'minute'
     //add caching mechanism to local db
-    let data = await db.getSimulationData(instrument_token, interval, date)
+    let data = await simulator.getSimulationData(instrument_token, interval, date)
     if (data.doc) {
         res.send({ status: true, data: data.doc })
     }
     else {
         limiter.schedule(() => req.app.locals.kc.getHistoricalData(instrument_token, interval, from_date, to_date))
             .then((response) => {
-                db.storeSimulationData(instrument_token, interval, date, response)
+                simulator.storeSimulationData(instrument_token, interval, date, response)
                 res.send({ status: true, data: response })
             })
             .catch((err) => {
@@ -145,7 +145,7 @@ router.get('/request-simulation-data', async (req, res) => {
     }
 })
 router.get('/flush-simulation-data', async (req, res) => {
-    db.flushSimulationData()
+    simulator.flushSimulationData()
     res.send(true)
 })
 

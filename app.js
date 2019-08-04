@@ -12,6 +12,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(logger('dev'));
 app.use(cookieParser());
 
+require('./db-modules/db-connection')
 const KiteConnect = require("kiteconnect").KiteConnect;
 const alertsRouter = require('./routes/alerts-router')
 const authRouter = require('./routes/auth-router')

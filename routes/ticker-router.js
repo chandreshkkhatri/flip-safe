@@ -3,7 +3,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const router = express.Router();
 const KiteTicker = require("kiteconnect").KiteTicker;
-const db = require('../db-module/db-module')
+const mwdb = require('../db-modules/marketwatch-module')
 const storage = require('node-persist');
 storage.init({
   dir: '../node-persist',
@@ -98,7 +98,7 @@ let disconnect= () => {
 let subscribe = async (id = 'ticker2') => {
   console.log('subscribe')
   let response
-  let _items = await db.getMWData(id);
+  let _items = await mwdb.getMWData(id);
   let items = [];
   for (let it in _items) {
     items.push(Number(_items[it]["instrument_token"]));
