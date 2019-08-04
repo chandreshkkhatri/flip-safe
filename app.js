@@ -5,8 +5,6 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors')
 
-var indexRouter = require('./routes/index');
-
 var app = express();
 
 // view engine setup
@@ -21,16 +19,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 ///////////~
 const KiteConnect = require("kiteconnect").KiteConnect;
-const alertsRouter = require('./routers/alerts-router')
-const authRouter = require('./routers/auth-router')
-const dbRouter = require('./routers/db-router')
-const kcRouter = require('./routers/kc-router')
-const tickerRouter = require('./routers/ticker-router')
+const alertsRouter = require('./routes/alerts-router')
+const authRouter = require('./routes/auth-router')
+const dbRouter = require('./routes/db-router')
+const kcRouter = require('./routes/kc-router')
+const tickerRouter = require('./routes/ticker-router')
 app.locals.cred = require('./app-cred.json')
 app.locals.reset = () => { app.locals.kc = new KiteConnect({ api_key: app.locals.cred.api_key }); }
 app.locals.reset()
 //////////////!
-app.use('/', indexRouter);
 //////////////~
 app.use('/alerts', alertsRouter)
 app.use('/auth', authRouter)
