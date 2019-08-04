@@ -1,7 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 var bodyParser = require('body-parser');
-const mwdb = require('../db-modules/marketwatch-module')
+const mwdb = require('../db-modules/marketwatch')
 const cacheModule = require('../db-modules/cache-historica-data')
 const router = express.Router()
 

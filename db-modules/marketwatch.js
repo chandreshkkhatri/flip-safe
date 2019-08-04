@@ -192,7 +192,6 @@ let clearTicker = (tickerId) => {
     })
 }
 
-
 module.exports = {
     updateInstruementDB, createNewMarketWatch, updateMWInfo, getInstrumentQuery, addInstrument,
     deleteInstrument, getMWData, subscribeToTicker, getTickerInfo, clearTicker, getMWInfo,

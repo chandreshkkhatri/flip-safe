@@ -3,7 +3,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const router = express.Router();
 const KiteTicker = require("kiteconnect").KiteTicker;
-const mwdb = require('../db-modules/marketwatch-module')
+const mwdb = require('../db-modules/marketwatch')
 const storage = require('node-persist');
 storage.init({
   dir: '../node-persist',

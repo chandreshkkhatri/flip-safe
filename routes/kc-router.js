@@ -2,7 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const bodyParser = require('body-parser');
 const Bottleneck = require("bottleneck/es5");
-const simulator = require('../db-modules/simulator-module')
+const simulator = require('../db-modules/simulator')
 const router = express.Router()
 
 const limiter = new Bottleneck({
