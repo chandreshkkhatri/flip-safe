@@ -3,7 +3,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const router = express.Router();
 const KiteTicker = require("kiteconnect").KiteTicker;
-const db = require('../db-module')
+const db = require('../db-module/db-module')
 const storage = require('node-persist');
 storage.init({
   dir: '../node-persist',
@@ -41,6 +41,7 @@ router.get("/connect", async (req, res) => {
   }
   let connected = await ticker.connected()
   if (!connected) {
+    clearCache()
     ticker.connect()
   }
   res.send(true);
@@ -56,8 +57,7 @@ router.get("/get-ticks", async (req, res) => {
   res.send({ ticks: tickCache })
 });
 router.get("/clear-cache", (req, res) => {
-  storage.removeItem('tickCache')
-  storage.setItem('tickCache', [])
+  clearCache()
   res.send(true)
 })
 router.get("/test", async (req, res) => {
@@ -71,6 +71,7 @@ let initializeTicker = (api_key, access_token) => {
   ticker.autoReconnect(true, 10, 5)
   ticker.on("ticks", onTicks);
   ticker.on("connect", subscribe);
+  ticker.on("disconnect", disconnect);
   ticker.on("reconnecting", (reconnect_interval, reconnections) => {
     console.log("Reconnecting: attempt - ", reconnections, " interval - ", reconnect_interval);
   });
@@ -91,7 +92,9 @@ let onTicks = (ticks) => {
     }
   }
 };
-
+let disconnect= () => {
+  console.log('ticker disconnected')
+}
 let subscribe = async (id = 'ticker2') => {
   console.log('subscribe')
   let response
@@ -156,3 +159,10 @@ let storeTicks = () => {
   }
   storage.setItem('tickCache', tickCache)
 }
+let clearCache = () => {
+  storage.removeItem('tickCache')
+  storage.setItem('tickCache', [])
+  console.log('cleared')
+}
+
+// module.exports = { clearCache }

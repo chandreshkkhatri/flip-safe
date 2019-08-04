@@ -1,7 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 var bodyParser = require('body-parser');
-const db = require('../db-module')
+const db = require('../db-module/db-module')
 const router = express.Router()
 
 router.use(bodyParser.json()); // for parsing application/json
