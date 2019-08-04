@@ -5,6 +5,8 @@ const router = express.Router();
 const KiteTicker = require("kiteconnect").KiteTicker;
 const mwdb = require('../db-modules/marketwatch')
 const storage = require('node-persist');
+const session = require('../session')
+const cred = require('../app-cred.json')
 storage.init({
   dir: '../node-persist',
   stringify: JSON.stringify,
@@ -35,9 +37,9 @@ router.get("/is-connected", async (req, res) => {
 });
 router.get("/connect", async (req, res) => {
   startStoringTicks()
-  if (req.app.locals.ticker_access_token_in_use !== req.app.locals.kc.access_token) {
-    initializeTicker(req.app.locals.cred.api_key, req.app.locals.kc.access_token)
-    req.app.locals.ticker_access_token_in_use = req.app.locals.kc.access_token
+  if (req.app.locals.ticker_access_token_in_use !== session.kc.access_token) {
+    initializeTicker(cred.api_key, session.kc.access_token)
+    req.app.locals.ticker_access_token_in_use = session.kc.access_token
   }
   let connected = await ticker.connected()
   if (!connected) {
@@ -92,7 +94,7 @@ let onTicks = (ticks) => {
     }
   }
 };
-let disconnect= () => {
+let disconnect = () => {
   console.log('ticker disconnected')
 }
 let subscribe = async (id = 'ticker2') => {

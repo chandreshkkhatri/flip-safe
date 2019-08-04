@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const Bottleneck = require("bottleneck/es5");
 const simulator = require('../db-modules/simulator')
 const router = express.Router()
+const session = require('../session')
 
 const limiter = new Bottleneck({
     minTime: 333
@@ -18,7 +19,7 @@ router.get('/', (req, res) => {
 })
 
 router.get('/get-profile', async (req, res) => {
-    req.app.locals.kc.getProfile()
+    session.kc.getProfile()
         .then((response) => {
             res.send(response)
         })
@@ -29,7 +30,7 @@ router.get('/get-profile', async (req, res) => {
 })
 router.get('/get-margins', async (req, res) => {
     const segment = req.query.segment           //optional argument to the method, equity/commodity
-    req.app.locals.kc.getMargins()
+    session.kc.getMargins()
         .then((response) => {
             res.send(response)
         })
@@ -40,7 +41,7 @@ router.get('/get-margins', async (req, res) => {
 })
 router.post('/get-ohlc', async (req, res) => {
     let instruments = req.body.instruments
-    req.app.locals.kc.getOHLC(instruments)
+    session.kc.getOHLC(instruments)
         .then((response) => res.send(response))
         .catch((err) => {
             console.log('err', err)
@@ -49,7 +50,7 @@ router.post('/get-ohlc', async (req, res) => {
 })
 router.post('/get-ltp', async (req, res) => {
     let instruments = req.body.instruments
-    req.app.locals.kc.getLTP(instruments)
+    session.kc.getLTP(instruments)
         .then((response) => res.send(response))
         .catch((err) => {
             console.log('err', err)
@@ -58,7 +59,7 @@ router.post('/get-ltp', async (req, res) => {
 })
 router.post('/get-quotes', async (req, res) => {
     let instruments = req.body.instruments
-    req.app.locals.kc.getQuote(instruments)
+    session.kc.getQuote(instruments)
         .then((response) => res.send(response))
         .catch((err) => {
             console.log('err', err)
@@ -66,7 +67,7 @@ router.post('/get-quotes', async (req, res) => {
         })
 })
 router.get('/get-positions', async (req, res) => {
-    req.app.locals.kc.getPositions()
+    session.kc.getPositions()
         .then((response) => res.send(response))
         .catch((err) => {
             console.log('error getting holdings', err)
@@ -74,7 +75,7 @@ router.get('/get-positions', async (req, res) => {
         })
 })
 router.get('/get-holdings', async (req, res) => {
-    req.app.locals.kc.getHoldings()
+    session.kc.getHoldings()
         .then((response) => res.send(response))
         .catch((err) => {
             console.log('error getting holdings', err)
@@ -82,7 +83,7 @@ router.get('/get-holdings', async (req, res) => {
         })
 })
 router.get('/get-orders', async (req, res) => {
-    req.app.locals.kc.getOrders()
+    session.kc.getOrders()
         .then((response) => {
             res.send(response)
         })
@@ -92,7 +93,7 @@ router.get('/get-orders', async (req, res) => {
         })
 })
 router.get('/get-trades', async (req, res) => {
-    req.app.locals.kc.getTrades()
+    session.kc.getTrades()
         .then((response) => res.send(response))
         .catch((err) => {
             console.log('error getting trades', err)
@@ -103,7 +104,7 @@ router.post('/get-historical-data', async (req, res) => {
     let payload = req.body
     let { instrument_token, interval, from_date, to_date, instrument_type } = payload
     if (instrument_type === 'derivative') {
-        req.app.locals.kc.getHistoricalData(instrument_token, interval, from_date, to_date, 1)
+        session.kc.getHistoricalData(instrument_token, interval, from_date, to_date, 1)
             .then((response) => {
                 res.send(response)
             })
@@ -112,7 +113,7 @@ router.post('/get-historical-data', async (req, res) => {
                 res.status(500).send('error fetching candles')
             })
     } else {
-        req.app.locals.kc.getHistoricalData(instrument_token, interval, from_date, to_date, 0)
+        session.kc.getHistoricalData(instrument_token, interval, from_date, to_date, 0)
             .then((response) => {
                 res.send(response)
             })
@@ -133,7 +134,7 @@ router.get('/request-simulation-data', async (req, res) => {
         res.send({ status: true, data: data.doc })
     }
     else {
-        limiter.schedule(() => req.app.locals.kc.getHistoricalData(instrument_token, interval, from_date, to_date))
+        limiter.schedule(() => session.kc.getHistoricalData(instrument_token, interval, from_date, to_date))
             .then((response) => {
                 simulator.storeSimulationData(instrument_token, interval, date, response)
                 res.send({ status: true, data: response })

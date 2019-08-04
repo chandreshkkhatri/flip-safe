@@ -3,6 +3,8 @@ const router = express.Router()
 const cors = require('cors')
 const kcModule = require('../db-modules/session')
 const sessionMethods = { storeSession: kcModule.storeSession, retrieveSession: kcModule.retrieveSession, clearSession: kcModule.clearSession }
+const session = require('../session')
+const cred = require('../app-cred.json')
 let client_url
 router.use(cors())
 
@@ -15,21 +17,21 @@ router.get('/', (req, res) => {
     res.send('Bonjour!')
 })
 router.get('/check-status', async (req, res, next) => {
-    if (req.app.locals.kc.access_token) {
+    if (session.kc.access_token) {
         res.send({ isLoggedIn: true })
     }
     else {
-        let session = await sessionMethods.retrieveSession()
-        let kc = req.app.locals.kc
-        if (session.status === 'success') {
-            let access_token = session.session.access_token
+        let _session = await sessionMethods.retrieveSession()
+        let kc = session.kc
+        if (_session.status === 'success') {
+            let access_token = _session.session.access_token
             kc.setAccessToken(access_token)
             kc.setSessionExpiryHook(() => invalidateLocalSession(req))
-            req.app.locals.kc = kc
+            session.kc = kc
             res.send({ isLoggedIn: true })
         }
         else {
-            res.send({ isLoggedIn: false, message: 'User Not Logged in', login_url: `https://kite.trade/connect/login?v=3&api_key=${req.app.locals.cred.api_key}` });
+            res.send({ isLoggedIn: false, message: 'User Not Logged in', login_url: `https://kite.trade/connect/login?v=3&api_key=${cred.api_key}` });
         }
     }
 })
@@ -41,12 +43,12 @@ router.get('/login', (req, res) => {
     let response = req.query
     if (response.status === 'success') {
         request_token = response.request_token
-        console.log('response received successfully', request_token, req.app.locals.cred.api_secret)
-        req.app.locals.kc.generateSession(request_token, req.app.locals.cred.api_secret)
+        console.log('response received successfully', request_token, cred.api_secret)
+        session.kc.generateSession(request_token, cred.api_secret)
             .then((response) => {
-                req.app.locals.kc.setSessionExpiryHook(() => invalidateLocalSession(req))
+                session.kc.setSessionExpiryHook(() => invalidateLocalSession(req))
                 console.log(response)
-                sessionMethods.storeSession(req.app.locals.kc.access_token)
+                sessionMethods.storeSession(session.kc.access_token)
                 res.redirect(`${client_url}`)
             })
             .catch((err) => {
@@ -57,16 +59,16 @@ router.get('/login', (req, res) => {
     else { res.send('login error') }
 })
 router.get('/logout', (req, res, next) => {
-    invalidateAccessToken(req)
-    invalidateLocalSession(req)
-    res.send({ isLoggedIn: false, message: 'Successfully Logged Out', login_url: `https://kite.trade/connect/login?v=3&api_key=${req.app.locals.cred.api_key}` })
+    invalidateAccessToken()
+    invalidateLocalSession()
+    res.send({ isLoggedIn: false, message: 'Successfully Logged Out', login_url: `https://kite.trade/connect/login?v=3&api_key=${cred.api_key}` })
 })
 
-let invalidateLocalSession = (req) => {
-    req.app.locals.reset()
+let invalidateLocalSession = () => {
+    session.reset()
     sessionMethods.clearSession()
 }
-let invalidateAccessToken = (req) => {
-    req.app.locals.kc.invalidateAccessToken()
+let invalidateAccessToken = () => {
+    session.kc.invalidateAccessToken()
 }
 module.exports = router

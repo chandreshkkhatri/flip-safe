@@ -2,7 +2,8 @@ const express = require('express')
 const cors = require('cors')
 var bodyParser = require('body-parser');
 const mwdb = require('../db-modules/marketwatch')
-const cacheModule = require('../db-modules/cache-historica-data')
+const cacheModule = require('../db-modules/cache-data')
+const kc = require('./auth-router')
 const router = express.Router()
 
 router.use(bodyParser.json()); // for parsing application/json
@@ -14,7 +15,7 @@ router.get('/', (req, res) => {
 })
 
 router.get('/update-instruments-db', (req, res) => {
-  mwdb.updateInstruementDB(req.app.locals.kc)
+  mwdb.updateInstruementDB(kc)
   res.send('Request updated instrument list from broker')
 })
 router.get('/get-list-of-mw', async (req, res) => {
@@ -84,7 +85,7 @@ router.post('/cache-data', async (req, res) => {
   let payload = req.body
   let { instrument_token, interval, from_date, to_date } = payload
   let data
-  await req.app.locals.kc.getHistoricalData(instrument_token, interval, from_date, to_date)
+  await kc.getHistoricalData(instrument_token, interval, from_date, to_date)
     .then((response) => {
       data = response
       cacheModule.cacheData(instrument_token, interval, data)
@@ -98,7 +99,7 @@ router.post('/cache-data', async (req, res) => {
     })
 })
 router.get('/clear-pending-cache-stack', (req, res) => {
-  cacheModule.clearCacheStack(req.app.locals.kc)
+  cacheModule.clearCacheStack(kc)
   res.send('Clearing Stack')
 })
 
