@@ -11,10 +11,7 @@ router.use(function (req, res, next) {
 router.get('/', (req, res) => {
     res.send('Bonjour!')
 })
-router.get('/create-alert', (req, res) => {
-    res.send('Bonjour!')
-})
-router.get('/get-alerts', (req, res) => {
+router.get('/create-trigger', (req, res) => {
     res.send('Bonjour!')
 })
 module.exports = router
