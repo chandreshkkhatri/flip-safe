@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const cors = require('cors')
-const kcModule = require('../db-modules/session')
+const kcModule = require('../scripts/session')
 const sessionMethods = { storeSession: kcModule.storeSession, retrieveSession: kcModule.retrieveSession, clearSession: kcModule.clearSession }
 const session = require('../session')
 const cred = require('../app-cred.json')
