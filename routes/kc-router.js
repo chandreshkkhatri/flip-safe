@@ -1,9 +1,9 @@
 const express = require('express')
 const cors = require('cors')
 const bodyParser = require('body-parser');
-const simulator = require('../scripts/db-module/simulator')
+const simulator = require('../db/simulator')
 const router = express.Router()
-const kc = require('../scripts/utils/kc')
+const kc = require('../actions/kc')
 
 router.use(bodyParser.json()); // for parsing application/json
 router.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded

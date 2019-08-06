@@ -1,9 +1,5 @@
-const kc = require('../../session').kc
-
-const Bottleneck = require("bottleneck/es5");
-const limiter = new Bottleneck({
-    minTime: 333
-});
+const kc = require('../session').kc
+const limiter = require('../utils/utils').limiter
 
 let getProfile = () => { return limiter.schedule(kc.getProfile) }
 let getMargin = () => { return limiter.schedule(kc.getMargins) }

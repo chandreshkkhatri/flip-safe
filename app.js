@@ -12,7 +12,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(logger('dev'));
 app.use(cookieParser());
 
-require('./scripts/db-module/db-connection')
+require('./db/db-connection')
 const alertsRouter = require('./routes/alerts-router')
 const authRouter = require('./routes/auth-router')
 const dbRouter = require('./routes/db-router')
