@@ -12,15 +12,13 @@ app.use(express.urlencoded({ extended: false }));
 app.use(logger('dev'));
 app.use(cookieParser());
 
-require('./scripts/db-connection')
+require('./scripts/db-module/db-connection')
 const alertsRouter = require('./routes/alerts-router')
-const ordersRouter = require('./routes/orders-router')
 const authRouter = require('./routes/auth-router')
 const dbRouter = require('./routes/db-router')
 const kcRouter = require('./routes/kc-router')
 const tickerRouter = require('./routes/ticker-router')
 app.use('/alerts', alertsRouter)
-app.use('/orders', ordersRouter)
 app.use('/auth', authRouter)
 app.use('/db', dbRouter)
 app.use('/ticker', tickerRouter)
