@@ -14,11 +14,13 @@ app.use(cookieParser());
 
 require('./db/db-connection')
 const alertsRouter = require('./routes/alerts-router')
+const ordersRouter = require('./routes/orders-router')
 const authRouter = require('./routes/auth-router')
 const dbRouter = require('./routes/db-router')
 const kcRouter = require('./routes/kc-router')
 const tickerRouter = require('./routes/ticker-router')
 app.use('/alerts', alertsRouter)
+app.use('/orders', ordersRouter)
 app.use('/auth', authRouter)
 app.use('/db', dbRouter)
 app.use('/ticker', tickerRouter)

@@ -1,0 +1,76 @@
+const kc = require('../session').kc
+const limiter = require('../utils/utils').limiter
+const orders = require('../db/orders')
+let exitTriggerQueue = []
+let orderTriggerQueue = []
+
+orders.getExitTriggers()
+    .then(res => {
+        exitTriggerQueue = res
+        console.log(res, 'exitTriggerQueue')
+    })
+    .catch((err) => console.log(err))
+orders.getOrderTriggers()
+    .then(res => {
+        orderTriggerQueue = res
+        console.log(res, 'orderTriggerQuueue')
+    })
+    .catch(err => console.log(err))
+
+let placeOrder = (variety, params) => { return limiter.schedule(kc.placeOrder, variety, params) }
+let exitOrder = (variety, order_id) => { return limiter.schedule(kc.exitOrder, variety, order_id) }
+
+let createOrderTrigger = () => {
+    ///to be implemented
+}
+let scanOrderTriggerQueue = (ticks) => {
+    for (let it in orderTriggerQueue) {
+        let matched = false
+        let jt = 0
+        let l = ticks.length
+        while (!matched) {
+            if (orderTriggerQueue[it].tradingsymbol === ticks[jt % l].tradingsymbol) {
+                console.log('matched', ticks[jt])
+                matched = true
+                ///check if trigger condition is met,call executeTrigger, mark the orderTriggerQueue as complete on db, pop the trigger out of the queue
+            }
+            jt++
+        }
+    }
+}
+let executeOrderTrigger = () => {
+    ///to be implemented
+}
+
+let createExitTrigger = (variety, order_id, tradingsymbol, trigger_price) => {
+    let trigger = { variety, order_id, tradingsymbol, trigger_price, status: 'pending' }
+    orders.createExitTrigger(trigger)
+    exitTriggerQueue.push(trigger)
+}
+let scanExitTriggerQueue = (ticks) => {
+    for (let it in exitTriggerQueue) {
+        let matched = false
+        let jt = 0
+        let l = ticks.length
+        while (!matched) {
+            if (exitTriggerQueue[it].tradingsymbol === ticks[jt % l].tradingsymbol) {
+                console.log('matched', ticks[jt])
+                matched = true
+                ///check if trigger condition is met,call executeTrigger, mark the exitTriggerQueue as complete on db, pop the trigger out of the queue
+            }
+            jt++
+        }
+    }
+}
+let executeExitTrigger = () => {
+    ///to be implemented
+}
+let returnExitTriggerQueue = () => { return exitTriggerQueue }
+let returnOrderTriggerQueue = () => { return orderTriggerQueue }
+
+module.exports = {
+    placeOrder, exitOrder,
+    createOrderTrigger, scanOrderTriggerQueue,
+    createExitTrigger, scanExitTriggerQueue,
+    returnExitTriggerQueue, returnOrderTriggerQueue
+}
