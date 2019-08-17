@@ -1,5 +1,6 @@
 const KiteTicker = require("kiteconnect").KiteTicker;
 const orders = require('../actions/orders')
+const alerts = require('./alerts')
 const storage = require('node-persist');
 const mwdb = require('../db/marketwatch')
 
@@ -64,8 +65,9 @@ let onTicks = (ticks) => {
       tickStore.push(ticks[it])
     }
   }
-  orders.scanOrderTriggerQueue(ticks)
-  orders.scanExitTriggerQueue(ticks)
+  // orders.scanOrderTriggerQueue(ticks)
+  // orders.scanExitTriggerQueue(ticks)
+  // alerts.scanAlertQueue(ticks)
 };
 let disconnected = () => {
   console.log('ticker disconnected')

@@ -20,8 +20,10 @@ orders.getOrderTriggers()
 let placeOrder = (variety, params) => { return limiter.schedule(kc.placeOrder, variety, params) }
 let exitOrder = (variety, order_id) => { return limiter.schedule(kc.exitOrder, variety, order_id) }
 
-let createOrderTrigger = () => {
-    ///to be implemented
+let createOrderTrigger = (variety, params, transaction_type, trigger_price) => {
+    let trigger = { variety, params, transaction_type, trigger_price, status: 'pending' }
+    orders.createOrderTrigger(trigger)
+    orderTriggerQueue.push(trigger)
 }
 let scanOrderTriggerQueue = (ticks) => {
     for (let it in orderTriggerQueue) {
@@ -42,8 +44,8 @@ let executeOrderTrigger = () => {
     ///to be implemented
 }
 
-let createExitTrigger = (variety, order_id, tradingsymbol, trigger_price) => {
-    let trigger = { variety, order_id, tradingsymbol, trigger_price, status: 'pending' }
+let createExitTrigger = (variety, order_id, tradingsymbol, transaction_type, trigger_price) => {
+    let trigger = { variety, order_id, tradingsymbol, trigger_price, transaction_type, status: 'pending' }
     orders.createExitTrigger(trigger)
     exitTriggerQueue.push(trigger)
 }
