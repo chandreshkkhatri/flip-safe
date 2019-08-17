@@ -30,6 +30,9 @@ router.post('/exit-order', (req, res) => {
         })
         .catch((err) => console.log('error', err))
 })
+router.post('/create-order-trigger', (req, res) => {
+    res.send('create-order-trigger called. Under construction')
+})
 router.post('/create-exit-trigger', (req, res) => {
     let { variety, order_id, tradingsymbol, trigger_price } = req.body
     order.createExitTrigger(variety, order_id, tradingsymbol, trigger_price)

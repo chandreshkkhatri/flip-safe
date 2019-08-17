@@ -1,18 +1,17 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const storage = require('node-persist');
 const router = express.Router();
 const KiteTicker = require("kiteconnect").KiteTicker;
 const mwdb = require('../db/marketwatch')
-const storage = require('node-persist');
 const session = require('../session')
 const cred = require('../app-cred.json')
 storage.init({
-  dir: '../node-persist',
+  dir: './node-persist',
   stringify: JSON.stringify,
   parse: JSON.parse,
   encoding: 'utf8',
-
 })
 
 let storingTicks = false

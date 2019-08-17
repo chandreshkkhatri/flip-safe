@@ -8,7 +8,7 @@ const cred = require('../app-cred.json')
 let client_url
 router.use(cors())
 
-router.use(function (req, res, next) {
+router.use((req, res, next) => {
     next();
 });
 
@@ -16,7 +16,7 @@ router.use(function (req, res, next) {
 router.get('/', (req, res) => {
     res.send('Bonjour!')
 })
-router.get('/check-status', async (req, res, next) => {
+router.get('/check-status', async (req, res) => {
     if (session.kc.access_token) {
         res.send({ isLoggedIn: true })
     }
@@ -26,7 +26,7 @@ router.get('/check-status', async (req, res, next) => {
         if (_session.status === 'success') {
             let access_token = _session.session.access_token
             kc.setAccessToken(access_token)
-            kc.setSessionExpiryHook(() => invalidateLocalSession(req))
+            kc.setSessionExpiryHook(invalidateLocalSession)
             session.kc = kc
             res.send({ isLoggedIn: true })
         }
@@ -35,7 +35,7 @@ router.get('/check-status', async (req, res, next) => {
         }
     }
 })
-router.get('/set-login-info', (req, res, next) => {
+router.get('/set-login-info', (req, res) => {
     client_url = req.query.url
     res.send('port set')
 })
@@ -43,10 +43,10 @@ router.get('/login', (req, res) => {
     let response = req.query
     if (response.status === 'success') {
         request_token = response.request_token
-        console.log('response received successfully', request_token, cred.api_secret)
+        console.log('response received successfully', request_token)
         session.kc.generateSession(request_token, cred.api_secret)
             .then((response) => {
-                session.kc.setSessionExpiryHook(() => invalidateLocalSession(req))
+                session.kc.setSessionExpiryHook(invalidateLocalSession)
                 console.log(response)
                 sessionMethods.storeSession(session.kc.access_token)
                 res.redirect(`${client_url}`)
@@ -58,7 +58,7 @@ router.get('/login', (req, res) => {
     }
     else { res.send('login error') }
 })
-router.get('/logout', (req, res, next) => {
+router.get('/logout', (req, res) => {
     invalidateAccessToken()
     invalidateLocalSession()
     res.send({ isLoggedIn: false, message: 'Successfully Logged Out', login_url: `https://kite.trade/connect/login?v=3&api_key=${cred.api_key}` })
