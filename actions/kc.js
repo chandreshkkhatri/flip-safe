@@ -2,7 +2,7 @@ const kc = require('../session').kc
 const limiter = require('../utils/utils').limiter
 
 let getProfile = () => { return limiter.schedule(kc.getProfile) }
-let getMargin = () => { return limiter.schedule(kc.getMargins) }
+let getMargins = () => { return limiter.schedule(kc.getMargins) }
 let getOHLC = (instruments) => { return limiter.schedule(kc.getOHLC, instruments) }
 let getLTP = (instruments) => { return limiter.schedule(kc.getLTP, instruments) }
 let getQuote = (instruments) => { return limiter.schedule(kc.getQuote, instruments) }
@@ -15,5 +15,5 @@ let getHistoricalData = (instrument_token, interval, from_date, to_date, continu
 }
 
 module.exports = {
-    getProfile, getMargin, getOHLC, getLTP, getQuote, getHoldings, getPositions, getOrders, getTrades, getHistoricalData
+    getProfile, getMargins, getOHLC, getLTP, getQuote, getHoldings, getPositions, getOrders, getTrades, getHistoricalData
 }

@@ -1,20 +1,56 @@
 const KiteTicker = require("kiteconnect").KiteTicker;
-const order = require('../actions/orders')
-let tickStore
+const orders = require('../actions/orders')
+const storage = require('node-persist');
+const mwdb = require('../db/marketwatch')
 
-let initializeTicker = (api_key, access_token) => {
-  ticker = new KiteTicker({ api_key, access_token });
-  ticker.autoReconnect(true, 10, 5)
-  ticker.on("ticks", onTicks);
-  ticker.on("connect", subscribe);
-  ticker.on("disconnect", disconnect);
-  ticker.on("reconnecting", (reconnect_interval, reconnections) => {
-    console.log("Reconnecting: attempt - ", reconnections, " interval - ", reconnect_interval);
-  });
-  isInitialized = true
+storage.init({
+  dir: './node-persist',
+  stringify: JSON.stringify,
+  parse: JSON.parse,
+  encoding: 'utf8',
+})
+
+let storingTicks = false
+let tickStore = []
+let tickCache = []
+let ticker
+const session = require('../session')
+const cred = require('../app-cred.json')
+
+let isInitialized = false
+
+let initializeTicker = () => {
+  let api_key = cred.api_key
+  let access_token = session.kc.access_token
+  if (session.active_ticker_access_token !== access_token) {
+    console.log('initializing ticker')
+    ticker = new KiteTicker({ api_key, access_token });
+    ticker.autoReconnect(true, 10, 5)
+    ticker.on("ticks", onTicks);
+    ticker.on("connect", subscribe);
+    ticker.on("disconnect", disconnected);
+    ticker.on("reconnecting", (reconnect_interval, reconnections) => {
+      console.log("Reconnecting: attempt - ", reconnections, " interval - ", reconnect_interval);
+    });
+    isInitialized = true
+    session.active_ticker_access_token = access_token
+  }
+}
+
+let connected = async () => {
+  let status = false
+  if (isInitialized) {
+    status = await ticker.connected()
+  }
+  return status
+}
+let connect = async () => {
+  let isConnected = await connected()
+  if (!isConnected) {
+    ticker.connect()
+  }
 }
 let onTicks = (ticks) => {
-  // console.log(ticks.length)
   for (let it in ticks) {
     let flag = true
     for (let jt in tickStore) {
@@ -27,26 +63,30 @@ let onTicks = (ticks) => {
       tickStore.push(ticks[it])
     }
   }
-  order.scanTriggerQueue(ticks)
+  orders.scanOrderTriggerQueue(ticks)
+  orders.scanExitTriggerQueue(ticks)
 };
-let disconnect = () => {
+let disconnected = () => {
   console.log('ticker disconnected')
 }
+let disconnect = () => {
+  ticker.disconnect()
+}
 let subscribe = async (id = 'ticker2') => {
-  console.log('subscribe')
+  console.log('subscribed to ticker')
   let response
   let _items = await mwdb.getMWData(id);
   let items = [];
   for (let it in _items) {
     items.push(Number(_items[it]["instrument_token"]));
   }
-  // console.log(items)
   ticker.subscribe(items);
   ticker.setMode(ticker.modeFull, items);
   response = { status: true, message: `ticker subscribed to ${items.length} instruments` }
   return response
 };
 let startStoringTicks = async () => {
+  // console.log('start storing ticks')
   if (!storingTicks) {
     storingTicks = true
     tmp = await storage.getItem('tickCache')
@@ -104,5 +144,5 @@ let clearCache = () => {
 
 
 module.exports = {
-  initializeTicker, onTicks, startStoringTicks, storeTicks, clearCache, tickStore
+  initializeTicker, startStoringTicks, clearCache, tickStore, tickCache, connected, connect, disconnect
 }
