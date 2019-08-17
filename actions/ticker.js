@@ -47,6 +47,7 @@ let connected = async () => {
 let connect = async () => {
   let isConnected = await connected()
   if (!isConnected) {
+    clearCache()
     ticker.connect()
   }
 }
@@ -136,6 +137,9 @@ let storeTicks = () => {
   }
   storage.setItem('tickCache', tickCache)
 }
+let getTicks = () => {
+  return tickCache
+}
 let clearCache = () => {
   storage.removeItem('tickCache')
   storage.setItem('tickCache', [])
@@ -144,5 +148,5 @@ let clearCache = () => {
 
 
 module.exports = {
-  initializeTicker, startStoringTicks, clearCache, tickStore, tickCache, connected, connect, disconnect
+  initializeTicker, startStoringTicks, clearCache, tickStore, getTicks, connected, connect, disconnect
 }

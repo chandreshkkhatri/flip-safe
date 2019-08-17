@@ -29,7 +29,7 @@ router.get("/disconnect", async (req, res) => {
   res.send({ status: true })
 });
 router.get("/get-ticks", async (req, res) => {
-  res.send({ ticks: ticker.tickCache })
+  res.send({ ticks: ticker.getTicks() })
 });
 router.get("/clear-cache", (req, res) => {
   ticker.clearCache()
