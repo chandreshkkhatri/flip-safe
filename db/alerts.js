@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 
-var alertSchema = new mongoose.Schema({ tradingsymbol: String, trigger_price: String, trigger_type: String, status: String })
+var alertSchema = new mongoose.Schema({ tradingsymbol: String, trigger_price: Number, trigger_type: String, status: String })
 var Alert = mongoose.model('Alert', alertSchema)
 
 let getAlerts = (query) => {
@@ -16,14 +16,22 @@ let createAlert = (tradingsymbol, trigger_price, trigger_type) => {
     alert.save(err => { if (err) { console.log(err, 'error storing alert') } })
 }
 
-let updateAlertStatus = (alert_id) => {
-    Alert.find({ _id: alert_id })
+let updateAlertStatus = (alert_id, updated_status) => {
+    Alert.findOne({ _id: alert_id })
         .then((doc) => {
             console.log(doc)
-            doc.status = 'triggered'
+            doc.status = updated_status
             doc.save((err) => { if (err) { console.log(err, 'error') } })
         })
         .catch(err => console.log(err))
 }
 
-module.exports = { getAlerts, createAlert, updateAlertStatus }
+let updateAlert = (alert_id, trigger_price) => {
+    Alert.findOne({ _id: alert_id })
+        .then((doc) => {
+            console.log(doc)
+            doc.trigger_price = trigger_price
+            doc.save((err) => { if (err) { console.log(err, 'error') } })
+        })
+}
+module.exports = { getAlerts, createAlert, updateAlertStatus, updateAlert }
