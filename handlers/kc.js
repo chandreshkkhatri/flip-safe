@@ -10,10 +10,11 @@ let getPositions = () => { return limiter.schedule(kc.getPositions) }
 let getHoldings = () => { return limiter.schedule(kc.getHoldings) }
 let getOrders = () => { return limiter.schedule(kc.getOrders) }
 let getTrades = () => { return limiter.schedule(kc.getTrades) }
+let getInstruments = () => { return limiter.schedule(kc.getInstruments) }
 let getHistoricalData = (instrument_token, interval, from_date, to_date, continuos = 0) => {
     return limiter.schedule(kc.getHistoricalData, instrument_token, interval, from_date, to_date, continuos)
 }
 
 module.exports = {
-    getProfile, getMargins, getOHLC, getLTP, getQuote, getHoldings, getPositions, getOrders, getTrades, getHistoricalData
+    getProfile, getMargins, getOHLC, getLTP, getQuote, getHoldings, getPositions, getOrders, getTrades, getInstruments, getHistoricalData
 }

@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+const kcHandler = require('../handlers/kc');
 
 var candleStickDataSchema = new mongoose.Schema({
     instrument_token: String,
@@ -101,7 +102,7 @@ let sendToPendingCacheStack = (instrument_token, interval, from_date, to_date) =
     })
 }
 
-let clearCacheStack = (kc) => {
+let clearCacheStack = () => {
     CacheRequest.find()
         .then(async (docs) => {
             let requestArray = []
@@ -113,7 +114,7 @@ let clearCacheStack = (kc) => {
                 await setTimeout(() => {
                 }, 400);
                 let { instrument_token, interval, from_date, to_date } = requestArray[it]
-                await kc.getHistoricalData(instrument_token, interval, from_date, to_date)
+                await kcHandler.getHistoricalData(instrument_token, interval, from_date, to_date)
                     .then(async (response) => {
                         data = response
                         await cacheData(instrument_token, interval, data)

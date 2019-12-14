@@ -3,7 +3,7 @@ const cors = require('cors')
 var bodyParser = require('body-parser');
 const mwdb = require('../models/marketwatch')
 const cacheModule = require('../models/cache-data')
-const kc = require('./auth-router')
+const kcHandler = require('../handlers/kc')
 const router = express.Router()
 
 router.use(bodyParser.json()); // for parsing application/json
@@ -15,7 +15,7 @@ router.get('/', (req, res) => {
 })
 
 router.get('/update-instruments-db', (req, res) => {
-  mwdb.updateInstruementDB(kc)
+  mwdb.updateInstruementDB(kcHandler)
   res.send('Request updated instrument list from broker')
 })
 router.get('/get-list-of-mw', async (req, res) => {
@@ -85,7 +85,7 @@ router.post('/cache-data', async (req, res) => {
   let payload = req.body
   let { instrument_token, interval, from_date, to_date } = payload
   let data
-  await kc.getHistoricalData(instrument_token, interval, from_date, to_date)
+  await kcHandler.getHistoricalData(instrument_token, interval, from_date, to_date)
     .then((response) => {
       data = response
       cacheModule.cacheData(instrument_token, interval, data)
@@ -99,7 +99,7 @@ router.post('/cache-data', async (req, res) => {
     })
 })
 router.get('/clear-pending-cache-stack', (req, res) => {
-  cacheModule.clearCacheStack(kc)
+  cacheModule.clearCacheStack()
   res.send('Clearing Stack')
 })
 
@@ -111,6 +111,6 @@ router.get('/flush-cache-stack', (req, res) => {
 router.get('/flush-simulation-data', (req, res) => {
   let date = req.query.date
   mwdb.flushSimulationData(date)
-  res.send('flshing')
+  res.send('flushing')
 })
 module.exports = router

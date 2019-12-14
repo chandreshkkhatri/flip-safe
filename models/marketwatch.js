@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+const kcHandler = require('../handlers/kc');
 
 var instrumentsSchema = new mongoose.Schema({
     instrument_token: String, tradingsymbol: String, exchange_token: String, name: String, last_price: String, expiry: String, strike: String, tick_size: String, lot_size: String, instrument_type: String, segment: String, exchange: String
@@ -11,13 +12,13 @@ var marketWatchInfoSchema = new mongoose.Schema({
 })
 var MarketWatchInfo = mongoose.model('MarketWatchInfo', marketWatchInfoSchema)
 
-let updateInstruementDB = async (kc) => {
+let updateInstruementDB = async () => {
     await Instruments.deleteMany({}, (err) => {
         if (err) {
             console.log(err, 'error')
         }
     })
-    kc.getInstruments()
+    kcHandler.getInstruments()
         .then((res) => {
             Instruments.insertMany(res, (error, docs) => {
                 if (error) {
