@@ -1,9 +1,9 @@
 const express = require('express')
 const cors = require('cors')
 const bodyParser = require('body-parser');
-const simulator = require('../db/simulator')
+const simulator = require('../models/simulator')
 const router = express.Router()
-const kc = require('../actions/kc')
+const kcHandler = require('../handlers/kc')
 
 router.use(bodyParser.json()); // for parsing application/json
 router.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
@@ -14,7 +14,7 @@ router.get('/', (req, res) => {
 })
 
 router.get('/get-profile', async (req, res) => {
-    kc.getProfile()
+    kcHandler.getProfile()
         .then((response) => {
             res.send(response)
         })
@@ -25,7 +25,7 @@ router.get('/get-profile', async (req, res) => {
 })
 router.get('/get-margins', async (req, res) => {
     const segment = req.query.segment           //optional argument to the method, equity/commodity
-    kc.getMargins()
+    kcHandler.getMargins()
         .then((response) => {
             res.send(response)
         })
@@ -36,7 +36,7 @@ router.get('/get-margins', async (req, res) => {
 })
 router.post('/get-ohlc', async (req, res) => {
     let instruments = req.body.instruments
-    kc.getOHLC(instruments)
+    kcHandler.getOHLC(instruments)
         .then((response) => res.send(response))
         .catch((err) => {
             console.log('err', err)
@@ -45,7 +45,7 @@ router.post('/get-ohlc', async (req, res) => {
 })
 router.post('/get-ltp', async (req, res) => {
     let instruments = req.body.instruments
-    kc.getLTP(instruments)
+    kcHandler.getLTP(instruments)
         .then((response) => res.send(response))
         .catch((err) => {
             console.log('err', err)
@@ -54,7 +54,7 @@ router.post('/get-ltp', async (req, res) => {
 })
 router.post('/get-quotes', async (req, res) => {
     let instruments = req.body.instruments
-    kc.getQuote(instruments)
+    kcHandler.getQuote(instruments)
         .then((response) => res.send(response))
         .catch((err) => {
             console.log('err', err)
@@ -62,7 +62,7 @@ router.post('/get-quotes', async (req, res) => {
         })
 })
 router.get('/get-positions', async (req, res) => {
-    kc.getPositions()
+    kcHandler.getPositions()
         .then((response) => res.send(response))
         .catch((err) => {
             console.log('error getting holdings', err)
@@ -70,7 +70,7 @@ router.get('/get-positions', async (req, res) => {
         })
 })
 router.get('/get-holdings', async (req, res) => {
-    kc.getHoldings()
+    kcHandler.getHoldings()
         .then((response) => res.send(response))
         .catch((err) => {
             console.log('error getting holdings', err)
@@ -78,7 +78,7 @@ router.get('/get-holdings', async (req, res) => {
         })
 })
 router.get('/get-orders', async (req, res) => {
-    kc.getOrders()
+    kcHandler.getOrders()
         .then((response) => {
             res.send(response)
         })
@@ -88,7 +88,7 @@ router.get('/get-orders', async (req, res) => {
         })
 })
 router.get('/get-trades', async (req, res) => {
-    kc.getTrades()
+    kcHandler.getTrades()
         .then((response) => res.send(response))
         .catch((err) => {
             console.log('error getting trades', err)
@@ -99,7 +99,7 @@ router.post('/get-historical-data', async (req, res) => {
     let payload = req.body
     let { instrument_token, interval, from_date, to_date, instrument_type } = payload
     if (instrument_type === 'derivative') {
-        kc.getHistoricalData(instrument_token, interval, from_date, to_date, 1)
+        kcHandler.getHistoricalData(instrument_token, interval, from_date, to_date, 1)
             .then((response) => {
                 res.send(response)
             })
@@ -108,7 +108,7 @@ router.post('/get-historical-data', async (req, res) => {
                 res.status(500).send('error fetching candles')
             })
     } else {
-        kc.getHistoricalData(instrument_token, interval, from_date, to_date, 0)
+        kcHandler.getHistoricalData(instrument_token, interval, from_date, to_date, 0)
             .then((response) => {
                 res.send(response)
             })
@@ -128,7 +128,7 @@ router.get('/request-simulation-data', async (req, res) => {
         res.send({ status: true, data: data.doc })
     }
     else {
-        kc.getHistoricalData(instrument_token, interval, from_date, to_date)
+        kcHandler.getHistoricalData(instrument_token, interval, from_date, to_date)
             .then((response) => {
                 simulator.storeSimulationData(instrument_token, interval, date, response)
                 res.send({ status: true, data: response })

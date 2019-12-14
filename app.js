@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(logger('dev'));
 app.use(cookieParser());
 
-require('./db/db-connection')
+require('./db-connection')
 const alertsRouter = require('./routes/alerts-router')
 const ordersRouter = require('./routes/orders-router')
 const authRouter = require('./routes/auth-router')

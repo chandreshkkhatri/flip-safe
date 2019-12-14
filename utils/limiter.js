@@ -3,4 +3,4 @@ const limiter = new Bottleneck({
     minTime: 333
 });
 
-module.exports = { limiter }
+module.exports = limiter 

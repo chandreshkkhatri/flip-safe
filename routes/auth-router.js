@@ -1,8 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const cors = require('cors')
-const kcModule = require('../db/session')
-const sessionMethods = { storeSession: kcModule.storeSession, retrieveSession: kcModule.retrieveSession, clearSession: kcModule.clearSession }
+const sessionModel = require('../models/session')
 const session = require('../session')
 const cred = require('../app-cred.json')
 let client_url
@@ -21,7 +20,7 @@ router.get('/check-status', async (req, res) => {
         res.send({ isLoggedIn: true })
     }
     else {
-        let _session = await sessionMethods.retrieveSession()
+        let _session = await sessionModel.retrieveSession()
         let kc = session.kc
         if (_session.status === 'success') {
             let access_token = _session.session.access_token
@@ -48,7 +47,7 @@ router.get('/login', (req, res) => {
             .then((response) => {
                 session.kc.setSessionExpiryHook(invalidateLocalSession)
                 console.log(response)
-                sessionMethods.storeSession(session.kc.access_token)
+                sessionModel.storeSession(session.kc.access_token)
                 res.redirect(`${client_url}`)
             })
             .catch((err) => {
@@ -66,7 +65,7 @@ router.get('/logout', (req, res) => {
 
 let invalidateLocalSession = () => {
     session.reset()
-    sessionMethods.clearSession()
+    sessionModel.clearSession()
 }
 let invalidateAccessToken = () => {
     session.kc.invalidateAccessToken()

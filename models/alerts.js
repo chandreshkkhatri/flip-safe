@@ -34,4 +34,5 @@ let updateAlert = (alert_id, trigger_price) => {
             doc.save((err) => { if (err) { console.log(err, 'error') } })
         })
 }
+
 module.exports = { getAlerts, createAlert, updateAlertStatus, updateAlert }

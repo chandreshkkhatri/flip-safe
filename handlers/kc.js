@@ -1,5 +1,5 @@
 const kc = require('../session').kc
-const limiter = require('../utils/utils').limiter
+const limiter = require('../utils/limiter')
 
 let getProfile = () => { return limiter.schedule(kc.getProfile) }
 let getMargins = () => { return limiter.schedule(kc.getMargins) }

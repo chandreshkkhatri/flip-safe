@@ -1,6 +1,4 @@
-const kc = require('../session').kc
-const limiter = require('../utils/utils').limiter
-const alerts = require('../db/alerts')
+const alerts = require('../models/alerts')
 
 let alertsQueue = []
 

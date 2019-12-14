@@ -1,19 +1,17 @@
 const kc = require('../session').kc
-const limiter = require('../utils/utils').limiter
-const orders = require('../db/orders')
+const limiter = require('../utils/limiter').limiter
+const orders = require('../models/orders')
 let exitTriggerQueue = []
 let orderTriggerQueue = []
 
 orders.getExitTriggers()
     .then(res => {
         exitTriggerQueue = res
-        console.log(res, 'exitTriggerQueue')
     })
     .catch((err) => console.log(err))
 orders.getOrderTriggers()
     .then(res => {
         orderTriggerQueue = res
-        console.log(res, 'orderTriggerQuueue')
     })
     .catch(err => console.log(err))
 
