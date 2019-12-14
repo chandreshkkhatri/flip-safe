@@ -1,5 +1,5 @@
 const kc = require('../session').kc
-const limiter = require('../utils/limiter').limiter
+const limiter = require('../utils/limiter')
 const orders = require('../models/orders')
 let exitTriggerQueue = []
 let orderTriggerQueue = []
