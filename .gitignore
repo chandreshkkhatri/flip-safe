@@ -2,3 +2,5 @@
 /node-persist
 .pycache/
 build/
+.env.local
+.next/
