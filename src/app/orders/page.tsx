@@ -24,16 +24,14 @@ export default function OrdersPage() {
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
-  const { isLoggedIn, allowOfflineAccess } = useAuth();
+  const { isLoggedIn, allowOfflineAccess, runOfflineMode } = useAuth();
 
   useEffect(() => {
     if (!isLoggedIn && !allowOfflineAccess) {
-      router.push('/login');
-      return;
+      runOfflineMode();
     }
-
     fetchOrders();
-  }, [isLoggedIn, allowOfflineAccess, router]);
+  }, [isLoggedIn, allowOfflineAccess, runOfflineMode]);
 
   const fetchOrders = async () => {
     if (!isLoggedIn) {

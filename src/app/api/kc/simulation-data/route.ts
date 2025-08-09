@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       const response = await getHistoricalData(instrument_token, interval, from_date, to_date);
 
       // Store the fetched data for future use
-      await storeSimulationData(instrument_token, interval, date, response);
+      await storeSimulationData(instrument_token, interval, date, response as any[]);
 
       return NextResponse.json({
         status: true,

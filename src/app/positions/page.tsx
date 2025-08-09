@@ -1,7 +1,6 @@
 'use client';
 
 import axios from 'axios';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { API_ROUTES } from '@/lib/constants';
@@ -22,17 +21,14 @@ export default function PositionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const router = useRouter();
-  const { isLoggedIn, allowOfflineAccess } = useAuth();
+  const { isLoggedIn, allowOfflineAccess, runOfflineMode } = useAuth();
 
   useEffect(() => {
     if (!isLoggedIn && !allowOfflineAccess) {
-      router.push('/login');
-      return;
+      runOfflineMode();
     }
-
     fetchPositions();
-  }, [isLoggedIn, allowOfflineAccess, router]);
+  }, [isLoggedIn, allowOfflineAccess, runOfflineMode]);
 
   const fetchPositions = async () => {
     if (!isLoggedIn) {

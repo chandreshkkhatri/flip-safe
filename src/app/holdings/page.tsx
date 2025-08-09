@@ -23,16 +23,14 @@ export default function HoldingsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
-  const { isLoggedIn, allowOfflineAccess } = useAuth();
+  const { isLoggedIn, allowOfflineAccess, runOfflineMode } = useAuth();
 
   useEffect(() => {
     if (!isLoggedIn && !allowOfflineAccess) {
-      router.push('/login');
-      return;
+      runOfflineMode();
     }
-
     fetchHoldings();
-  }, [isLoggedIn, allowOfflineAccess, router]);
+  }, [isLoggedIn, allowOfflineAccess, runOfflineMode]);
 
   const fetchHoldings = async () => {
     if (!isLoggedIn) {
