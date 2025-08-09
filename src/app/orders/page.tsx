@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { API_ROUTES } from '@/lib/constants';
-import axios from 'axios';
 
 interface Order {
   order_id: string;
@@ -47,8 +47,8 @@ export default function OrdersPage() {
           order_type: 'LIMIT',
           status: 'OPEN',
           price: 2500,
-          created_at: new Date().toISOString()
-        }
+          created_at: new Date().toISOString(),
+        },
       ]);
       setLoading(false);
       return;
@@ -85,11 +85,19 @@ export default function OrdersPage() {
       <nav className="navbar-fixed">
         <nav className="blue">
           <div className="nav-wrapper container">
-            <a href="/dashboard" className="brand-logo">Flip Safe</a>
+            <a href="/dashboard" className="brand-logo">
+              Flip Safe
+            </a>
             <ul className="right">
-              <li><a href="/dashboard">Dashboard</a></li>
-              <li><a href="/positions">Positions</a></li>
-              <li><a href="/holdings">Holdings</a></li>
+              <li>
+                <a href="/dashboard">Dashboard</a>
+              </li>
+              <li>
+                <a href="/positions">Positions</a>
+              </li>
+              <li>
+                <a href="/holdings">Holdings</a>
+              </li>
             </ul>
           </div>
         </nav>
@@ -98,7 +106,7 @@ export default function OrdersPage() {
       <div className="row">
         <div className="col s12">
           <h4>Orders</h4>
-          
+
           {error && (
             <div className="card-panel red lighten-4 red-text text-darken-2">
               <p>{error}</p>
@@ -128,32 +136,43 @@ export default function OrdersPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.map((order) => (
+                    {orders.map(order => (
                       <tr key={order.order_id}>
                         <td>{order.order_id}</td>
                         <td>{order.tradingsymbol}</td>
                         <td>
-                          <span className={order.transaction_type === 'BUY' ? 'green-text' : 'red-text'}>
+                          <span
+                            className={order.transaction_type === 'BUY' ? 'green-text' : 'red-text'}
+                          >
                             {order.transaction_type}
                           </span>
                         </td>
                         <td>{order.quantity}</td>
                         <td>
-                          {order.average_price ? `₹${order.average_price}` : 
-                           order.price ? `₹${order.price}` : 'Market'}
+                          {order.average_price
+                            ? `₹${order.average_price}`
+                            : order.price
+                              ? `₹${order.price}`
+                              : 'Market'}
                         </td>
                         <td>
-                          <span className={`badge ${
-                            order.status === 'COMPLETE' ? 'green' : 
-                            order.status === 'OPEN' ? 'blue' : 
-                            order.status === 'CANCELLED' ? 'red' : 'grey'
-                          }`}>
+                          <span
+                            className={`badge ${
+                              order.status === 'COMPLETE'
+                                ? 'green'
+                                : order.status === 'OPEN'
+                                  ? 'blue'
+                                  : order.status === 'CANCELLED'
+                                    ? 'red'
+                                    : 'grey'
+                            }`}
+                          >
                             {order.status}
                           </span>
                         </td>
                         <td>
                           {order.status === 'OPEN' && (
-                            <button 
+                            <button
                               className="btn red btn-small"
                               onClick={() => cancelOrder(order.order_id)}
                             >

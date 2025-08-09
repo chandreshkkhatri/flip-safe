@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { API_ROUTES } from '@/lib/constants';
-import axios from 'axios';
 
 interface Holding {
   tradingsymbol: string;
@@ -46,7 +46,7 @@ export default function HoldingsPage() {
           pnl: 15000,
           pnl_percentage: 13.64,
           exchange: 'NSE',
-          isin: 'INE002A01018'
+          isin: 'INE002A01018',
         },
         {
           tradingsymbol: 'TCS',
@@ -56,8 +56,8 @@ export default function HoldingsPage() {
           pnl: 2500,
           pnl_percentage: 3.23,
           exchange: 'NSE',
-          isin: 'INE467B01029'
-        }
+          isin: 'INE467B01029',
+        },
       ]);
       setLoading(false);
       return;
@@ -74,8 +74,14 @@ export default function HoldingsPage() {
     }
   };
 
-  const totalValue = holdings.reduce((sum, holding) => sum + (holding.last_price * holding.quantity), 0);
-  const totalInvestment = holdings.reduce((sum, holding) => sum + (holding.average_price * holding.quantity), 0);
+  const totalValue = holdings.reduce(
+    (sum, holding) => sum + holding.last_price * holding.quantity,
+    0
+  );
+  const totalInvestment = holdings.reduce(
+    (sum, holding) => sum + holding.average_price * holding.quantity,
+    0
+  );
   const totalPnL = holdings.reduce((sum, holding) => sum + holding.pnl, 0);
   const totalPnLPercentage = totalInvestment > 0 ? (totalPnL / totalInvestment) * 100 : 0;
 
@@ -89,11 +95,19 @@ export default function HoldingsPage() {
       <nav className="navbar-fixed">
         <nav className="blue">
           <div className="nav-wrapper container">
-            <a href="/dashboard" className="brand-logo">Flip Safe</a>
+            <a href="/dashboard" className="brand-logo">
+              Flip Safe
+            </a>
             <ul className="right">
-              <li><a href="/dashboard">Dashboard</a></li>
-              <li><a href="/orders">Orders</a></li>
-              <li><a href="/positions">Positions</a></li>
+              <li>
+                <a href="/dashboard">Dashboard</a>
+              </li>
+              <li>
+                <a href="/orders">Orders</a>
+              </li>
+              <li>
+                <a href="/positions">Positions</a>
+              </li>
             </ul>
           </div>
         </nav>
@@ -102,7 +116,7 @@ export default function HoldingsPage() {
       <div className="row">
         <div className="col s12">
           <h4>Holdings</h4>
-          
+
           {/* Portfolio Summary */}
           <div className="row">
             <div className="col s12 m3">
@@ -138,7 +152,7 @@ export default function HoldingsPage() {
               </div>
             </div>
           </div>
-          
+
           {error && (
             <div className="card-panel red lighten-4 red-text text-darken-2">
               <p>{error}</p>

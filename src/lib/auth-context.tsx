@@ -1,7 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import axios from 'axios';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { API_ROUTES } from './constants';
 
 interface AuthContextType {
@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Initialize state from sessionStorage
     const storedLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
     const storedOfflineAccess = sessionStorage.getItem('allowOfflineAccess') === 'true';
-    
+
     setIsLoggedIn(storedLoggedIn);
     setAllowOfflineAccess(storedOfflineAccess);
 
@@ -115,9 +115,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuthStatus,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

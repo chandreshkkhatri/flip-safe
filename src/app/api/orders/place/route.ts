@@ -1,27 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { placeOrder, checkAuth } from '@/lib/kiteconnect-handler';
+import { checkAuth, placeOrder } from '@/lib/kiteconnect-handler';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
     if (!checkAuth()) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     const orderParams = await request.json();
 
     // Validate required parameters
-    const requiredFields = ['tradingsymbol', 'quantity', 'transaction_type', 'order_type', 'product'];
+    const requiredFields = [
+      'tradingsymbol',
+      'quantity',
+      'transaction_type',
+      'order_type',
+      'product',
+    ];
     for (const field of requiredFields) {
       if (!orderParams[field]) {
-        return NextResponse.json(
-          { error: `Missing required field: ${field}` },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: `Missing required field: ${field}` }, { status: 400 });
       }
     }
 
@@ -29,9 +29,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error placing order:', error);
-    return NextResponse.json(
-      { error: 'Failed to place order' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to place order' }, { status: 500 });
   }
 }

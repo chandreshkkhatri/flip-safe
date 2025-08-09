@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/lib/auth-context';
 
 interface DashboardProps {}
 
 export default function DashboardPage() {
   const [nightMode, setNightMode] = useState(false);
   const [loading, setLoading] = useState(true);
-  
+
   const router = useRouter();
   const { isLoggedIn, allowOfflineAccess, logout, checkedLoginStatus } = useAuth();
 
@@ -68,10 +68,10 @@ export default function DashboardPage() {
             <Link href="/dashboard" className="brand-logo">
               Flip Safe
             </Link>
-            
+
             <ul className="right">
               <li>
-                <button 
+                <button
                   onClick={toggleNightMode}
                   className="btn-flat white-text"
                   title={nightMode ? 'Light Mode' : 'Dark Mode'}
@@ -80,10 +80,7 @@ export default function DashboardPage() {
                 </button>
               </li>
               <li>
-                <button 
-                  onClick={handleLogout}
-                  className="btn-flat white-text"
-                >
+                <button onClick={handleLogout} className="btn-flat white-text">
                   Logout
                 </button>
               </li>
@@ -213,4 +210,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

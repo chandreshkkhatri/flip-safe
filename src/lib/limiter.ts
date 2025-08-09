@@ -1,4 +1,4 @@
-import Bottleneck from "bottleneck";
+import Bottleneck from 'bottleneck';
 
 // Rate limiter for KiteConnect API calls
 // Zerodha has rate limits, so we need to throttle requests

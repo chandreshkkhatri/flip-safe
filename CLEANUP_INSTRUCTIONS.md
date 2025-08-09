@@ -17,7 +17,7 @@ flip-safe/
 │   ├── src/
 │   │   ├── Components/
 │   │   │   ├── Simulator.js      # From analytics-ui
-│   │   │   ├── AdminConsole.js   # From analytics-ui  
+│   │   │   ├── AdminConsole.js   # From analytics-ui
 │   │   │   ├── Orders/           # Trading features
 │   │   │   ├── Holdings/         # Trading features
 │   │   │   ├── Positions/        # Trading features
@@ -50,5 +50,6 @@ npm run dev           # Start server + UI
 ```
 
 The unified application should run on:
-- Backend: http://localhost:3000  
+
+- Backend: http://localhost:3000
 - Frontend: http://localhost:3098

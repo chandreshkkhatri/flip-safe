@@ -8,10 +8,7 @@ export async function GET(request: NextRequest) {
     const mwName = searchParams.get('mwName');
 
     if (!mwName) {
-      return NextResponse.json(
-        { error: 'Missing required parameter: mwName' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required parameter: mwName' }, { status: 400 });
     }
 
     // TODO: Implement MarketWatch data fetching
@@ -25,9 +22,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(mockData);
   } catch (error) {
     console.error('Error fetching MarketWatch data:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch MarketWatch data' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch MarketWatch data' }, { status: 500 });
   }
 }

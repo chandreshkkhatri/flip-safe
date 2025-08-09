@@ -5,7 +5,9 @@ const API_KEY = process.env.KITE_API_KEY || '';
 const API_SECRET = process.env.KITE_API_SECRET || '';
 
 if (!API_KEY || !API_SECRET) {
-  console.warn('Kite API credentials not found. Please set KITE_API_KEY and KITE_API_SECRET environment variables.');
+  console.warn(
+    'Kite API credentials not found. Please set KITE_API_KEY and KITE_API_SECRET environment variables.'
+  );
 }
 
 interface KiteConnectInstance {

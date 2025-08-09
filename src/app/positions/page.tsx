@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { API_ROUTES } from '@/lib/constants';
-import axios from 'axios';
 
 interface Position {
   tradingsymbol: string;
@@ -46,8 +46,8 @@ export default function PositionsPage() {
           pnl: 5000,
           pnl_percentage: 2.04,
           product: 'CNC',
-          exchange: 'NSE'
-        }
+          exchange: 'NSE',
+        },
       ]);
       setLoading(false);
       return;
@@ -74,11 +74,19 @@ export default function PositionsPage() {
       <nav className="navbar-fixed">
         <nav className="blue">
           <div className="nav-wrapper container">
-            <a href="/dashboard" className="brand-logo">Flip Safe</a>
+            <a href="/dashboard" className="brand-logo">
+              Flip Safe
+            </a>
             <ul className="right">
-              <li><a href="/dashboard">Dashboard</a></li>
-              <li><a href="/orders">Orders</a></li>
-              <li><a href="/holdings">Holdings</a></li>
+              <li>
+                <a href="/dashboard">Dashboard</a>
+              </li>
+              <li>
+                <a href="/orders">Orders</a>
+              </li>
+              <li>
+                <a href="/holdings">Holdings</a>
+              </li>
             </ul>
           </div>
         </nav>
@@ -87,7 +95,7 @@ export default function PositionsPage() {
       <div className="row">
         <div className="col s12">
           <h4>Positions</h4>
-          
+
           {error && (
             <div className="card-panel red lighten-4 red-text text-darken-2">
               <p>{error}</p>

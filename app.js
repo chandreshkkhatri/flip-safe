@@ -8,10 +8,12 @@ const cors = require('cors');
 const app = express();
 
 // Enable CORS for all origins in development
-app.use(cors({
-  origin: ['http://localhost:3098', 'http://localhost:3000'],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: ['http://localhost:3098', 'http://localhost:3000'],
+    credentials: true,
+  })
+);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

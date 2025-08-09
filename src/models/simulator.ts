@@ -31,14 +31,12 @@ const simulationDataSchema = new mongoose.Schema<ISimulationData>(
   },
   {
     timestamps: true,
-    indexes: [
-      { instrument_token: 1, interval: 1, date: 1 }
-    ]
+    indexes: [{ instrument_token: 1, interval: 1, date: 1 }],
   }
 );
 
-const SimulationData = 
-  mongoose.models.SimulationData || 
+const SimulationData =
+  mongoose.models.SimulationData ||
   mongoose.model<ISimulationData>('SimulationData', simulationDataSchema);
 
 export const storeSimulationData = async (
@@ -49,14 +47,14 @@ export const storeSimulationData = async (
 ): Promise<void> => {
   try {
     await connectDB();
-    
+
     const simulationData = new SimulationData({
       instrument_token,
       interval,
       date,
       candleStickData,
     });
-    
+
     await simulationData.save();
   } catch (error) {
     console.error('Error saving simulation data:', error);
@@ -74,13 +72,13 @@ export const getSimulationData = async (
 }> => {
   try {
     await connectDB();
-    
+
     const doc = await SimulationData.findOne({
       instrument_token,
       interval,
       date,
     });
-    
+
     if (doc) {
       return { status: true, doc };
     } else {

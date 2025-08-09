@@ -59,7 +59,7 @@ export const getHistoricalData = async (
   continuous: number = 0
 ) => {
   const kc = kiteConnectService.getKiteConnect();
-  return limiter.schedule(() => 
+  return limiter.schedule(() =>
     kc.getHistoricalData(instrument_token, interval, from_date, to_date, continuous)
   );
 };
