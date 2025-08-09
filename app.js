@@ -9,7 +9,7 @@ var app = express();
 
 // Enable CORS for all origins in development
 app.use(cors({
-  origin: ['http://localhost:3098', 'http://localhost:3099', 'http://localhost:3000'],
+  origin: ['http://localhost:3098', 'http://localhost:3000'],
   credentials: true
 }));
 
@@ -23,8 +23,7 @@ app.use(logger('dev'));
 app.use(cookieParser());
 
 // Serve static files for production builds
-app.use('/ui', express.static(path.join(__dirname, 'z-trader-ui/build')));
-app.use('/action-ui', express.static(path.join(__dirname, 'z-trader-action-ui/build')));
+app.use('/ui', express.static(path.join(__dirname, 'action-ui/build')));
 
 require('./db-connection')
 const alertsRouter = require('./routes/alerts')

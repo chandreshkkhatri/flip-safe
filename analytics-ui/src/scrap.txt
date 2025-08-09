@@ -1,3 +1,0 @@
-//the case where use is logged in and still attempt to access login route
-//the case where the use isn't logged in but tries to access dashboard
-//make sure there are no infinite redirections

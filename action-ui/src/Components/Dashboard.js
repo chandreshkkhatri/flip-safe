@@ -16,6 +16,8 @@ import Positions from './Positions/Positions'
 import Funds from './Funds/Funds'
 import Alerts from './Alerts/Alerts'
 import Ticker from './Terminal/Ticker/Ticker'
+import Simulator from './Simulator'
+import AdminConsole from './AdminConsole'
 import DraggableWindow from "./common/DraggablePanel/DraggableWindow";
 import NavBar from './layout/NavBar'
 import AppContent from "./layout/AppContent";
@@ -104,10 +106,13 @@ class Dashboard extends Component {
         <NavBar navColor={navColor} navTextColor={navTextColor}>
           <ul id="nav-mobile" className={`right hide-on-med-and-down`}>
             <li><Link className={`${navTextColor}`} to={`${path}/home`}>Home</Link></li>
+            <li><Link className={`${navTextColor}`} to={`${path}/trade`}>Trade</Link></li>
             <li><Link className={`${navTextColor}`} to={`${path}/orders`}>Orders</Link></li>
             <li><Link className={`${navTextColor}`} to={`${path}/holdings`}>Holdings</Link></li>
             <li><Link className={`${navTextColor}`} to={`${path}/positions`}>Positions</Link></li>
             <li><Link className={`${navTextColor}`} to={`${path}/funds`}>Funds</Link></li>
+            <li><Link className={`${navTextColor}`} to={`${path}/simulator`}>Simulator</Link></li>
+            <li><Link className={`${navTextColor}`} to={`${path}/admin`}>Admin</Link></li>
             <li><Link className={`${navTextColor}`} to={`${path}/alerts`}>
               <FontAwesomeIcon color="cyan" icon={faBell} />
             </Link></li>
@@ -132,6 +137,8 @@ class Dashboard extends Component {
                 <Route path={`${path}/positions`} render={({ match }) => <Positions match={match} />} />
                 <Route path={`${path}/funds`} render={({ match }) => <Funds match={match} />} />
                 <Route path={`${path}/alerts`} render={({ match }) => <Alerts match={match} />} />
+                <Route path={`${path}/simulator`} render={(props) => <Simulator {...props} nightMode={nightMode} />} />
+                <Route path={`${path}/admin`} render={(props) => <AdminConsole {...props} />} />
                 <Route path={`${path}/logout`} render={() => { this.handleLogout(); return <Logout />; }} />
                 <Route render={() => <Redirect to={`${path}/dev`} />} />
               </Switch>

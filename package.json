@@ -5,10 +5,10 @@
   "scripts": {
     "start": "nodemon ./bin/www",
     "server": "nodemon ./bin/www",
-    "ui": "cd z-trader-ui && npm start",
-    "action-ui": "cd z-trader-action-ui && npm start",
-    "dev": "concurrently \"npm run server\" \"npm run ui\" \"npm run action-ui\"",
-    "install-all": "npm install && cd z-trader-ui && npm install && cd ../z-trader-action-ui && npm install"
+    "ui": "cd action-ui && npm start",
+    "dev": "concurrently \"npm run server\" \"npm run ui\"",
+    "install-all": "npm install && cd action-ui && npm install",
+    "build-ui": "cd action-ui && npm run build"
   },
   "dependencies": {
     "axios": "^0.18.0",
