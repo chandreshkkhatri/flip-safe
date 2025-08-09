@@ -1,34 +1,45 @@
 import axios from "axios";
-const base_url = 'http://localhost:3000/kc'
+import constants from "../constants";
 
-export const getQuotes = async instruments => {
-  let data;
-  await axios.post(`${base_url}/get-quotes`, { instruments })
-    .then(res => {
-      data = res.data;
-    })
-    .catch(err => (data = "error"));
-  return data;
+const { baseURL } = constants.config;
+
+export const getQuotes = async (instruments) => {
+  try {
+    const response = await axios.post(`${baseURL}${constants.routes.kc.getQuotes}`, { instruments });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching quotes:', error);
+    throw error;
+  }
 };
 
 export const getChartData = async (instrument_token, from_date, to_date, interval) => {
-  let payload = { instrument_token, from_date, to_date, interval };
-  let response;
-  await axios.post(`${base_url}/get-historical-data`, payload)
-    .then(res => {
-      response = res.data;
-    })
-    .catch(err => {
-      console.log("Error fetching chart data:", err);
-      response = [];
-    });
-  return response;
+  try {
+    const payload = { instrument_token, from_date, to_date, interval };
+    const response = await axios.post(`${baseURL}${constants.routes.kc.getHistoricalData}`, payload);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching chart data:', error);
+    return [];
+  }
 };
 
-export const requestSimulationInstrumentData = (instrument_token, date, interval) => {
-  return axios.get(`${base_url}/request-simulation-data?instrument_token=${instrument_token}&date=${date}&interval=${interval}`);
+export const requestSimulationInstrumentData = async (instrument_token, date, interval) => {
+  try {
+    const response = await axios.get(`${baseURL}${constants.routes.kc.requestSimulationData}?instrument_token=${instrument_token}&date=${date}&interval=${interval}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error requesting simulation data:', error);
+    throw error;
+  }
 };
 
-export const flushSimulationDataFromServer = () => {
-  return axios.get(`${base_url}/flush-simulation-data`)
-}
+export const flushSimulationDataFromServer = async () => {
+  try {
+    const response = await axios.get(`${baseURL}${constants.routes.kc.flushSimulationData}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error flushing simulation data:', error);
+    throw error;
+  }
+};

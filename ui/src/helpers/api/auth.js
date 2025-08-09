@@ -1,40 +1,48 @@
 import axios from 'axios';
-import constants from '../../constants'
+import constants from '../../constants';
+
+const { baseURL, clientURL } = constants.config;
 
 export const checkAuthStatus = async () => {
-    let state = {}
-    await axios.get(`http://localhost:3000${constants.routes.auth.check_status}`)
-        .then(res => {
-            let isLoggedIn = res.data.isLoggedIn;
-            let login_url;
-            if (res.data.isLoggedIn === false) {
-                login_url = res.data.login_url;
-            }
-            state = { isLoggedIn, login_url }
-        })
-        .catch(err => {
-            state = { serviceUnavailable: true }
-        });
-    return state
+    try {
+        const response = await axios.get(`${baseURL}${constants.routes.auth.checkStatus}`);
+        const { isLoggedIn, login_url } = response.data;
+        
+        return {
+            isLoggedIn,
+            login_url: !isLoggedIn ? login_url : undefined
+        };
+    } catch (error) {
+        console.error('Error checking auth status:', error);
+        return { serviceUnavailable: true };
+    }
 };
 
 export const handleLogout = async () => {
-    let state = {};
-    await axios.get(`http://localhost:3000${constants.routes.auth.check_status}`)
-        .then(res => {
-            let isLoggedIn = res.data.isLoggedIn;
-            let login_url;
-            if (res.data.isLoggedIn === false) { login_url = res.data.login_url; }
-            sessionStorage.setItem('isLoggedIn', isLoggedIn)
-            state = { isLoggedIn, login_url };
-        })
-        .catch(err => console.log(err));
-    return state
+    try {
+        const response = await axios.get(`${baseURL}${constants.routes.auth.checkStatus}`);
+        const { isLoggedIn, login_url } = response.data;
+        
+        sessionStorage.setItem('isLoggedIn', isLoggedIn);
+        sessionStorage.removeItem('allowOfflineAccess');
+        
+        return {
+            isLoggedIn,
+            login_url: !isLoggedIn ? login_url : undefined,
+            allowOfflineAccess: false
+        };
+    } catch (error) {
+        console.error('Error during logout:', error);
+        throw error;
+    }
 };
 
 export const setLoginInfo = async () => {
-    const url = `http://localhost:3098`
-    await axios.get(`http://localhost:3000/auth/set-login-info?url=${url}`)
-        .then(res => console.log(res.data))
-        .catch(err => console.log(err));
+    try {
+        const response = await axios.get(`${baseURL}/auth/set-login-info?url=${clientURL}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error setting login info:', error);
+        throw error;
+    }
 };

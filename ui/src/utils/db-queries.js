@@ -1,32 +1,39 @@
 import axios from "axios";
+import constants from "../constants";
 
-export const getMWInstruments = async mwName => {
-  let response;
-  await axios.get(`http://localhost:3000/db/get-mw-data?mwName=${mwName}`)
-    .then(res => {
-      let data = res.data;
-      response = data;
-    })
-    .catch(err => console.log(err));
-  return response;
+const { baseURL } = constants.config;
+
+export const getMWInstruments = async (mwName) => {
+  try {
+    const response = await axios.get(`${baseURL}${constants.routes.db.getMWData}?mwName=${mwName}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching MW instruments:', error);
+    throw error;
+  }
 };
 
 export const getListOfMW = async () => {
-  let listOfMW = [];
-  await axios.get("http://localhost:3000/db/get-list-of-mw")
-    .then(async res => {
-      for (let i in res.data) {
-        let appInfo = res.data[i].appInfo;
-        for (let j in appInfo) {
-          if (appInfo[j].name === "zdashboard" || appInfo[j].name === "flip-safe") {
+  try {
+    const response = await axios.get(`${baseURL}${constants.routes.db.getListOfMW}`);
+    const listOfMW = [];
+    
+    response.data.forEach((item) => {
+      if (item.appInfo) {
+        item.appInfo.forEach((app) => {
+          if (app.name === "zdashboard" || app.name === "flip-safe") {
             listOfMW.push({
-              name: res.data[i].name,
-              status: appInfo[j].status
+              name: item.name,
+              status: app.status
             });
           }
-        }
+        });
       }
-    })
-    .catch(err => console.log(err));
-  return listOfMW;
+    });
+    
+    return listOfMW;
+  } catch (error) {
+    console.error('Error fetching list of MW:', error);
+    throw error;
+  }
 };
