@@ -1,7 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import axios from 'axios';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { API_ROUTES } from './constants';
 
 interface AuthContextType {
@@ -33,7 +33,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [allowOfflineAccess, setAllowOfflineAccess] = useState(false);
+  const [allowOfflineAccess, setAllowOfflineAccess] = useState(true); // Default to offline access
   const [loginUrl, setLoginUrl] = useState<string | null>(null);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [checkedLoginStatus, setCheckedLoginStatus] = useState(false);
@@ -42,10 +42,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     // Initialize state from sessionStorage
     const storedLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
-    const storedOfflineAccess = sessionStorage.getItem('allowOfflineAccess') === 'true';
-    
+    const storedOfflineAccess = sessionStorage.getItem('allowOfflineAccess');
+
     setIsLoggedIn(storedLoggedIn);
-    setAllowOfflineAccess(storedOfflineAccess);
+    // Default to offline access if not explicitly set
+    setAllowOfflineAccess(storedOfflineAccess !== 'false');
 
     checkAuthStatus();
 
@@ -94,6 +95,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const runOfflineMode = () => {
     sessionStorage.setItem('allowOfflineAccess', 'true');
     setAllowOfflineAccess(true);
+    setCheckedLoginStatus(true);
   };
 
   const login = () => {
@@ -115,9 +117,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuthStatus,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

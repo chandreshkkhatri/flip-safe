@@ -1,6 +1,6 @@
-const Bottleneck = require("bottleneck/es5");
+const Bottleneck = require('bottleneck/es5');
 const limiter = new Bottleneck({
-    minTime: 333
+  minTime: 333,
 });
 
-module.exports = limiter 
+module.exports = limiter;

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 
 const LoginCard: React.FC<{
@@ -12,55 +12,51 @@ const LoginCard: React.FC<{
   apisecret: string;
   onApiKeyChange: (value: string) => void;
   onApiSecretChange: (value: string) => void;
-}> = ({ 
-  visibility, 
-  onLogin, 
-  onRunOfflineMode, 
-  apikey, 
-  apisecret, 
-  onApiKeyChange, 
-  onApiSecretChange 
+}> = ({
+  visibility,
+  onLogin,
+  onRunOfflineMode,
+  apikey,
+  apisecret,
+  onApiKeyChange,
+  onApiSecretChange,
 }) => (
   <div className="login-card">
     <div style={{ visibility }} className="progress row">
       <div className="indeterminate" />
     </div>
-    
-    <h2 className="row" style={{ padding: "50px 0 20px 0" }}>
+
+    <h2 className="row" style={{ padding: '50px 0 20px 0' }}>
       Welcome to Flip Safe Trading Platform
     </h2>
-    
+
     <div className="row">
       <form className="col s8 offset-s2">
-        <input 
-          className="validate form-input" 
-          placeholder="API Key" 
-          type="text" 
-          name="apikey" 
+        <input
+          className="validate form-input"
+          placeholder="API Key"
+          type="text"
+          name="apikey"
           value={apikey}
-          onChange={(e) => onApiKeyChange(e.target.value)}
+          onChange={e => onApiKeyChange(e.target.value)}
         />
-        <input 
-          className="validate form-input" 
-          placeholder="API Secret" 
-          type="password" 
-          name="apisecret" 
+        <input
+          className="validate form-input"
+          placeholder="API Secret"
+          type="password"
+          name="apisecret"
           value={apisecret}
-          onChange={(e) => onApiSecretChange(e.target.value)}
+          onChange={e => onApiSecretChange(e.target.value)}
         />
         <br />
         <br />
-        <button 
-          type="button" 
-          onClick={onLogin} 
-          className="waves-effect waves-light btn"
-        >
+        <button type="button" onClick={onLogin} className="waves-effect waves-light btn">
           Login with Kite
         </button>
         <p>or</p>
-        <button 
-          type="button" 
-          className="waves-effect grey lighten-2 black-text waves-light btn-small" 
+        <button
+          type="button"
+          className="waves-effect grey lighten-2 black-text waves-light btn-small"
           onClick={onRunOfflineMode}
         >
           Offline mode
@@ -111,14 +107,14 @@ function LoginPageContent() {
     try {
       setVisibility('visible');
       setError(null);
-      
+
       // Set login info and redirect to Kite
       await fetch('/api/auth/set-login-info', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: window.location.origin }),
       });
-      
+
       if (loginUrl) {
         window.location.href = loginUrl;
       } else {
@@ -151,7 +147,7 @@ function LoginPageContent() {
           <p>{error}</p>
         </div>
       )}
-      
+
       <LoginCard
         visibility={visibility}
         onLogin={handleLogin}
@@ -172,4 +168,3 @@ export default function LoginPage() {
     </Suspense>
   );
 }
-

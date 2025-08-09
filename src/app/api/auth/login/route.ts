@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import kiteConnectService from '@/lib/kiteconnect';
-import { storeSession, clearSession } from '@/models/session';
+import { clearSession, storeSession } from '@/models/session';
 
 let client_url = process.env.NEXT_PUBLIC_CLIENT_URL || 'http://localhost:3000';
 
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     if (status === 'success' && request_token) {
       console.log('Login response received successfully', request_token);
-      
+
       try {
         const response = await kiteConnectService.generateSession(request_token);
         console.log('Session generated:', response);
@@ -53,9 +53,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'URL not provided' }, { status: 400 });
   } catch (error) {
     console.error('Error setting client URL:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

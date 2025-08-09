@@ -19,17 +19,17 @@ const kiteConnectSessionSchema = new mongoose.Schema<IKiteConnectSession>(
   }
 );
 
-const KiteConnectSession = 
-  mongoose.models.KiteConnectSession || 
+const KiteConnectSession =
+  mongoose.models.KiteConnectSession ||
   mongoose.model<IKiteConnectSession>('KiteConnectSession', kiteConnectSessionSchema);
 
 export const storeSession = async (access_token: string): Promise<void> => {
   try {
     await connectDB();
-    
+
     // Clear existing sessions
     await KiteConnectSession.deleteMany({});
-    
+
     // Store new session
     const kiteConnectSession = new KiteConnectSession({ access_token });
     await kiteConnectSession.save();
@@ -45,9 +45,9 @@ export const retrieveSession = async (): Promise<{
 }> => {
   try {
     await connectDB();
-    
+
     const doc = await KiteConnectSession.findOne().sort({ createdAt: -1 });
-    
+
     if (doc) {
       return { status: 'success', session: doc };
     } else {

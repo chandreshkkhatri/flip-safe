@@ -15,9 +15,10 @@ const nextConfig = {
     ];
   },
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NODE_ENV === 'production' 
-      ? 'https://your-production-domain.com' 
-      : 'http://localhost:3000',
+    NEXT_PUBLIC_API_URL:
+      process.env.NODE_ENV === 'production'
+        ? 'https://your-production-domain.com'
+        : 'http://localhost:3000',
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {

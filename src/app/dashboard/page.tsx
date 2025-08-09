@@ -1,18 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import PageLayout from '@/components/layout/PageLayout';
+import EnhancedCard from '@/components/enhanced-card';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { useAuth } from '@/lib/auth-context';
 
-interface DashboardProps {}
 
 export default function DashboardPage() {
   const [nightMode, setNightMode] = useState(false);
   const [loading, setLoading] = useState(true);
-  
-  const router = useRouter();
-  const { isLoggedIn, allowOfflineAccess, logout, checkedLoginStatus } = useAuth();
+
+  const { isLoggedIn, allowOfflineAccess, checkedLoginStatus, runOfflineMode } = useAuth();
 
   useEffect(() => {
     // Load night mode preference
@@ -22,11 +22,12 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    // Redirect to login if not authenticated
+    // Allow offline access by default for the dashboard
     if (checkedLoginStatus && !isLoggedIn && !allowOfflineAccess) {
-      router.push('/login');
+      // Auto-enable offline mode instead of redirecting to login
+      runOfflineMode();
     }
-  }, [isLoggedIn, allowOfflineAccess, checkedLoginStatus, router]);
+  }, [isLoggedIn, allowOfflineAccess, checkedLoginStatus, runOfflineMode]);
 
   const toggleNightMode = () => {
     const newNightMode = !nightMode;
@@ -34,183 +35,183 @@ export default function DashboardPage() {
     localStorage.setItem('nightMode', String(newNightMode));
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      router.push('/login');
-    } catch (error) {
-      console.error('Error during logout:', error);
-    }
-  };
-
   if (!checkedLoginStatus || loading) {
-    return (
-      <div className="loading">
-        <p>Loading dashboard...</p>
-      </div>
-    );
+    return <LoadingSpinner message="Loading dashboard..." />;
   }
 
-  if (!isLoggedIn && !allowOfflineAccess) {
-    return (
-      <div className="loading">
-        <p>Redirecting to login...</p>
-      </div>
-    );
-  }
 
   return (
-    <div className={`dashboard ${nightMode ? 'night-mode' : ''}`}>
-      {/* Navigation Bar */}
-      <nav className="navbar-fixed">
-        <nav className={nightMode ? 'grey darken-4' : 'blue'}>
-          <div className="nav-wrapper container">
-            <Link href="/dashboard" className="brand-logo">
-              Flip Safe
-            </Link>
-            
-            <ul className="right">
-              <li>
-                <button 
-                  onClick={toggleNightMode}
-                  className="btn-flat white-text"
-                  title={nightMode ? 'Light Mode' : 'Dark Mode'}
-                >
-                  {nightMode ? '☀️' : '🌙'}
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={handleLogout}
-                  className="btn-flat white-text"
-                >
-                  Logout
-                </button>
-              </li>
-            </ul>
-          </div>
-        </nav>
-      </nav>
+    <>
+      <PageLayout
+        title="Flip Safe"
+        showNightModeToggle={true}
+        onToggleNightMode={toggleNightMode}
+        nightMode={nightMode}
+      >
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">Trading Dashboard</h1>
+        <p className="dashboard-subtitle">Welcome to Flip Safe - Your Unified Trading Platform</p>
+      </div>
 
-      {/* Main Content */}
-      <main className="container" style={{ marginTop: '80px' }}>
-        <div className="row">
-          <div className="col s12">
-            <h4>Trading Dashboard</h4>
-            <p>Welcome to Flip Safe - Your Unified Trading Platform</p>
+      {/* Feature Cards */}
+      <div className="feature-grid">
+        <EnhancedCard
+          title="Market Watch"
+          description="Monitor your favorite instruments in real-time"
+          hoverable={true}
+          nightMode={nightMode}
+          action={<Link href="/terminal" className="btn blue waves-effect">View Terminal</Link>}
+        />
+
+        <EnhancedCard
+          title="Orders"
+          description="View and manage your trading orders"
+          hoverable={true}
+          nightMode={nightMode}
+          action={<Link href="/orders" className="btn blue waves-effect">View Orders</Link>}
+        />
+
+        <EnhancedCard
+          title="Positions"
+          description="Track your current trading positions"
+          hoverable={true}
+          nightMode={nightMode}
+          action={<Link href="/positions" className="btn blue waves-effect">View Positions</Link>}
+        />
+
+        <EnhancedCard
+          title="Holdings"
+          description="Manage your investment portfolio"
+          hoverable={true}
+          nightMode={nightMode}
+          action={<Link href="/holdings" className="btn blue waves-effect">View Holdings</Link>}
+        />
+
+        <EnhancedCard
+          title="Alerts"
+          description="Set up price alerts and notifications"
+          hoverable={true}
+          nightMode={nightMode}
+          action={<Link href="/alerts" className="btn blue waves-effect">Manage Alerts</Link>}
+        />
+
+        <EnhancedCard
+          title="Simulator"
+          description="Practice trading with historical data"
+          hoverable={true}
+          nightMode={nightMode}
+          action={<Link href="/simulator" className="btn blue waves-effect">Open Simulator</Link>}
+        />
+
+        <EnhancedCard
+          title="Account Management"
+          description="Connect and manage multiple trading accounts"
+          hoverable={true}
+          nightMode={nightMode}
+          action={<Link href="/accounts" className="btn blue waves-effect">Manage Accounts</Link>}
+        />
+      </div>
+
+      {/* Status Information */}
+      <EnhancedCard 
+        title="Connection Status" 
+        nightMode={nightMode}
+      >
+        <div className="status-info">
+          <div className="status-item">
+            <strong>Mode:</strong>{' '}
+            <span className={`status-badge ${isLoggedIn ? 'live' : 'offline'}`}>
+              {isLoggedIn ? 'Live Trading' : 'Offline Mode'}
+            </span>
           </div>
+          {!isLoggedIn && allowOfflineAccess && (
+            <div className="status-warning">
+              ⚠️ You are in offline mode. Some features may be limited.
+            </div>
+          )}
         </div>
+      </EnhancedCard>
 
-        {/* Feature Cards */}
-        <div className="row">
-          <div className="col s12 m6 l4">
-            <div className="card">
-              <div className="card-content">
-                <span className="card-title">Market Watch</span>
-                <p>Monitor your favorite instruments in real-time</p>
-              </div>
-              <div className="card-action">
-                <Link href="/terminal">View Terminal</Link>
-              </div>
-            </div>
-          </div>
+      </PageLayout>
 
-          <div className="col s12 m6 l4">
-            <div className="card">
-              <div className="card-content">
-                <span className="card-title">Orders</span>
-                <p>View and manage your trading orders</p>
-              </div>
-              <div className="card-action">
-                <Link href="/orders">View Orders</Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="col s12 m6 l4">
-            <div className="card">
-              <div className="card-content">
-                <span className="card-title">Positions</span>
-                <p>Track your current trading positions</p>
-              </div>
-              <div className="card-action">
-                <Link href="/positions">View Positions</Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="col s12 m6 l4">
-            <div className="card">
-              <div className="card-content">
-                <span className="card-title">Holdings</span>
-                <p>Manage your investment portfolio</p>
-              </div>
-              <div className="card-action">
-                <Link href="/holdings">View Holdings</Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="col s12 m6 l4">
-            <div className="card">
-              <div className="card-content">
-                <span className="card-title">Alerts</span>
-                <p>Set up price alerts and notifications</p>
-              </div>
-              <div className="card-action">
-                <Link href="/alerts">Manage Alerts</Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="col s12 m6 l4">
-            <div className="card">
-              <div className="card-content">
-                <span className="card-title">Simulator</span>
-                <p>Practice trading with historical data</p>
-              </div>
-              <div className="card-action">
-                <Link href="/simulator">Open Simulator</Link>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Status Information */}
-        <div className="row">
-          <div className="col s12">
-            <div className={`card ${nightMode ? 'grey darken-3' : ''}`}>
-              <div className="card-content">
-                <span className="card-title">Connection Status</span>
-                <p>
-                  <strong>Mode:</strong> {isLoggedIn ? 'Live Trading' : 'Offline Mode'}
-                </p>
-                {!isLoggedIn && allowOfflineAccess && (
-                  <p className="orange-text">
-                    You are in offline mode. Some features may be limited.
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-
-      <style jsx>{`
-        .dashboard.night-mode {
-          background-color: #121212;
-          color: #ffffff;
-          min-height: 100vh;
+    <style jsx>{`
+      .dashboard-header {
+        text-align: center;
+        margin-bottom: 48px;
+      }
+      
+      .dashboard-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, #2196f3, #1976d2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .dashboard-subtitle {
+        font-size: 1.1rem;
+        color: #666;
+        margin: 0;
+      }
+      
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+      
+      .status-info {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      .status-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .status-badge {
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 0.85rem;
+        font-weight: 500;
+      }
+      
+      .status-badge.live {
+        background-color: #4caf50;
+        color: white;
+      }
+      
+      .status-badge.offline {
+        background-color: #ff9800;
+        color: white;
+      }
+      
+      .status-warning {
+        padding: 12px;
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 6px;
+        color: #856404;
+      }
+      
+      @media only screen and (max-width: 768px) {
+        .dashboard-title {
+          font-size: 2rem;
         }
-        .dashboard.night-mode .card {
-          background-color: #1e1e1e;
-          color: #ffffff;
+        
+        .feature-grid {
+          grid-template-columns: 1fr;
+          gap: 16px;
         }
-        .dashboard.night-mode .card-title {
-          color: #ffffff;
-        }
-      `}</style>
-    </div>
+        
+      }
+    `}</style>
+    </>
   );
 }
-

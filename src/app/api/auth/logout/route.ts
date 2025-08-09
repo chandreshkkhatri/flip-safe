@@ -11,23 +11,20 @@ export async function GET(request: NextRequest) {
 
     // Clear local session
     kiteConnectService.reset();
-    
+
     // Clear session from database
     await clearSession();
 
     const login_url = `https://kite.trade/connect/login?v=3&api_key=${API_KEY}`;
-    
-    return NextResponse.json({ 
-      isLoggedIn: false, 
-      message: 'Successfully Logged Out', 
-      login_url 
+
+    return NextResponse.json({
+      isLoggedIn: false,
+      message: 'Successfully Logged Out',
+      login_url,
     });
   } catch (error) {
     console.error('Error during logout:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 

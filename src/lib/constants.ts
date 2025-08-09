@@ -3,39 +3,66 @@ const API_ROUTES = {
     checkStatus: '/api/auth/check-status',
     logout: '/api/auth/logout',
     login: '/api/auth/login',
-    setLoginInfo: '/api/auth/set-login-info'
+    setLoginInfo: '/api/auth/set-login-info',
   },
   kc: {
-    getQuotes: '/api/kc/get-quotes',
-    getHistoricalData: '/api/kc/get-historical-data',
-    requestSimulationData: '/api/kc/request-simulation-data',
-    flushSimulationData: '/api/kc/flush-simulation-data'
+    getQuotes: '/api/kc/quotes',
+    getProfile: '/api/kc/profile',
+    getMargins: '/api/kc/margins',
+    getOHLC: '/api/kc/ohlc',
+    getLTP: '/api/kc/ltp',
+    getPositions: '/api/kc/positions',
+    getHoldings: '/api/kc/holdings',
+    getOrders: '/api/kc/orders',
+    getTrades: '/api/kc/trades',
+    getHistoricalData: '/api/kc/historical-data',
+    requestSimulationData: '/api/kc/simulation-data',
+    flushSimulationData: '/api/kc/flush-simulation-data',
   },
   db: {
     getMWData: '/api/db/get-mw-data',
-    getListOfMW: '/api/db/get-list-of-mw'
+    getListOfMW: '/api/db/get-list-of-mw',
   },
   orders: {
     placeOrder: '/api/orders/place',
-    getOrders: '/api/orders',
-    getPositions: '/api/orders/positions',
-    getHoldings: '/api/orders/holdings'
+    modifyOrder: '/api/orders/modify',
+    cancelOrder: '/api/orders/cancel',
   },
   alerts: {
     getAlerts: '/api/alerts',
     createAlert: '/api/alerts/create',
-    deleteAlert: '/api/alerts/delete'
+    deleteAlert: '/api/alerts/delete',
   },
   ticker: {
     subscribe: '/api/ticker/subscribe',
-    unsubscribe: '/api/ticker/unsubscribe'
-  }
+    unsubscribe: '/api/ticker/unsubscribe',
+  },
+  // New unified trading API routes
+  trading: {
+    getOrders: '/api/trading/orders',
+    getPositions: '/api/trading/positions',
+    getHoldings: '/api/trading/holdings',
+  },
+  // Account management routes
+  accounts: {
+    list: '/api/accounts',
+    getAccounts: '/api/accounts',
+    create: '/api/accounts',
+    get: (id: string) => `/api/accounts/${id}`,
+    update: (id: string) => `/api/accounts/${id}`,
+    delete: (id: string) => `/api/accounts/${id}`,
+  },
+  // Upstox authentication routes
+  upstox: {
+    login: '/api/auth/upstox/login',
+    callback: '/api/auth/upstox/callback',
+  },
 } as const;
 
 const API_CONFIG = {
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
   clientURL: process.env.NEXT_PUBLIC_CLIENT_URL || 'http://localhost:3000',
-  wsURL: process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3000'
+  wsURL: process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3000',
 } as const;
 
 const PAGE_ROUTES = {
@@ -47,13 +74,14 @@ const PAGE_ROUTES = {
   POSITIONS: '/positions',
   HOLDINGS: '/holdings',
   ALERTS: '/alerts',
-  SIMULATOR: '/simulator'
+  SIMULATOR: '/simulator',
+  ACCOUNTS: '/accounts',
 } as const;
 
 export default {
   routes: API_ROUTES,
   config: API_CONFIG,
-  pages: PAGE_ROUTES
+  pages: PAGE_ROUTES,
 };
 
-export { API_ROUTES, API_CONFIG, PAGE_ROUTES };
+export { API_CONFIG, API_ROUTES, PAGE_ROUTES };
