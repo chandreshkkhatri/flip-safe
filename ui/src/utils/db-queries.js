@@ -18,7 +18,7 @@ export const getListOfMW = async () => {
       for (let i in res.data) {
         let appInfo = res.data[i].appInfo;
         for (let j in appInfo) {
-          if (appInfo[j].name === "zdashboard" || appInfo[j].name === "flip-secure") {
+          if (appInfo[j].name === "zdashboard" || appInfo[j].name === "flip-safe") {
             listOfMW.push({
               name: res.data[i].name,
               status: appInfo[j].status

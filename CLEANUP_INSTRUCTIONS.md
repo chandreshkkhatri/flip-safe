@@ -12,7 +12,7 @@ Please manually delete these legacy directories that are no longer needed:
 After removing the legacy directories, your project structure should be:
 
 ```
-flip-secure/
+flip-safe/
 ├── action-ui/                    # 🎯 UNIFIED APPLICATION
 │   ├── src/
 │   │   ├── Components/
