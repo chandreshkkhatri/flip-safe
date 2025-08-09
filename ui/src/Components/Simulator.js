@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import M from "materialize-css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faRandom, faChartBar, faAngleDoubleDown, faBroom, faAngleRight, faSync } from "@fortawesome/free-solid-svg-icons";
+import { faChartBar, faAngleDoubleDown, faBroom, faAngleRight } from "@fortawesome/free-solid-svg-icons";
 import { TypeChooser } from "react-stockcharts/lib/helper";
 import Hotkeys from "react-hot-keys";
 

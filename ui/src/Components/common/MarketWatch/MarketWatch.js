@@ -101,14 +101,7 @@ class MarketWatch extends Component {
     let { marketData, connected, nightMode, listOfMW, mwInfo } = this.props;
     let { activeIndex, fieldsToDisplay, } = this.state;
     const panes = [];
-    let backgroundColor, textColor
-    if (nightMode) {
-      backgroundColor = "grey"
-      textColor = "cyan-text"
-    } else {
-      backgroundColor = null
-      textColor = "cyan-text"
-    }
+    let textColor = "cyan-text";
 
     if (listOfMW.length === 0) {
       let tabsMsg;

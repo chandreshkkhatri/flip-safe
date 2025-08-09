@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { BrowserRouter as Router, Route, Switch, Redirect } from "react-router-dom";
+import PropTypes from 'prop-types';
 import Login from "./Components/Login";
 import Dashboard from "./Components/Dashboard";
 import * as authHelper from './helpers/api/auth';
@@ -7,19 +8,28 @@ import "./App.css";
 import "materialize-css/dist/css/materialize.min.css";
 import "semantic-ui-css/semantic.min.css";
 
-const ServiceUnavailable = () => {
-  return <div>Service Unavailable</div>
-}
+const ServiceUnavailable = () => (
+  <div className="service-unavailable">
+    <h2>Service Unavailable</h2>
+    <p>Please try again later.</p>
+  </div>
+);
 
-const PrivateRoute = ({ auth, handleLogout, component: Component, ...rest }) => {
-  return (
-    <div>
-      <Route {...rest} render={
-        props => auth
-          ? (<Component {...props} handleLogout={handleLogout} />)
-          : (<Redirect to="/login" />)} />
-    </div>
-  );
+const PrivateRoute = ({ auth, handleLogout, component: Component, ...rest }) => (
+  <Route 
+    {...rest} 
+    render={props => 
+      auth 
+        ? <Component {...props} handleLogout={handleLogout} />
+        : <Redirect to="/login" />
+    } 
+  />
+);
+
+PrivateRoute.propTypes = {
+  auth: PropTypes.bool.isRequired,
+  handleLogout: PropTypes.func.isRequired,
+  component: PropTypes.func.isRequired
 };
 
 class App extends Component {
@@ -38,16 +48,27 @@ class App extends Component {
 
   componentDidMount() {
     this.handleAuthStatus();
-    setInterval(this.handleAuthStatus, 20000);
+    this.authInterval = setInterval(this.handleAuthStatus, 20000);
+  }
+
+  componentWillUnmount() {
+    if (this.authInterval) {
+      clearInterval(this.authInterval);
+    }
   }
 
   handleAuthStatus = async () => {
-    const state = await authHelper.checkAuthStatus()
-    this.setState(state)
+    try {
+      const state = await authHelper.checkAuthStatus();
+      this.setState(state);
 
-    if (state.isLoggedIn !== this.state.isLoggedIn || !this.state.checkedLoginStatus) {
-      sessionStorage.setItem('isLoggedIn', state.isLoggedIn)
-      this.setState({ checkedLoginStatus: true });
+      if (state.isLoggedIn !== this.state.isLoggedIn || !this.state.checkedLoginStatus) {
+        sessionStorage.setItem('isLoggedIn', state.isLoggedIn);
+        this.setState({ checkedLoginStatus: true });
+      }
+    } catch (error) {
+      console.error('Error checking auth status:', error);
+      this.setState({ serviceUnavailable: true });
     }
   }
 
@@ -56,40 +77,50 @@ class App extends Component {
     this.setState({ allowOfflineAccess: true });
   };
 
+  handleLogout = async () => {
+    try {
+      const state = await authHelper.handleLogout();
+      this.setState(state);
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+  }
+
   render() {
-    let { isLoggedIn, login_url, allowOfflineAccess, serviceUnavailable, checkedLoginStatus } = this.state;
-    let auth = isLoggedIn || allowOfflineAccess;
+    const { isLoggedIn, login_url, allowOfflineAccess, serviceUnavailable, checkedLoginStatus } = this.state;
+    const auth = isLoggedIn || allowOfflineAccess;
+
+    if (serviceUnavailable) {
+      return <ServiceUnavailable />;
+    }
+
+    if (!checkedLoginStatus) {
+      return <div className="loading">Loading...</div>;
+    }
 
     return (
-      <div>
-        <Router>
-          {serviceUnavailable
-            ? <ServiceUnavailable />
-            : <div>{checkedLoginStatus
-              ? <Switch>
-                <PrivateRoute auth={auth}
-                  path="/dashboard"
-                  component={Dashboard}
-                  handleLogout={async () => {
-                    this.setState(await authHelper.handleLogout())
-                  }} />
-                <Route path="/login" render={
-                  () => (
-                    <Login
-                      checkedLoginStatus={this.state.checkedLoginStatus}
-                      runOfflineMode={this.runOfflineMode}
-                      loginurl={login_url}
-                      isLoggedIn={isLoggedIn} />)
-                } />
-                <Route render={() => {
-                  return <Redirect to='/dashboard' />
-                }} />
-              </Switch>
-              : <></>}
-            </div>
-          }
-        </Router>
-      </div>
+      <Router>
+        <Switch>
+          <PrivateRoute 
+            auth={auth}
+            path="/dashboard"
+            component={Dashboard}
+            handleLogout={this.handleLogout}
+          />
+          <Route 
+            path="/login" 
+            render={() => (
+              <Login
+                checkedLoginStatus={checkedLoginStatus}
+                runOfflineMode={this.runOfflineMode}
+                loginurl={login_url}
+                isLoggedIn={isLoggedIn} 
+              />
+            )} 
+          />
+          <Route render={() => <Redirect to="/dashboard" />} />
+        </Switch>
+      </Router>
     );
   }
 }
