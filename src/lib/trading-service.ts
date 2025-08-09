@@ -1,5 +1,6 @@
 import { IAccount } from '@/models/account';
 import { createUpstoxClient, UpstoxAPI } from './upstox';
+import { createBinanceClient, BinanceAPI } from './binance';
 // Note: Import KiteConnect based on your existing implementation
 // import KiteConnect from './kiteconnect';
 
@@ -56,6 +57,7 @@ export interface UnifiedHolding {
 export class TradingService {
   private kiteClients: Map<string, any> = new Map();
   private upstoxClients: Map<string, UpstoxAPI> = new Map();
+  private binanceClients: Map<string, BinanceAPI> = new Map();
 
   // Initialize client for account
   private async initializeClient(account: IAccount): Promise<void> {
@@ -80,6 +82,17 @@ export class TradingService {
               upstoxClient.setAccessToken(account.accessToken);
             }
             this.upstoxClients.set(account._id!, upstoxClient);
+          }
+          break;
+
+        case 'binance':
+          if (!this.binanceClients.has(account._id!)) {
+            const binanceClient = createBinanceClient({
+              apiKey: account.apiKey,
+              apiSecret: account.apiSecret,
+              testnet: account.metadata?.testnet || false,
+            });
+            this.binanceClients.set(account._id!, binanceClient);
           }
           break;
 
@@ -117,6 +130,8 @@ export class TradingService {
         return this.getKiteOrders(account);
       case 'upstox':
         return this.getUpstoxOrders(account);
+      case 'binance':
+        return this.getBinanceOrders(account);
       default:
         throw new Error(`Unsupported account type: ${account.accountType}`);
     }
@@ -162,6 +177,35 @@ export class TradingService {
     }
   }
 
+  private async getBinanceOrders(account: IAccount): Promise<UnifiedOrder[]> {
+    try {
+      const client = this.binanceClients.get(account._id!);
+      if (!client) throw new Error('Binance client not initialized');
+
+      const orders = await client.getOpenOrders();
+      return orders.map((order): UnifiedOrder => ({
+        id: `${account._id}_${order.orderId}`,
+        accountId: account._id!,
+        accountType: 'binance',
+        symbol: order.symbol,
+        exchange: 'BINANCE-F',
+        quantity: parseFloat(order.origQty),
+        price: parseFloat(order.price) || undefined,
+        averagePrice: parseFloat(order.avgPrice) || undefined,
+        orderType: order.type,
+        transactionType: order.side,
+        status: order.status,
+        product: order.positionSide,
+        validity: order.timeInForce,
+        timestamp: new Date(order.time).toISOString(),
+        rawData: order,
+      }));
+    } catch (error) {
+      console.error('Error fetching Binance orders:', error);
+      return [];
+    }
+  }
+
   // Fetch positions from all accounts
   async getAllPositions(accounts: IAccount[]): Promise<UnifiedPosition[]> {
     const allPositions: UnifiedPosition[] = [];
@@ -185,6 +229,8 @@ export class TradingService {
         return this.getKitePositions(account);
       case 'upstox':
         return this.getUpstoxPositions(account);
+      case 'binance':
+        return this.getBinancePositions(account);
       default:
         throw new Error(`Unsupported account type: ${account.accountType}`);
     }
@@ -227,6 +273,41 @@ export class TradingService {
     }
   }
 
+  private async getBinancePositions(account: IAccount): Promise<UnifiedPosition[]> {
+    try {
+      const client = this.binanceClients.get(account._id!);
+      if (!client) throw new Error('Binance client not initialized');
+
+      const positions = await client.getPositions();
+      return positions.map((position): UnifiedPosition => {
+        const quantity = parseFloat(position.positionAmt);
+        const entryPrice = parseFloat(position.entryPrice);
+        const markPrice = parseFloat(position.markPrice);
+        const pnl = parseFloat(position.unRealizedProfit);
+        const notional = Math.abs(quantity * markPrice);
+        const pnlPercentage = notional > 0 ? (pnl / notional) * 100 : 0;
+
+        return {
+          id: `${account._id}_${position.symbol}_${position.positionSide}`,
+          accountId: account._id!,
+          accountType: 'binance',
+          symbol: position.symbol,
+          exchange: 'BINANCE-F',
+          quantity: quantity,
+          averagePrice: entryPrice,
+          lastPrice: markPrice,
+          pnl: pnl,
+          pnlPercentage: pnlPercentage,
+          product: position.positionSide,
+          rawData: position,
+        };
+      });
+    } catch (error) {
+      console.error('Error fetching Binance positions:', error);
+      return [];
+    }
+  }
+
   // Fetch holdings from all accounts
   async getAllHoldings(accounts: IAccount[]): Promise<UnifiedHolding[]> {
     const allHoldings: UnifiedHolding[] = [];
@@ -250,6 +331,9 @@ export class TradingService {
         return this.getKiteHoldings(account);
       case 'upstox':
         return this.getUpstoxHoldings(account);
+      case 'binance':
+        // Binance futures doesn't have holdings (only positions)
+        return [];
       default:
         throw new Error(`Unsupported account type: ${account.accountType}`);
     }

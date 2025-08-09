@@ -30,10 +30,6 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleBrokerSelect = (brokerType: 'kite' | 'upstox' | 'binance') => {
-    if (brokerType === 'binance') {
-      alert('Binance integration coming soon!');
-      return;
-    }
     setSelectedBroker(brokerType);
     setFormData(prev => ({ ...prev, accountType: brokerType }));
     setStep(2);
@@ -126,17 +122,17 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
     },
     { 
       id: 'binance', 
-      name: 'Binance', 
-      description: 'World\'s leading crypto exchange',
+      name: 'Binance Futures', 
+      description: 'USD-M perpetual futures trading',
       icon: '🟡',
-      available: false,
-      features: ['Spot Trading', 'Futures', 'Options', 'P2P']
+      available: true,
+      features: ['USDT Futures', 'Leverage Trading', 'Cross/Isolated Margin', 'API Trading']
     }
   ];
 
   const getModalTitle = () => {
     if (step === 1) return 'Choose Trading Platform';
-    return `Add ${selectedBroker === 'kite' ? 'Zerodha Kite' : selectedBroker === 'upstox' ? 'Upstox' : 'Trading'} Account`;
+    return `Add ${selectedBroker === 'kite' ? 'Zerodha Kite' : selectedBroker === 'upstox' ? 'Upstox' : selectedBroker === 'binance' ? 'Binance Futures' : 'Trading'} Account`;
   };
 
   return (
@@ -205,7 +201,7 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
               type="text"
               value={formData.accountName}
               onChange={(e) => handleChange('accountName', e.target.value)}
-              placeholder={`e.g., My ${selectedBroker === 'kite' ? 'Kite' : 'Upstox'} Account`}
+              placeholder={`e.g., My ${selectedBroker === 'kite' ? 'Kite' : selectedBroker === 'upstox' ? 'Upstox' : 'Binance'} Account`}
               className={`form-input ${errors.accountName ? 'error' : ''}`}
             />
             {errors.accountName && <span className="error-text">{errors.accountName}</span>}
@@ -213,13 +209,13 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
 
           {/* API Key */}
           <div className="form-group">
-            <label htmlFor="apiKey">{selectedBroker === 'kite' ? 'Kite Connect' : 'Upstox'} API Key *</label>
+            <label htmlFor="apiKey">{selectedBroker === 'kite' ? 'Kite Connect' : selectedBroker === 'upstox' ? 'Upstox' : 'Binance'} API Key *</label>
             <input
               id="apiKey"
               type="text"
               value={formData.apiKey}
               onChange={(e) => handleChange('apiKey', e.target.value)}
-              placeholder={`Your ${selectedBroker === 'kite' ? 'Kite Connect' : 'Upstox'} API Key`}
+              placeholder={`Your ${selectedBroker === 'kite' ? 'Kite Connect' : selectedBroker === 'upstox' ? 'Upstox' : 'Binance'} API Key`}
               className={`form-input ${errors.apiKey ? 'error' : ''}`}
             />
             {errors.apiKey && <span className="error-text">{errors.apiKey}</span>}
@@ -227,17 +223,38 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
 
           {/* API Secret */}
           <div className="form-group">
-            <label htmlFor="apiSecret">{selectedBroker === 'kite' ? 'Kite Connect' : 'Upstox'} API Secret *</label>
+            <label htmlFor="apiSecret">{selectedBroker === 'kite' ? 'Kite Connect' : selectedBroker === 'upstox' ? 'Upstox' : 'Binance'} API Secret *</label>
             <input
               id="apiSecret"
               type="password"
               value={formData.apiSecret}
               onChange={(e) => handleChange('apiSecret', e.target.value)}
-              placeholder={`Your ${selectedBroker === 'kite' ? 'Kite Connect' : 'Upstox'} API Secret`}
+              placeholder={`Your ${selectedBroker === 'kite' ? 'Kite Connect' : selectedBroker === 'upstox' ? 'Upstox' : 'Binance'} API Secret`}
               className={`form-input ${errors.apiSecret ? 'error' : ''}`}
             />
             {errors.apiSecret && <span className="error-text">{errors.apiSecret}</span>}
           </div>
+
+          {/* Testnet Option (for Binance) */}
+          {selectedBroker === 'binance' && (
+            <div className="form-group">
+              <div className="checkbox-group">
+                <input
+                  id="testnet"
+                  type="checkbox"
+                  checked={formData.redirectUri === 'testnet'}
+                  onChange={(e) => handleChange('redirectUri', e.target.checked ? 'testnet' : '')}
+                  className="form-checkbox"
+                />
+                <label htmlFor="testnet" className="checkbox-label">
+                  Use Testnet (recommended for testing)
+                </label>
+              </div>
+              <small className="form-help">
+                Enable this for testing with Binance Testnet. Disable for live trading.
+              </small>
+            </div>
+          )}
 
           {/* Redirect URI (for OAuth) */}
           {selectedBroker === 'upstox' && (
@@ -259,7 +276,7 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
 
           {/* Instructions */}
           <div className="instructions">
-            <h4>Getting {selectedBroker === 'kite' ? 'Kite Connect' : 'Upstox'} API Credentials:</h4>
+            <h4>Getting {selectedBroker === 'kite' ? 'Kite Connect' : selectedBroker === 'upstox' ? 'Upstox' : 'Binance'} API Credentials:</h4>
             {selectedBroker === 'upstox' && (
               <div className="instruction-content">
                 <p>1. Visit <a href="https://upstox.com/developer/" target="_blank" rel="noopener noreferrer">Upstox Developer Console</a></p>
@@ -272,6 +289,14 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
                 <p>1. Visit <a href="https://kite.zerodha.com/apps" target="_blank" rel="noopener noreferrer">Kite Connect Apps</a></p>
                 <p>2. Create a new app and get your API credentials</p>
                 <p>3. Set redirect URI to your application's callback URL</p>
+              </div>
+            )}
+            {selectedBroker === 'binance' && (
+              <div className="instruction-content">
+                <p>1. Visit <a href="https://www.binance.com/en/my/settings/api-management" target="_blank" rel="noopener noreferrer">Binance API Management</a></p>
+                <p>2. Create a new API key with <strong>Futures</strong> permissions enabled</p>
+                <p>3. For Testnet: Use <a href="https://testnet.binancefuture.com/" target="_blank" rel="noopener noreferrer">Binance Testnet</a></p>
+                <p>4. <strong>Important:</strong> Enable "Enable Futures" permission for your API key</p>
               </div>
             )}
           </div>
@@ -291,7 +316,7 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
               className="btn-submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Adding Account...' : `Add ${selectedBroker === 'kite' ? 'Kite' : 'Upstox'} Account`}
+              {isSubmitting ? 'Adding Account...' : `Add ${selectedBroker === 'kite' ? 'Kite' : selectedBroker === 'upstox' ? 'Upstox' : 'Binance'} Account`}
             </button>
           </div>
         </form>
@@ -474,6 +499,24 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
           color: #666;
           font-size: 0.8rem;
           margin-top: 4px;
+        }
+
+        .checkbox-group {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .form-checkbox {
+          width: 16px;
+          height: 16px;
+          cursor: pointer;
+        }
+
+        .checkbox-label {
+          cursor: pointer;
+          font-weight: 500;
+          margin: 0;
         }
 
         .instructions {
