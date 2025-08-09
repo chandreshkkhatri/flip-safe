@@ -159,19 +159,19 @@ export default function OrdersPage() {
 
       <style jsx>{`
         .page-header {
-          margin-bottom: 32px;
+          margin-bottom: 16px;
           text-align: center;
         }
         
         .page-header h1 {
-          font-size: 2.5rem;
-          font-weight: 700;
-          margin-bottom: 8px;
+          font-size: 1.8rem;
+          font-weight: 600;
+          margin-bottom: 4px;
           color: #333;
         }
         
         .page-header p {
-          font-size: 1.1rem;
+          font-size: 0.9rem;
           color: #666;
           margin: 0;
         }
@@ -179,26 +179,29 @@ export default function OrdersPage() {
         .error-message {
           background: #fff3cd;
           border: 1px solid #ffeaa7;
-          border-radius: 6px;
-          padding: 16px;
-          margin-bottom: 24px;
+          border-radius: 4px;
+          padding: 10px;
+          margin-bottom: 12px;
           color: #856404;
+          font-size: 0.85rem;
         }
         
         .transaction-buy {
           color: #4caf50;
           font-weight: 600;
+          font-size: 0.8rem;
         }
         
         .transaction-sell {
           color: #f44336;
           font-weight: 600;
+          font-size: 0.8rem;
         }
         
         .status-badge {
-          padding: 6px 12px;
-          border-radius: 16px;
-          font-size: 0.8rem;
+          padding: 3px 8px;
+          border-radius: 10px;
+          font-size: 0.7rem;
           font-weight: 500;
           text-transform: uppercase;
         }
@@ -227,10 +230,10 @@ export default function OrdersPage() {
           background: #f44336;
           color: white;
           border: none;
-          padding: 8px 16px;
+          padding: 4px 8px;
           border-radius: 4px;
           cursor: pointer;
-          font-size: 0.85rem;
+          font-size: 0.7rem;
           transition: background 0.2s ease;
         }
         
@@ -241,20 +244,20 @@ export default function OrdersPage() {
         .symbol-info {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 2px;
         }
         
         .symbol-name {
           font-weight: 600;
-          font-size: 0.95rem;
+          font-size: 0.85rem;
         }
         
         .account-badge {
           background: #e3f2fd;
           color: #1976d2;
-          padding: 2px 6px;
-          border-radius: 8px;
-          font-size: 0.7rem;
+          padding: 1px 4px;
+          border-radius: 6px;
+          font-size: 0.65rem;
           font-weight: 600;
           text-align: center;
           width: fit-content;

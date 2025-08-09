@@ -37,6 +37,7 @@ export default function NavBar({
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard' },
+    { href: '/trading', label: 'Trading' },
     { href: '/orders', label: 'Orders' },
     { href: '/positions', label: 'Positions' },
     { href: '/holdings', label: 'Holdings' },

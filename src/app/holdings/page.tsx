@@ -193,28 +193,28 @@ export default function HoldingsPage() {
 
       <style jsx>{`
         .page-header {
-          margin-bottom: 32px;
+          margin-bottom: 16px;
           text-align: center;
         }
         
         .page-header h1 {
-          font-size: 2.5rem;
-          font-weight: 700;
-          margin-bottom: 8px;
+          font-size: 1.8rem;
+          font-weight: 600;
+          margin-bottom: 4px;
           color: #333;
         }
         
         .page-header p {
-          font-size: 1.1rem;
+          font-size: 0.9rem;
           color: #666;
           margin: 0;
         }
         
         .portfolio-summary {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 20px;
-          margin-bottom: 32px;
+          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+          gap: 12px;
+          margin-bottom: 20px;
         }
         
         .summary-card {
@@ -232,47 +232,49 @@ export default function HoldingsPage() {
         
         .summary-item {
           color: white;
-          padding: 8px;
+          padding: 6px;
         }
         
         .summary-label {
-          font-size: 0.9rem;
+          font-size: 0.75rem;
           opacity: 0.9;
-          margin-bottom: 8px;
+          margin-bottom: 4px;
         }
         
         .summary-value {
-          font-size: 1.8rem;
-          font-weight: 700;
+          font-size: 1.2rem;
+          font-weight: 600;
         }
         
         .error-message {
           background: #fff3cd;
           border: 1px solid #ffeaa7;
-          border-radius: 6px;
-          padding: 16px;
-          margin-bottom: 24px;
+          border-radius: 4px;
+          padding: 10px;
+          margin-bottom: 12px;
           color: #856404;
+          font-size: 0.85rem;
         }
         
         .symbol-info {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 2px;
         }
         
         .symbol-name {
           font-weight: 600;
-          font-size: 0.95rem;
+          font-size: 0.85rem;
         }
         
         .exchange {
-          font-size: 0.8rem;
+          font-size: 0.7rem;
           color: #666;
         }
         
         .pnl-value {
           font-weight: 600;
+          font-size: 0.85rem;
         }
         
         .pnl-value.positive {
@@ -286,23 +288,23 @@ export default function HoldingsPage() {
         .account-badge {
           background: #e3f2fd;
           color: #1976d2;
-          padding: 2px 6px;
-          border-radius: 8px;
-          font-size: 0.7rem;
+          padding: 1px 4px;
+          border-radius: 6px;
+          font-size: 0.65rem;
           font-weight: 600;
           text-align: center;
           width: fit-content;
-          margin: 2px 0;
+          margin: 1px 0;
         }
         
         @media only screen and (max-width: 768px) {
           .portfolio-summary {
             grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
+            gap: 10px;
           }
           
           .summary-value {
-            font-size: 1.4rem;
+            font-size: 1rem;
           }
         }
       `}</style>

@@ -31,11 +31,12 @@ export default function Table({
         <style jsx>{`
           .empty-state {
             text-align: center;
-            padding: 48px 24px;
+            padding: 24px 16px;
             color: #666;
             background: #f8f9fa;
-            border-radius: 8px;
-            border: 2px dashed #ddd;
+            border-radius: 6px;
+            border: 1px dashed #ddd;
+            font-size: 0.9rem;
           }
           
           .empty-state.dark {
@@ -97,16 +98,17 @@ export default function Table({
         .responsive-table {
           width: 100%;
           border-collapse: collapse;
-          font-size: 14px;
+          font-size: 13px;
         }
         
         .responsive-table th {
           background-color: #f8f9fa;
-          padding: 16px 12px;
+          padding: 8px 10px;
           text-align: left;
           font-weight: 600;
           color: #495057;
           border-bottom: 1px solid #e9ecef;
+          font-size: 0.8rem;
         }
         
         .dark .responsive-table th {
@@ -116,7 +118,7 @@ export default function Table({
         }
         
         .responsive-table td {
-          padding: 16px 12px;
+          padding: 8px 10px;
           border-bottom: 1px solid #f1f3f4;
           vertical-align: middle;
         }
@@ -143,24 +145,28 @@ export default function Table({
         
         @media only screen and (max-width: 768px) {
           .responsive-table {
-            font-size: 12px;
+            font-size: 11px;
           }
           
           .responsive-table th,
           .responsive-table td {
-            padding: 12px 8px;
+            padding: 6px 6px;
+          }
+          
+          .responsive-table th {
+            font-size: 0.7rem;
           }
         }
         
         @media only screen and (max-width: 480px) {
           .table-wrapper {
-            margin: 0 -16px;
+            margin: 0 -8px;
           }
           
           .responsive-table th,
           .responsive-table td {
-            padding: 8px 6px;
-            min-width: 100px;
+            padding: 4px 4px;
+            min-width: 80px;
           }
         }
       `}</style>
