@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { IAccount } from '@/models/account';
 import PageLayout from '@/components/layout/PageLayout';
-import Card from '@/components/ui/Card';
+import EnhancedCard from '@/components/enhanced-card';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import AccountCard from '@/components/accounts/AccountCard';
 import AddAccountModal from '@/components/accounts/AddAccountModal';
-import { IAccount } from '@/models/account';
 
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState<IAccount[]>([]);
@@ -152,7 +152,7 @@ export default function AccountsPage() {
         )}
 
         {accounts.length === 0 ? (
-          <Card>
+          <EnhancedCard>
             <div className="empty-state">
               <div className="empty-icon">📱</div>
               <h3>No Trading Accounts</h3>
@@ -166,7 +166,7 @@ export default function AccountsPage() {
                 Add Your First Account
               </button>
             </div>
-          </Card>
+          </EnhancedCard>
         ) : (
           <div className="accounts-grid">
             {accounts.map((account) => (
@@ -184,7 +184,7 @@ export default function AccountsPage() {
         {/* Account Statistics */}
         {accounts.length > 0 && (
           <div className="account-stats">
-            <Card title="Account Overview">
+            <EnhancedCard title="Account Overview">
               <div className="stats-grid">
                 <div className="stat-item">
                   <div className="stat-value">{accounts.length}</div>
@@ -209,7 +209,7 @@ export default function AccountsPage() {
                   <div className="stat-label">Kite</div>
                 </div>
               </div>
-            </Card>
+            </EnhancedCard>
           </div>
         )}
 

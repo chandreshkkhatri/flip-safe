@@ -1,95 +1,79 @@
-'use client';
+import * as React from "react"
 
-import { ReactNode } from 'react';
+import { cn } from "@/lib/utils"
 
-interface CardProps {
-  children: ReactNode;
-  title?: string;
-  className?: string;
-  hoverable?: boolean;
-  action?: ReactNode;
-  nightMode?: boolean;
-}
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-lg border bg-card text-card-foreground shadow-sm",
+      className
+    )}
+    {...props}
+  />
+))
+Card.displayName = "Card"
 
-export default function Card({
-  children,
-  title,
-  className = '',
-  hoverable = false,
-  action,
-  nightMode = false,
-}: CardProps) {
-  const cardClasses = `
-    card 
-    ${hoverable ? 'hoverable' : ''} 
-    ${nightMode ? 'dark-card' : ''} 
-    ${className}
-  `.trim();
+const CardHeader = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    {...props}
+  />
+))
+CardHeader.displayName = "CardHeader"
 
-  return (
-    <div className={cardClasses}>
-      <div className="card-content">
-        {title && <span className="card-title">{title}</span>}
-        {children}
-      </div>
-      {action && <div className="card-action">{action}</div>}
+const CardTitle = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLHeadingElement>
+>(({ className, ...props }, ref) => (
+  <h3
+    ref={ref}
+    className={cn(
+      "text-2xl font-semibold leading-none tracking-tight",
+      className
+    )}
+    {...props}
+  />
+))
+CardTitle.displayName = "CardTitle"
 
-      <style jsx>{`
-        .card {
-          margin: 0.5rem 0 1rem 0;
-          border-radius: 8px;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-          transition: box-shadow 0.3s ease;
-          background-color: #fff;
-        }
-        
-        .card.hoverable:hover {
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-          transform: translateY(-2px);
-          transition: all 0.3s ease;
-        }
-        
-        .dark-card {
-          background-color: #1e1e1e !important;
-          color: #ffffff;
-        }
-        
-        .dark-card .card-title {
-          color: #ffffff;
-        }
-        
-        .card-content {
-          padding: 24px;
-        }
-        
-        .card-title {
-          font-size: 1.5rem;
-          font-weight: 500;
-          margin-bottom: 16px;
-          display: block;
-        }
-        
-        .card-action {
-          padding: 16px 24px;
-          border-top: 1px solid rgba(160, 160, 160, 0.2);
-          background-color: rgba(0, 0, 0, 0.02);
-        }
-        
-        .dark-card .card-action {
-          border-top-color: rgba(255, 255, 255, 0.2);
-          background-color: rgba(255, 255, 255, 0.05);
-        }
-        
-        @media only screen and (max-width: 600px) {
-          .card-content {
-            padding: 16px;
-          }
-          
-          .card-action {
-            padding: 12px 16px;
-          }
-        }
-      `}</style>
-    </div>
-  );
-}
+const CardDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+CardDescription.displayName = "CardDescription"
+
+const CardContent = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+))
+CardContent.displayName = "CardContent"
+
+const CardFooter = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex items-center p-6 pt-0", className)}
+    {...props}
+  />
+))
+CardFooter.displayName = "CardFooter"
+
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }

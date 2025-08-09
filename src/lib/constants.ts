@@ -46,6 +46,7 @@ const API_ROUTES = {
   // Account management routes
   accounts: {
     list: '/api/accounts',
+    getAccounts: '/api/accounts',
     create: '/api/accounts',
     get: (id: string) => `/api/accounts/${id}`,
     update: (id: string) => `/api/accounts/${id}`,

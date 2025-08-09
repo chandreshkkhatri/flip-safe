@@ -3,7 +3,7 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
-import Card from '@/components/ui/Card';
+import EnhancedCard from '@/components/enhanced-card';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Table from '@/components/ui/Table';
 import { useAuth } from '@/lib/auth-context';
@@ -149,33 +149,41 @@ export default function HoldingsPage() {
 
         {/* Portfolio Summary */}
         <div className="portfolio-summary">
-          <Card className="summary-card">
+          <EnhancedCard className="summary-card">
             <div className="summary-item">
               <div className="summary-label">Current Value</div>
               <div className="summary-value">₹{totalValue.toFixed(2)}</div>
             </div>
-          </Card>
+          </EnhancedCard>
           
-          <Card className="summary-card">
+          <EnhancedCard className="summary-card">
             <div className="summary-item">
               <div className="summary-label">Total Investment</div>
               <div className="summary-value">₹{totalInvestment.toFixed(2)}</div>
             </div>
-          </Card>
+          </EnhancedCard>
           
-          <Card className={`summary-card ${totalPnL >= 0 ? 'positive' : 'negative'}`}>
+          <EnhancedCard 
+            className="summary-card"
+            customBackground={totalPnL >= 0 ? 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)' : 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)'}
+            customTextColor="white"
+          >
             <div className="summary-item">
               <div className="summary-label">Total P&L</div>
               <div className="summary-value">₹{totalPnL.toFixed(2)}</div>
             </div>
-          </Card>
+          </EnhancedCard>
           
-          <Card className={`summary-card ${totalPnLPercentage >= 0 ? 'positive' : 'negative'}`}>
+          <EnhancedCard 
+            className="summary-card"
+            customBackground={totalPnLPercentage >= 0 ? 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)' : 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)'}
+            customTextColor="white"
+          >
             <div className="summary-item">
               <div className="summary-label">Total P&L %</div>
               <div className="summary-value">{totalPnLPercentage.toFixed(2)}%</div>
             </div>
-          </Card>
+          </EnhancedCard>
         </div>
 
         {error && (
@@ -219,15 +227,6 @@ export default function HoldingsPage() {
         
         .summary-card {
           text-align: center;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        .summary-card.positive {
-          background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-        }
-        
-        .summary-card.negative {
-          background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
         }
         
         .summary-item {
