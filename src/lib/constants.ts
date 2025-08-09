@@ -6,9 +6,17 @@ const API_ROUTES = {
     setLoginInfo: '/api/auth/set-login-info'
   },
   kc: {
-    getQuotes: '/api/kc/get-quotes',
-    getHistoricalData: '/api/kc/get-historical-data',
-    requestSimulationData: '/api/kc/request-simulation-data',
+    getQuotes: '/api/kc/quotes',
+    getProfile: '/api/kc/profile',
+    getMargins: '/api/kc/margins',
+    getOHLC: '/api/kc/ohlc',
+    getLTP: '/api/kc/ltp',
+    getPositions: '/api/kc/positions',
+    getHoldings: '/api/kc/holdings',
+    getOrders: '/api/kc/orders',
+    getTrades: '/api/kc/trades',
+    getHistoricalData: '/api/kc/historical-data',
+    requestSimulationData: '/api/kc/simulation-data',
     flushSimulationData: '/api/kc/flush-simulation-data'
   },
   db: {
@@ -17,9 +25,8 @@ const API_ROUTES = {
   },
   orders: {
     placeOrder: '/api/orders/place',
-    getOrders: '/api/orders',
-    getPositions: '/api/orders/positions',
-    getHoldings: '/api/orders/holdings'
+    modifyOrder: '/api/orders/modify',
+    cancelOrder: '/api/orders/cancel'
   },
   alerts: {
     getAlerts: '/api/alerts',
