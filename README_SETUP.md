@@ -1,4 +1,4 @@
-# TradeMaster - Unified Trading Platform
+# Flip Secure - Unified Trading Platform
 
 ## Project Structure
 - **Server**: Express.js backend with MongoDB

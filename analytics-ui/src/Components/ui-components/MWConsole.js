@@ -5,7 +5,7 @@ import {
   faCloudUploadAlt,
   faSyncAlt
 } from "@fortawesome/free-solid-svg-icons";
-import M from "materialize-css/dist/js/materialize";
+import M from "materialize-css";
 import axios from "axios";
 import { getListOfMW } from "../../utils/db-queries";
 
