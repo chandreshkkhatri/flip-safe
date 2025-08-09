@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import { IAccount } from '@/models/account';
-import PageLayout from '@/components/layout/PageLayout';
-import EnhancedCard from '@/components/enhanced-card';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import AccountCard from '@/components/accounts/AccountCard';
-import AddAccountModal from '@/components/accounts/AddAccountModal';
+import RadixAccountModal from '@/components/accounts/RadixAccountModal';
+import EnhancedCard from '@/components/enhanced-card';
+import PageLayout from '@/components/layout/PageLayout';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState<IAccount[]>([]);
@@ -137,12 +138,13 @@ export default function AccountsPage() {
             <h1>Trading Accounts</h1>
             <p>Manage your connected trading accounts and credentials</p>
           </div>
-          <button
+          <Button
             onClick={() => setShowAddModal(true)}
-            className="btn-add-account"
+            variant="trading"
+            size="lg"
           >
             + Add Account
-          </button>
+          </Button>
         </div>
 
         {error && (
@@ -159,12 +161,13 @@ export default function AccountsPage() {
               <p>
                 Connect your first trading account to start managing your portfolio across multiple brokers.
               </p>
-              <button
+              <Button
                 onClick={() => setShowAddModal(true)}
-                className="btn-get-started"
+                variant="success"
+                size="lg"
               >
                 Add Your First Account
-              </button>
+              </Button>
             </div>
           </EnhancedCard>
         ) : (
@@ -213,7 +216,7 @@ export default function AccountsPage() {
           </div>
         )}
 
-        <AddAccountModal
+        <RadixAccountModal
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
           onSubmit={handleAddAccount}
