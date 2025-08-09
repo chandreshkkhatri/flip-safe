@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import PageLayout from '@/components/layout/PageLayout';
+import Card from '@/components/ui/Card';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Modal from '@/components/ui/Modal';
 import { useAuth } from '@/lib/auth-context';
 
-interface DashboardProps {}
 
 export default function DashboardPage() {
   const [nightMode, setNightMode] = useState(false);
@@ -14,8 +16,7 @@ export default function DashboardPage() {
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
 
-  const router = useRouter();
-  const { isLoggedIn, allowOfflineAccess, logout, checkedLoginStatus, runOfflineMode } = useAuth();
+  const { isLoggedIn, allowOfflineAccess, checkedLoginStatus, runOfflineMode } = useAuth();
 
   useEffect(() => {
     // Load night mode preference
@@ -38,14 +39,6 @@ export default function DashboardPage() {
     localStorage.setItem('nightMode', String(newNightMode));
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      // Don't redirect to login, just stay on dashboard
-    } catch (error) {
-      console.error('Error during logout:', error);
-    }
-  };
 
   const handleApiConfig = async () => {
     if (!apiKey.trim() || !apiSecret.trim()) {
@@ -82,278 +75,319 @@ export default function DashboardPage() {
   };
 
   if (!checkedLoginStatus || loading) {
-    return (
-      <div className="loading">
-        <p>Loading dashboard...</p>
-      </div>
-    );
+    return <LoadingSpinner message="Loading dashboard..." />;
   }
 
 
   return (
-    <div className={`dashboard ${nightMode ? 'night-mode' : ''}`}>
-      {/* Navigation Bar */}
-      <nav className="navbar-fixed">
-        <nav className={nightMode ? 'grey darken-4' : 'blue'}>
-          <div className="nav-wrapper container">
-            <Link href="/dashboard" className="brand-logo">
-              Flip Safe
-            </Link>
+    <>
+      <PageLayout
+        title="Flip Safe"
+        showNightModeToggle={true}
+        showApiConfig={true}
+        onToggleNightMode={toggleNightMode}
+        onShowApiPanel={() => setShowApiPanel(true)}
+        nightMode={nightMode}
+      >
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">Trading Dashboard</h1>
+        <p className="dashboard-subtitle">Welcome to Flip Safe - Your Unified Trading Platform</p>
+      </div>
 
-            <ul className="right">
-              <li>
-                <button
-                  onClick={toggleNightMode}
-                  className="btn-flat white-text"
-                  title={nightMode ? 'Light Mode' : 'Dark Mode'}
-                >
-                  {nightMode ? '☀️' : '🌙'}
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => setShowApiPanel(true)}
-                  className="btn-flat white-text"
-                  title="Configure API"
-                >
-                  ⚙️ API Config
-                </button>
-              </li>
-              {isLoggedIn && (
-                <li>
-                  <button onClick={handleLogout} className="btn-flat white-text">
-                    Logout
-                  </button>
-                </li>
-              )}
-            </ul>
-          </div>
-        </nav>
-      </nav>
+      {/* Feature Cards */}
+      <div className="feature-grid">
+        <Card
+          title="Market Watch"
+          hoverable={true}
+          nightMode={nightMode}
+          action={<Link href="/terminal" className="btn blue waves-effect">View Terminal</Link>}
+        >
+          <p>Monitor your favorite instruments in real-time</p>
+        </Card>
 
-      {/* Main Content */}
-      <main className="container" style={{ marginTop: '80px' }}>
-        <div className="row">
-          <div className="col s12">
-            <h4>Trading Dashboard</h4>
-            <p>Welcome to Flip Safe - Your Unified Trading Platform</p>
+        <Card
+          title="Orders"
+          hoverable={true}
+          nightMode={nightMode}
+          action={<Link href="/orders" className="btn blue waves-effect">View Orders</Link>}
+        >
+          <p>View and manage your trading orders</p>
+        </Card>
+
+        <Card
+          title="Positions"
+          hoverable={true}
+          nightMode={nightMode}
+          action={<Link href="/positions" className="btn blue waves-effect">View Positions</Link>}
+        >
+          <p>Track your current trading positions</p>
+        </Card>
+
+        <Card
+          title="Holdings"
+          hoverable={true}
+          nightMode={nightMode}
+          action={<Link href="/holdings" className="btn blue waves-effect">View Holdings</Link>}
+        >
+          <p>Manage your investment portfolio</p>
+        </Card>
+
+        <Card
+          title="Alerts"
+          hoverable={true}
+          nightMode={nightMode}
+          action={<Link href="/alerts" className="btn blue waves-effect">Manage Alerts</Link>}
+        >
+          <p>Set up price alerts and notifications</p>
+        </Card>
+
+        <Card
+          title="Simulator"
+          hoverable={true}
+          nightMode={nightMode}
+          action={<Link href="/simulator" className="btn blue waves-effect">Open Simulator</Link>}
+        >
+          <p>Practice trading with historical data</p>
+        </Card>
+
+        <Card
+          title="Account Management"
+          hoverable={true}
+          nightMode={nightMode}
+          action={<Link href="/accounts" className="btn blue waves-effect">Manage Accounts</Link>}
+        >
+          <p>Connect and manage multiple trading accounts</p>
+        </Card>
+      </div>
+
+      {/* Status Information */}
+      <Card title="Connection Status" nightMode={nightMode}>
+        <div className="status-info">
+          <div className="status-item">
+            <strong>Mode:</strong>{' '}
+            <span className={`status-badge ${isLoggedIn ? 'live' : 'offline'}`}>
+              {isLoggedIn ? 'Live Trading' : 'Offline Mode'}
+            </span>
           </div>
+          {!isLoggedIn && allowOfflineAccess && (
+            <div className="status-warning">
+              ⚠️ You are in offline mode. Some features may be limited.
+            </div>
+          )}
         </div>
+      </Card>
 
-        {/* Feature Cards */}
-        <div className="row">
-          <div className="col s12 m6 l4">
-            <div className="card">
-              <div className="card-content">
-                <span className="card-title">Market Watch</span>
-                <p>Monitor your favorite instruments in real-time</p>
-              </div>
-              <div className="card-action">
-                <Link href="/terminal">View Terminal</Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="col s12 m6 l4">
-            <div className="card">
-              <div className="card-content">
-                <span className="card-title">Orders</span>
-                <p>View and manage your trading orders</p>
-              </div>
-              <div className="card-action">
-                <Link href="/orders">View Orders</Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="col s12 m6 l4">
-            <div className="card">
-              <div className="card-content">
-                <span className="card-title">Positions</span>
-                <p>Track your current trading positions</p>
-              </div>
-              <div className="card-action">
-                <Link href="/positions">View Positions</Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="col s12 m6 l4">
-            <div className="card">
-              <div className="card-content">
-                <span className="card-title">Holdings</span>
-                <p>Manage your investment portfolio</p>
-              </div>
-              <div className="card-action">
-                <Link href="/holdings">View Holdings</Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="col s12 m6 l4">
-            <div className="card">
-              <div className="card-content">
-                <span className="card-title">Alerts</span>
-                <p>Set up price alerts and notifications</p>
-              </div>
-              <div className="card-action">
-                <Link href="/alerts">Manage Alerts</Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="col s12 m6 l4">
-            <div className="card">
-              <div className="card-content">
-                <span className="card-title">Simulator</span>
-                <p>Practice trading with historical data</p>
-              </div>
-              <div className="card-action">
-                <Link href="/simulator">Open Simulator</Link>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Status Information */}
-        <div className="row">
-          <div className="col s12">
-            <div className={`card ${nightMode ? 'grey darken-3' : ''}`}>
-              <div className="card-content">
-                <span className="card-title">Connection Status</span>
-                <p>
-                  <strong>Mode:</strong> {isLoggedIn ? 'Live Trading' : 'Offline Mode'}
-                </p>
-                {!isLoggedIn && allowOfflineAccess && (
-                  <p className="orange-text">
-                    You are in offline mode. Some features may be limited.
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
+      </PageLayout>
 
       {/* API Configuration Modal */}
-      {showApiPanel && (
-        <div className="modal-overlay" onClick={() => setShowApiPanel(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="card">
-              <div className="card-content">
-                <span className="card-title">
-                  API Configuration
-                  <button 
-                    className="btn-flat right" 
-                    onClick={() => setShowApiPanel(false)}
-                  >
-                    ✕
-                  </button>
-                </span>
-                <p>Enter your Zerodha Kite Connect API credentials to enable live trading.</p>
-                
-                <div className="row">
-                  <div className="input-field col s12">
-                    <input
-                      id="api-key"
-                      type="text"
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      placeholder="Enter your API Key"
-                    />
-                    <label htmlFor="api-key" className="active">API Key</label>
-                  </div>
-                </div>
+      <Modal
+        isOpen={showApiPanel}
+        onClose={() => setShowApiPanel(false)}
+        title="API Configuration"
+        size="medium"
+      >
+        <div className="api-config-form">
+          <p className="config-description">
+            Enter your Zerodha Kite Connect API credentials to enable live trading.
+          </p>
+          
+          <div className="form-group">
+            <label htmlFor="api-key">API Key</label>
+            <input
+              id="api-key"
+              type="text"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="Enter your API Key"
+              className="form-input"
+            />
+          </div>
 
-                <div className="row">
-                  <div className="input-field col s12">
-                    <input
-                      id="api-secret"
-                      type="password"
-                      value={apiSecret}
-                      onChange={(e) => setApiSecret(e.target.value)}
-                      placeholder="Enter your API Secret"
-                    />
-                    <label htmlFor="api-secret" className="active">API Secret</label>
-                  </div>
-                </div>
+          <div className="form-group">
+            <label htmlFor="api-secret">API Secret</label>
+            <input
+              id="api-secret"
+              type="password"
+              value={apiSecret}
+              onChange={(e) => setApiSecret(e.target.value)}
+              placeholder="Enter your API Secret"
+              className="form-input"
+            />
+          </div>
 
-                <div className="row">
-                  <div className="col s12">
-                    <button 
-                      className="btn blue waves-effect waves-light" 
-                      onClick={handleApiConfig}
-                      disabled={!apiKey.trim() || !apiSecret.trim()}
-                    >
-                      Configure & Login
-                    </button>
-                    <button 
-                      className="btn-flat waves-effect waves-light right" 
-                      onClick={() => setShowApiPanel(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
+          <div className="form-actions">
+            <button 
+              className="btn blue waves-effect waves-light" 
+              onClick={handleApiConfig}
+              disabled={!apiKey.trim() || !apiSecret.trim()}
+            >
+              Configure & Login
+            </button>
+            <button 
+              className="btn-flat waves-effect waves-light" 
+              onClick={() => setShowApiPanel(false)}
+            >
+              Cancel
+            </button>
+          </div>
 
-                <div className="row">
-                  <div className="col s12">
-                    <p className="grey-text text-darken-2">
-                      <small>
-                        Don&apos;t have API credentials? Visit{' '}
-                        <a href="https://kite.zerodha.com/apps" target="_blank" rel="noopener noreferrer">
-                          Zerodha Kite Connect
-                        </a>
-                        {' '}to create your app.
-                      </small>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="help-text">
+            <p>
+              Don&apos;t have API credentials? Visit{' '}
+              <a 
+                href="https://kite.zerodha.com/apps" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="link"
+              >
+                Zerodha Kite Connect
+              </a>
+              {' '}to create your app.
+            </p>
           </div>
         </div>
-      )}
+      </Modal>
 
-      <style jsx>{`
-        .dashboard.night-mode {
-          background-color: #121212;
-          color: #ffffff;
-          min-height: 100vh;
+    <style jsx>{`
+      .dashboard-header {
+        text-align: center;
+        margin-bottom: 48px;
+      }
+      
+      .dashboard-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, #2196f3, #1976d2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .dashboard-subtitle {
+        font-size: 1.1rem;
+        color: #666;
+        margin: 0;
+      }
+      
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+      
+      .status-info {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      .status-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .status-badge {
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 0.85rem;
+        font-weight: 500;
+      }
+      
+      .status-badge.live {
+        background-color: #4caf50;
+        color: white;
+      }
+      
+      .status-badge.offline {
+        background-color: #ff9800;
+        color: white;
+      }
+      
+      .status-warning {
+        padding: 12px;
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 6px;
+        color: #856404;
+      }
+      
+      .api-config-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      
+      .config-description {
+        margin: 0 0 20px 0;
+        color: #666;
+      }
+      
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      
+      .form-group label {
+        font-weight: 500;
+        color: #333;
+      }
+      
+      .form-input {
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 16px;
+        transition: border-color 0.2s ease;
+      }
+      
+      .form-input:focus {
+        outline: none;
+        border-color: #2196f3;
+        box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+      }
+      
+      .form-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 8px;
+      }
+      
+      .help-text {
+        padding-top: 16px;
+        border-top: 1px solid #eee;
+        font-size: 0.9rem;
+        color: #666;
+      }
+      
+      .link {
+        color: #2196f3;
+        text-decoration: none;
+      }
+      
+      .link:hover {
+        text-decoration: underline;
+      }
+      
+      @media only screen and (max-width: 768px) {
+        .dashboard-title {
+          font-size: 2rem;
         }
-        .dashboard.night-mode .card {
-          background-color: #1e1e1e;
-          color: #ffffff;
+        
+        .feature-grid {
+          grid-template-columns: 1fr;
+          gap: 16px;
         }
-        .dashboard.night-mode .card-title {
-          color: #ffffff;
+        
+        .form-actions {
+          flex-direction: column;
         }
-        .modal-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background-color: rgba(0, 0, 0, 0.6);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          z-index: 1000;
-        }
-        .modal-content {
-          background: white;
-          border-radius: 8px;
-          max-width: 500px;
-          width: 90%;
-          max-height: 90vh;
-          overflow-y: auto;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        }
-        .modal-content .card {
-          margin: 0;
-          border-radius: 8px;
-        }
-      `}</style>
-    </div>
+      }
+    `}</style>
+    </>
   );
 }

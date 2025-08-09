@@ -25,15 +25,17 @@ const simulationDataSchema = new mongoose.Schema<ISimulationData>(
       required: true,
     },
     candleStickData: {
-      type: [mongoose.Schema.Types.Mixed],
+      type: mongoose.Schema.Types.Mixed,
       required: true,
     },
   },
   {
     timestamps: true,
-    indexes: [{ instrument_token: 1, interval: 1, date: 1 }],
   }
 );
+
+// Add compound index
+simulationDataSchema.index({ instrument_token: 1, interval: 1, date: 1 });
 
 const SimulationData =
   mongoose.models.SimulationData ||

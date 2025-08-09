@@ -37,6 +37,25 @@ const API_ROUTES = {
     subscribe: '/api/ticker/subscribe',
     unsubscribe: '/api/ticker/unsubscribe',
   },
+  // New unified trading API routes
+  trading: {
+    getOrders: '/api/trading/orders',
+    getPositions: '/api/trading/positions',
+    getHoldings: '/api/trading/holdings',
+  },
+  // Account management routes
+  accounts: {
+    list: '/api/accounts',
+    create: '/api/accounts',
+    get: (id: string) => `/api/accounts/${id}`,
+    update: (id: string) => `/api/accounts/${id}`,
+    delete: (id: string) => `/api/accounts/${id}`,
+  },
+  // Upstox authentication routes
+  upstox: {
+    login: '/api/auth/upstox/login',
+    callback: '/api/auth/upstox/callback',
+  },
 } as const;
 
 const API_CONFIG = {
@@ -55,6 +74,7 @@ const PAGE_ROUTES = {
   HOLDINGS: '/holdings',
   ALERTS: '/alerts',
   SIMULATOR: '/simulator',
+  ACCOUNTS: '/accounts',
 } as const;
 
 export default {
