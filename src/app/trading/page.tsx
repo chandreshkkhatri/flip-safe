@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Watchlist from '@/components/watchlist/Watchlist';

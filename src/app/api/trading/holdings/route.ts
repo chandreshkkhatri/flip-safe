@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAccountsByUserId } from '@/models/account';
 import { tradingService } from '@/lib/trading-service';
+import { getAccountsByUserId } from '@/models/account';
 
 export async function GET(request: NextRequest) {
   try {

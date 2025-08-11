@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-import TradingWindow from './TradingWindow';
 import { binanceWebSocket } from '@/lib/binance-websocket';
+import TradingWindow from './TradingWindow';
 
 export interface WatchlistItem {
   symbol: string;

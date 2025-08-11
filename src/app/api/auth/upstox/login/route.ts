@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAccountById } from '@/models/account';
 import { createUpstoxClient } from '@/lib/upstox';
+import { getAccountById } from '@/models/account';
 
 export async function POST(request: NextRequest) {
   try {

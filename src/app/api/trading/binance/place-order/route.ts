@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
+import { createBinanceClient } from '@/lib/binance';
 import connectDB from '@/lib/mongodb';
 import Account from '@/models/account';
-import { createBinanceClient } from '@/lib/binance';
 
 export async function POST(request: Request) {
   try {

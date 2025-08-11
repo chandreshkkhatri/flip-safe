@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { IAccount } from '@/models/account';
 import AccountCard from '@/components/accounts/AccountCard';
 import RadixAccountModal from '@/components/accounts/RadixAccountModal';
 import EnhancedCard from '@/components/enhanced-card';
 import PageLayout from '@/components/layout/PageLayout';
+import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { IAccount } from '@/models/account';
 
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState<IAccount[]>([]);
