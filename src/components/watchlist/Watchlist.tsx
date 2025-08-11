@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { binanceWebSocket } from '@/lib/binance-websocket';
+import { useEffect, useState } from 'react';
 import TradingWindow from './TradingWindow';
 
 export interface WatchlistItem {
@@ -23,8 +23,16 @@ interface WatchlistProps {
 }
 
 const DEFAULT_SYMBOLS = [
-  'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'ADAUSDT', 'XRPUSDT', 
-  'SOLUSDT', 'DOTUSDT', 'DOGEUSDT', 'AVAXUSDT', 'MATICUSDT'
+  'BTCUSDT',
+  'ETHUSDT',
+  'BNBUSDT',
+  'ADAUSDT',
+  'XRPUSDT',
+  'SOLUSDT',
+  'DOTUSDT',
+  'DOGEUSDT',
+  'AVAXUSDT',
+  'MATICUSDT',
 ];
 
 export default function Watchlist({ binanceAccounts }: WatchlistProps) {
@@ -38,7 +46,7 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
     const initializeWatchlist = async () => {
       try {
         // Initialize with default symbols
-        const initialData: WatchlistItem[] = DEFAULT_SYMBOLS.map((symbol) => ({
+        const initialData: WatchlistItem[] = DEFAULT_SYMBOLS.map(symbol => ({
           symbol,
           lastPrice: 0,
           priceChange: 0,
@@ -52,23 +60,26 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
         setLoading(false);
 
         // Start WebSocket connection for real-time updates
-        binanceWebSocket.connect(DEFAULT_SYMBOLS, (priceUpdate) => {
-          setWatchlistItems(prev => prev.map(item => {
-            if (item.symbol === priceUpdate.symbol) {
-              return {
-                ...item,
-                lastPrice: parseFloat(priceUpdate.price),
-                priceChange: parseFloat(priceUpdate.price) * (parseFloat(priceUpdate.priceChangePercent) / 100),
-                priceChangePercent: parseFloat(priceUpdate.priceChangePercent),
-                volume: parseFloat(priceUpdate.volume),
-                high24h: parseFloat(priceUpdate.high),
-                low24h: parseFloat(priceUpdate.low),
-              };
-            }
-            return item;
-          }));
+        binanceWebSocket.connect(DEFAULT_SYMBOLS, priceUpdate => {
+          setWatchlistItems(prev =>
+            prev.map(item => {
+              if (item.symbol === priceUpdate.symbol) {
+                return {
+                  ...item,
+                  lastPrice: parseFloat(priceUpdate.price),
+                  priceChange:
+                    parseFloat(priceUpdate.price) *
+                    (parseFloat(priceUpdate.priceChangePercent) / 100),
+                  priceChangePercent: parseFloat(priceUpdate.priceChangePercent),
+                  volume: parseFloat(priceUpdate.volume),
+                  high24h: parseFloat(priceUpdate.high),
+                  low24h: parseFloat(priceUpdate.low),
+                };
+              }
+              return item;
+            })
+          );
         });
-
       } catch (err) {
         console.error('Error initializing watchlist:', err);
         setError('Failed to initialize price data');
@@ -133,7 +144,7 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
       <div className="watchlist-panel">
         <div className="watchlist-header">
           <h3>Market Watch</h3>
-          <button 
+          <button
             className="btn-add-symbol"
             onClick={() => {
               const symbol = prompt('Enter symbol (e.g., LINKUSDT):');
@@ -144,14 +155,10 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
           </button>
         </div>
 
-        {error && (
-          <div className="error-message">
-            {error}
-          </div>
-        )}
+        {error && <div className="error-message">{error}</div>}
 
         <div className="watchlist-items">
-          {watchlistItems.map((item) => (
+          {watchlistItems.map(item => (
             <div
               key={item.symbol}
               className={`watchlist-item ${selectedSymbol === item.symbol ? 'selected' : ''}`}
@@ -162,7 +169,7 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
                   <span className="symbol-name">{item.symbol}</span>
                   <button
                     className="btn-remove"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation();
                       removeSymbol(item.symbol);
                     }}
@@ -172,14 +179,15 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
                 </div>
                 <div className="price-info">
                   <span className="last-price">${item.lastPrice.toFixed(2)}</span>
-                  <span className={`price-change ${item.priceChange >= 0 ? 'positive' : 'negative'}`}>
-                    {item.priceChange >= 0 ? '+' : ''}{item.priceChangePercent.toFixed(2)}%
+                  <span
+                    className={`price-change ${item.priceChange >= 0 ? 'positive' : 'negative'}`}
+                  >
+                    {item.priceChange >= 0 ? '+' : ''}
+                    {item.priceChangePercent.toFixed(2)}%
                   </span>
                 </div>
               </div>
-              <div className="volume-info">
-                Vol: {(item.volume / 1000000).toFixed(2)}M
-              </div>
+              <div className="volume-info">Vol: {(item.volume / 1000000).toFixed(2)}M</div>
             </div>
           ))}
         </div>

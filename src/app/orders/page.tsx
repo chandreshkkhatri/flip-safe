@@ -1,13 +1,13 @@
 'use client';
 
-import axios from 'axios';
-import { useEffect, useState } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Table from '@/components/ui/Table';
 import { useAuth } from '@/lib/auth-context';
 import { API_ROUTES } from '@/lib/constants';
 import { UnifiedOrder } from '@/lib/trading-service';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 
 // Using UnifiedOrder interface from trading-service
 
@@ -77,13 +77,13 @@ export default function OrdersPage() {
   }
 
   const columns = [
-    { 
-      key: 'id', 
+    {
+      key: 'id',
       header: 'Order ID',
       render: (value: string) => value.substring(value.length - 8), // Show last 8 chars
     },
-    { 
-      key: 'symbol', 
+    {
+      key: 'symbol',
       header: 'Symbol',
       render: (value: string, row: UnifiedOrder) => (
         <div className="symbol-info">
@@ -96,9 +96,7 @@ export default function OrdersPage() {
       key: 'transactionType',
       header: 'Type',
       render: (value: string) => (
-        <span className={value === 'BUY' ? 'transaction-buy' : 'transaction-sell'}>
-          {value}
-        </span>
+        <span className={value === 'BUY' ? 'transaction-buy' : 'transaction-sell'}>{value}</span>
       ),
     },
     { key: 'quantity', header: 'Quantity' },
@@ -115,24 +113,18 @@ export default function OrdersPage() {
       key: 'status',
       header: 'Status',
       render: (value: string) => (
-        <span className={`status-badge status-${value.toLowerCase()}`}>
-          {value}
-        </span>
+        <span className={`status-badge status-${value.toLowerCase()}`}>{value}</span>
       ),
     },
     {
       key: 'actions',
       header: 'Actions',
-      render: (_: any, row: UnifiedOrder) => (
+      render: (_: any, row: UnifiedOrder) =>
         row.status === 'OPEN' ? (
-          <button
-            className="btn-cancel"
-            onClick={() => cancelOrder(row.id)}
-          >
+          <button className="btn-cancel" onClick={() => cancelOrder(row.id)}>
             Cancel
           </button>
-        ) : null
-      ),
+        ) : null,
     },
   ];
 
@@ -150,11 +142,7 @@ export default function OrdersPage() {
           </div>
         )}
 
-        <Table
-          columns={columns}
-          data={orders}
-          emptyMessage="You haven't placed any orders yet."
-        />
+        <Table columns={columns} data={orders} emptyMessage="You haven't placed any orders yet." />
       </PageLayout>
 
       <style jsx>{`
@@ -162,20 +150,20 @@ export default function OrdersPage() {
           margin-bottom: 16px;
           text-align: center;
         }
-        
+
         .page-header h1 {
           font-size: 1.8rem;
           font-weight: 600;
           margin-bottom: 4px;
           color: #333;
         }
-        
+
         .page-header p {
           font-size: 0.9rem;
           color: #666;
           margin: 0;
         }
-        
+
         .error-message {
           background: #fff3cd;
           border: 1px solid #ffeaa7;
@@ -185,19 +173,19 @@ export default function OrdersPage() {
           color: #856404;
           font-size: 0.85rem;
         }
-        
+
         .transaction-buy {
           color: #4caf50;
           font-weight: 600;
           font-size: 0.8rem;
         }
-        
+
         .transaction-sell {
           color: #f44336;
           font-weight: 600;
           font-size: 0.8rem;
         }
-        
+
         .status-badge {
           padding: 3px 8px;
           border-radius: 10px;
@@ -205,27 +193,27 @@ export default function OrdersPage() {
           font-weight: 500;
           text-transform: uppercase;
         }
-        
+
         .status-complete {
           background: #4caf50;
           color: white;
         }
-        
+
         .status-open {
           background: #2196f3;
           color: white;
         }
-        
+
         .status-cancelled {
           background: #f44336;
           color: white;
         }
-        
+
         .status-rejected {
           background: #9e9e9e;
           color: white;
         }
-        
+
         .btn-cancel {
           background: #f44336;
           color: white;
@@ -236,22 +224,22 @@ export default function OrdersPage() {
           font-size: 0.7rem;
           transition: background 0.2s ease;
         }
-        
+
         .btn-cancel:hover {
           background: #d32f2f;
         }
-        
+
         .symbol-info {
           display: flex;
           flex-direction: column;
           gap: 2px;
         }
-        
+
         .symbol-name {
           font-weight: 600;
           font-size: 0.85rem;
         }
-        
+
         .account-badge {
           background: #e3f2fd;
           color: #1976d2;

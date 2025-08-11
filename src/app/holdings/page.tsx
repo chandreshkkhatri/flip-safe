@@ -1,7 +1,5 @@
 'use client';
 
-import axios from 'axios';
-import { useEffect, useState } from 'react';
 import EnhancedCard from '@/components/enhanced-card';
 import PageLayout from '@/components/layout/PageLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -9,6 +7,8 @@ import Table from '@/components/ui/Table';
 import { useAuth } from '@/lib/auth-context';
 import { API_ROUTES } from '@/lib/constants';
 import { UnifiedHolding } from '@/lib/trading-service';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 
 // Using UnifiedHolding interface from trading-service
 
@@ -76,10 +76,7 @@ export default function HoldingsPage() {
     }
   };
 
-  const totalValue = holdings.reduce(
-    (sum, holding) => sum + holding.currentValue,
-    0
-  );
+  const totalValue = holdings.reduce((sum, holding) => sum + holding.currentValue, 0);
   const totalInvestment = holdings.reduce(
     (sum, holding) => sum + holding.averagePrice * holding.quantity,
     0
@@ -155,17 +152,21 @@ export default function HoldingsPage() {
               <div className="summary-value">₹{totalValue.toFixed(2)}</div>
             </div>
           </EnhancedCard>
-          
+
           <EnhancedCard className="summary-card">
             <div className="summary-item">
               <div className="summary-label">Total Investment</div>
               <div className="summary-value">₹{totalInvestment.toFixed(2)}</div>
             </div>
           </EnhancedCard>
-          
-          <EnhancedCard 
+
+          <EnhancedCard
             className="summary-card"
-            customBackground={totalPnL >= 0 ? 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)' : 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)'}
+            customBackground={
+              totalPnL >= 0
+                ? 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)'
+                : 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)'
+            }
             customTextColor="white"
           >
             <div className="summary-item">
@@ -173,10 +174,14 @@ export default function HoldingsPage() {
               <div className="summary-value">₹{totalPnL.toFixed(2)}</div>
             </div>
           </EnhancedCard>
-          
-          <EnhancedCard 
+
+          <EnhancedCard
             className="summary-card"
-            customBackground={totalPnLPercentage >= 0 ? 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)' : 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)'}
+            customBackground={
+              totalPnLPercentage >= 0
+                ? 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)'
+                : 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)'
+            }
             customTextColor="white"
           >
             <div className="summary-item">
@@ -204,47 +209,47 @@ export default function HoldingsPage() {
           margin-bottom: 16px;
           text-align: center;
         }
-        
+
         .page-header h1 {
           font-size: 1.8rem;
           font-weight: 600;
           margin-bottom: 4px;
           color: #333;
         }
-        
+
         .page-header p {
           font-size: 0.9rem;
           color: #666;
           margin: 0;
         }
-        
+
         .portfolio-summary {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
           gap: 12px;
           margin-bottom: 20px;
         }
-        
+
         .summary-card {
           text-align: center;
         }
-        
+
         .summary-item {
           color: white;
           padding: 6px;
         }
-        
+
         .summary-label {
           font-size: 0.75rem;
           opacity: 0.9;
           margin-bottom: 4px;
         }
-        
+
         .summary-value {
           font-size: 1.2rem;
           font-weight: 600;
         }
-        
+
         .error-message {
           background: #fff3cd;
           border: 1px solid #ffeaa7;
@@ -254,36 +259,36 @@ export default function HoldingsPage() {
           color: #856404;
           font-size: 0.85rem;
         }
-        
+
         .symbol-info {
           display: flex;
           flex-direction: column;
           gap: 2px;
         }
-        
+
         .symbol-name {
           font-weight: 600;
           font-size: 0.85rem;
         }
-        
+
         .exchange {
           font-size: 0.7rem;
           color: #666;
         }
-        
+
         .pnl-value {
           font-weight: 600;
           font-size: 0.85rem;
         }
-        
+
         .pnl-value.positive {
           color: #4caf50;
         }
-        
+
         .pnl-value.negative {
           color: #f44336;
         }
-        
+
         .account-badge {
           background: #e3f2fd;
           color: #1976d2;
@@ -295,13 +300,13 @@ export default function HoldingsPage() {
           width: fit-content;
           margin: 1px 0;
         }
-        
+
         @media only screen and (max-width: 768px) {
           .portfolio-summary {
             grid-template-columns: repeat(2, 1fr);
             gap: 10px;
           }
-          
+
           .summary-value {
             font-size: 1rem;
           }

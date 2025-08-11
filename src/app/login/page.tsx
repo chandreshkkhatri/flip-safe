@@ -1,8 +1,8 @@
 'use client';
 
+import { useAuth } from '@/lib/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { Suspense, useEffect, useState } from 'react';
-import { useAuth } from '@/lib/auth-context';
 
 const LoginCard: React.FC<{
   visibility: 'visible' | 'hidden';

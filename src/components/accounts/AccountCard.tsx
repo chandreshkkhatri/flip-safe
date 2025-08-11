@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { IAccount } from '@/models/account';
+import { useState } from 'react';
 
 interface AccountCardProps {
   account: IAccount;
@@ -40,16 +40,17 @@ export default function AccountCard({ account, onEdit, onDelete, onAuth }: Accou
   return (
     <div className="account-card">
       <div className="account-header">
-        <div className="account-type-badge" style={{ backgroundColor: accountTypeColors[account.accountType] }}>
+        <div
+          className="account-type-badge"
+          style={{ backgroundColor: accountTypeColors[account.accountType] }}
+        >
           {accountTypeLabels[account.accountType]}
         </div>
         <div className="account-status">
           <span className={`status-indicator ${isAuthenticated ? 'active' : 'inactive'}`}>
             {isAuthenticated ? '●' : '○'}
           </span>
-          <span className="status-text">
-            {isAuthenticated ? 'Connected' : 'Not Connected'}
-          </span>
+          <span className="status-text">{isAuthenticated ? 'Connected' : 'Not Connected'}</span>
         </div>
       </div>
 
@@ -69,21 +70,13 @@ export default function AccountCard({ account, onEdit, onDelete, onAuth }: Accou
 
       <div className="account-actions">
         {!isAuthenticated && account.accountType !== 'kite' && (
-          <button
-            onClick={handleAuth}
-            disabled={isLoading}
-            className="btn-auth"
-          >
+          <button onClick={handleAuth} disabled={isLoading} className="btn-auth">
             {isLoading ? 'Connecting...' : 'Connect Account'}
           </button>
         )}
-        
+
         <div className="action-buttons">
-          <button
-            onClick={() => onEdit(account)}
-            className="btn-edit"
-            title="Edit Account"
-          >
+          <button onClick={() => onEdit(account)} className="btn-edit" title="Edit Account">
             ✏️
           </button>
           <button
@@ -140,7 +133,7 @@ export default function AccountCard({ account, onEdit, onDelete, onAuth }: Accou
         }
 
         .status-indicator.active {
-          color: #4CAF50;
+          color: #4caf50;
         }
 
         .status-indicator.inactive {

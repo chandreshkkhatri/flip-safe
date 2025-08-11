@@ -1,13 +1,13 @@
 'use client';
 
-import axios from 'axios';
-import { useEffect, useState } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Table from '@/components/ui/Table';
 import { useAuth } from '@/lib/auth-context';
 import { API_ROUTES } from '@/lib/constants';
 import { UnifiedPosition } from '@/lib/trading-service';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 
 // Using UnifiedPosition interface from trading-service
 
@@ -108,9 +108,7 @@ export default function PositionsPage() {
     {
       key: 'product',
       header: 'Product',
-      render: (value: string) => (
-        <span className="product-badge">{value}</span>
-      ),
+      render: (value: string) => <span className="product-badge">{value}</span>,
     },
   ];
 
@@ -140,20 +138,20 @@ export default function PositionsPage() {
           margin-bottom: 16px;
           text-align: center;
         }
-        
+
         .page-header h1 {
           font-size: 1.8rem;
           font-weight: 600;
           margin-bottom: 4px;
           color: #333;
         }
-        
+
         .page-header p {
           font-size: 0.9rem;
           color: #666;
           margin: 0;
         }
-        
+
         .error-message {
           background: #fff3cd;
           border: 1px solid #ffeaa7;
@@ -163,36 +161,36 @@ export default function PositionsPage() {
           color: #856404;
           font-size: 0.85rem;
         }
-        
+
         .symbol-info {
           display: flex;
           flex-direction: column;
           gap: 2px;
         }
-        
+
         .symbol-name {
           font-weight: 600;
           font-size: 0.85rem;
         }
-        
+
         .exchange {
           font-size: 0.7rem;
           color: #666;
         }
-        
+
         .pnl-value {
           font-weight: 600;
           font-size: 0.85rem;
         }
-        
+
         .pnl-value.positive {
           color: #4caf50;
         }
-        
+
         .pnl-value.negative {
           color: #f44336;
         }
-        
+
         .product-badge {
           background: #2196f3;
           color: white;
@@ -201,7 +199,7 @@ export default function PositionsPage() {
           font-size: 0.7rem;
           font-weight: 500;
         }
-        
+
         .account-badge {
           background: #e3f2fd;
           color: #1976d2;

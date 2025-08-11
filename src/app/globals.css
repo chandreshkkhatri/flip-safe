@@ -1,6 +1,6 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-@import "tw-animate-css";
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -106,14 +106,30 @@ body {
 }
 
 /* Utility classes */
-.text-primary { color: var(--text-primary) !important; }
-.text-secondary { color: var(--text-secondary) !important; }
-.text-success { color: var(--success-color) !important; }
-.text-error { color: var(--error-color) !important; }
-.text-warning { color: var(--warning-color) !important; }
-.text-center { text-align: center; }
-.text-left { text-align: left; }
-.text-right { text-align: right; }
+.text-primary {
+  color: var(--text-primary) !important;
+}
+.text-secondary {
+  color: var(--text-secondary) !important;
+}
+.text-success {
+  color: var(--success-color) !important;
+}
+.text-error {
+  color: var(--error-color) !important;
+}
+.text-warning {
+  color: var(--warning-color) !important;
+}
+.text-center {
+  text-align: center;
+}
+.text-left {
+  text-align: left;
+}
+.text-right {
+  text-align: right;
+}
 
 /* Button improvements */
 .btn {
@@ -155,9 +171,9 @@ body {
 }
 
 /* Form improvements */
-input[type="text"],
-input[type="password"],
-input[type="email"],
+input[type='text'],
+input[type='password'],
+input[type='email'],
 select,
 textarea {
   width: 100%;
@@ -165,7 +181,9 @@ textarea {
   border: 2px solid var(--border-color);
   border-radius: var(--radius-small);
   font-size: 0.95rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   background: var(--background-light);
   color: var(--text-primary);
 }

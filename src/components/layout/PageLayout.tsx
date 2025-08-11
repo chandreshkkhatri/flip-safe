@@ -34,11 +34,9 @@ export default function PageLayout({
         onShowApiPanel={onShowApiPanel}
         nightMode={nightMode}
       />
-      
+
       <main className="main-content">
-        <div className="container">
-          {children}
-        </div>
+        <div className="container">{children}</div>
       </main>
 
       <style jsx>{`
@@ -46,28 +44,28 @@ export default function PageLayout({
           min-height: 100vh;
           background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
         }
-        
+
         .page-layout.dark-theme {
           background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
           color: #ffffff;
         }
-        
+
         .main-content {
           margin-top: 80px;
           padding-bottom: 40px;
         }
-        
+
         .container {
           max-width: 1200px;
           margin: 0 auto;
           padding: 0 20px;
         }
-        
+
         @media only screen and (max-width: 600px) {
           .main-content {
             margin-top: 70px;
           }
-          
+
           .container {
             padding: 0 15px;
           }

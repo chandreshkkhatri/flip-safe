@@ -1,12 +1,12 @@
 'use client';
 
-import axios from 'axios';
-import { useEffect, useState } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Watchlist from '@/components/watchlist/Watchlist';
 import { useAuth } from '@/lib/auth-context';
 import { API_ROUTES } from '@/lib/constants';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 
 interface BinanceAccount {
   _id: string;
@@ -34,7 +34,7 @@ export default function TradingPage() {
 
     try {
       const response = await axios.get(`${API_ROUTES.accounts.getAccounts}?userId=${userId}`);
-      
+
       if (response.data?.success) {
         // Filter only Binance accounts
         const binanceAccs = response.data.accounts.filter(
@@ -47,7 +47,7 @@ export default function TradingPage() {
     } catch (error) {
       console.error('Error fetching Binance accounts:', error);
       setError('Failed to fetch Binance accounts');
-      
+
       // For demo purposes, add a mock Binance account if none exist
       setBinanceAccounts([
         {
@@ -55,7 +55,7 @@ export default function TradingPage() {
           accountName: 'My Binance Futures',
           accountType: 'binance',
           isActive: true,
-        }
+        },
       ]);
     } finally {
       setLoading(false);
@@ -77,7 +77,9 @@ export default function TradingPage() {
         {error && (
           <div className="error-message">
             <p>⚠️ {error}</p>
-            <p><small>Using demo data for development</small></p>
+            <p>
+              <small>Using demo data for development</small>
+            </p>
           </div>
         )}
 
@@ -89,11 +91,11 @@ export default function TradingPage() {
           <div className="info-card">
             <h4>Risk Warning</h4>
             <p>
-              Futures trading involves substantial risk of loss and is not suitable for all investors. 
-              Please ensure you understand the risks before trading.
+              Futures trading involves substantial risk of loss and is not suitable for all
+              investors. Please ensure you understand the risks before trading.
             </p>
           </div>
-          
+
           <div className="info-card">
             <h4>Features</h4>
             <ul>

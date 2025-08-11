@@ -1,5 +1,5 @@
-import axios, { AxiosInstance } from 'axios';
 import { IAccount } from '@/models/account';
+import axios, { AxiosInstance } from 'axios';
 
 export interface UpstoxConfig {
   apiKey: string;
@@ -102,16 +102,16 @@ export class UpstoxAPI {
       baseURL: `${UpstoxAPI.BASE_URL}/${UpstoxAPI.API_VERSION}`,
       timeout: 30000,
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'Content-Type': 'application/json',
-        ...(this.accessToken && { 'Authorization': `Bearer ${this.accessToken}` }),
+        ...(this.accessToken && { Authorization: `Bearer ${this.accessToken}` }),
       },
     });
 
     // Response interceptor for error handling
     this.client.interceptors.response.use(
-      (response) => response,
-      (error) => {
+      response => response,
+      error => {
         console.error('Upstox API Error:', error.response?.data || error.message);
         throw error;
       }
@@ -136,18 +136,22 @@ export class UpstoxAPI {
     expires_in: number;
   }> {
     try {
-      const response = await axios.post(`${UpstoxAPI.BASE_URL}/v2/login/authorization/token`, {
-        code: authCode,
-        client_id: this.apiKey,
-        client_secret: this.apiSecret,
-        redirect_uri: this.redirectUri,
-        grant_type: 'authorization_code',
-      }, {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/x-www-form-urlencoded',
+      const response = await axios.post(
+        `${UpstoxAPI.BASE_URL}/v2/login/authorization/token`,
+        {
+          code: authCode,
+          client_id: this.apiKey,
+          client_secret: this.apiSecret,
+          redirect_uri: this.redirectUri,
+          grant_type: 'authorization_code',
         },
-      });
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        }
+      );
 
       const tokenData = response.data;
       this.accessToken = tokenData.access_token;
@@ -218,14 +222,17 @@ export class UpstoxAPI {
     }
   }
 
-  async modifyOrder(orderId: string, orderData: {
-    quantity?: number;
-    validity?: string;
-    price?: number;
-    order_type?: string;
-    disclosed_quantity?: number;
-    trigger_price?: number;
-  }): Promise<any> {
+  async modifyOrder(
+    orderId: string,
+    orderData: {
+      quantity?: number;
+      validity?: string;
+      price?: number;
+      order_type?: string;
+      disclosed_quantity?: number;
+      trigger_price?: number;
+    }
+  ): Promise<any> {
     try {
       const response = await this.client.put('/order/modify', {
         order_id: orderId,
@@ -284,7 +291,9 @@ export class UpstoxAPI {
 
   async getQuote(instrumentKey: string): Promise<any> {
     try {
-      const response = await this.client.get(`/market-quote/quotes?instrument_key=${instrumentKey}`);
+      const response = await this.client.get(
+        `/market-quote/quotes?instrument_key=${instrumentKey}`
+      );
       return response.data;
     } catch (error) {
       console.error('Error fetching quote:', error);
@@ -307,7 +316,9 @@ export class UpstoxAPI {
         from_date: fromDate,
       });
 
-      const response = await this.client.get(`/historical-candle/${instrumentKey}/${interval}/${toDate}/${fromDate}`);
+      const response = await this.client.get(
+        `/historical-candle/${instrumentKey}/${interval}/${toDate}/${fromDate}`
+      );
       return response.data;
     } catch (error) {
       console.error('Error fetching historical data:', error);
@@ -326,7 +337,9 @@ export const createUpstoxClient = (account: IAccount): UpstoxAPI => {
     apiKey: account.apiKey,
     apiSecret: account.apiSecret,
     accessToken: account.accessToken,
-    redirectUri: account.metadata?.redirectUri || `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/upstox/callback`,
+    redirectUri:
+      account.metadata?.redirectUri ||
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/upstox/callback`,
   });
 };
 

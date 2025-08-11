@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { tradingService } from '@/lib/trading-service';
 import { getAccountsByUserId } from '@/models/account';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     // Get all active accounts for the user
     const accounts = await getAccountsByUserId(userId);
-    
+
     if (accounts.length === 0) {
       return NextResponse.json({ success: true, positions: [] });
     }

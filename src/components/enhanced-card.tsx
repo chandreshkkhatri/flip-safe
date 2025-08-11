@@ -1,47 +1,49 @@
-import Image from "next/image"
-import Link from "next/link"
-import type { ReactNode } from "react"
+import Image from 'next/image';
+import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 export type EnhancedCardProps = {
-  title?: ReactNode
-  description?: ReactNode
-  children?: ReactNode
-  className?: string
-  hoverable?: boolean
-  action?: ReactNode
-  nightMode?: boolean
-  imageUrl?: string
-  imageAlt?: string
-  clickable?: boolean
-  href?: string
-  customBackground?: string
-  customTextColor?: string
-}
+  title?: ReactNode;
+  description?: ReactNode;
+  children?: ReactNode;
+  className?: string;
+  hoverable?: boolean;
+  action?: ReactNode;
+  nightMode?: boolean;
+  imageUrl?: string;
+  imageAlt?: string;
+  clickable?: boolean;
+  href?: string;
+  customBackground?: string;
+  customTextColor?: string;
+};
 
 export default function EnhancedCard({
   title,
   description,
   children,
-  className = "",
+  className = '',
   hoverable = true,
   action,
   nightMode = false,
   imageUrl,
-  imageAlt = "Card media",
+  imageAlt = 'Card media',
   clickable = false,
   href,
   customBackground,
   customTextColor,
 }: EnhancedCardProps) {
   // Only make the whole card clickable if there's no conflicting action area.
-  const isOverlayLink = clickable && href && !action
+  const isOverlayLink = clickable && href && !action;
 
   return (
-    <div className={`enhanced-card ${hoverable ? 'hoverable' : ''} ${nightMode ? 'night-mode' : ''} ${className}`}>
+    <div
+      className={`enhanced-card ${hoverable ? 'hoverable' : ''} ${nightMode ? 'night-mode' : ''} ${className}`}
+    >
       {isOverlayLink && (
         <Link
           href={href!}
-          aria-label={typeof title === "string" ? title : "Open card"}
+          aria-label={typeof title === 'string' ? title : 'Open card'}
           className="card-overlay-link"
         />
       )}
@@ -62,16 +64,8 @@ export default function EnhancedCard({
 
       {(title || description) && (
         <div className="card-header">
-          {title && (
-            <div className="card-title">
-              {title}
-            </div>
-          )}
-          {description && (
-            <div className="card-description">
-              {description}
-            </div>
-          )}
+          {title && <div className="card-title">{title}</div>}
+          {description && <div className="card-description">{description}</div>}
         </div>
       )}
 
@@ -88,7 +82,9 @@ export default function EnhancedCard({
           background: ${customBackground || '#ffffff'};
           border: 2px solid ${customBackground ? 'rgba(255,255,255,0.2)' : '#e2e8f0'};
           border-radius: var(--radius-large);
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+          box-shadow:
+            0 4px 20px rgba(0, 0, 0, 0.08),
+            0 2px 8px rgba(0, 0, 0, 0.04);
           overflow: hidden;
           position: relative;
           transition: all 0.3s ease;
@@ -97,7 +93,9 @@ export default function EnhancedCard({
 
         .enhanced-card.hoverable:hover {
           transform: translateY(-2px);
-          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.08);
+          box-shadow:
+            0 12px 40px rgba(0, 0, 0, 0.15),
+            0 4px 16px rgba(0, 0, 0, 0.08);
           border-color: ${customBackground ? 'rgba(255,255,255,0.4)' : '#3b82f6'};
         }
 
@@ -105,12 +103,16 @@ export default function EnhancedCard({
           background: #1e293b;
           border-color: #475569;
           color: #f1f5f9;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.15);
+          box-shadow:
+            0 4px 20px rgba(0, 0, 0, 0.25),
+            0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
         .enhanced-card.night-mode:hover {
           border-color: #3b82f6;
-          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.25);
+          box-shadow:
+            0 12px 40px rgba(0, 0, 0, 0.4),
+            0 4px 16px rgba(0, 0, 0, 0.25);
         }
 
         .card-overlay-link {
@@ -147,7 +149,7 @@ export default function EnhancedCard({
           left: 0;
           right: 0;
           bottom: 0;
-          background: linear-gradient(to bottom, rgba(0,0,0,0.1), transparent);
+          background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), transparent);
           pointer-events: none;
         }
 
@@ -270,5 +272,5 @@ export default function EnhancedCard({
         }
       `}</style>
     </div>
-  )
+  );
 }

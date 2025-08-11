@@ -7,18 +7,21 @@ Flip Safe now supports multiple trading accounts including Upstox alongside the 
 ## Features Added
 
 ### 🏦 Multi-Account Support
+
 - **Centralized Account Management**: Add and manage multiple trading accounts
 - **Unified Data View**: View orders, positions, and holdings from all accounts in one place
 - **Account-wise Identification**: Each data entry shows which account it belongs to
 - **Secure Credential Storage**: API keys and secrets stored securely with proper encryption
 
 ### 🔌 Upstox API Integration
+
 - **OAuth 2.0 Authentication**: Secure login flow with Upstox
 - **Real-time Data**: Fetch live orders, positions, and holdings
 - **Market Data**: Access to LTP, quotes, and historical data
 - **Order Management**: Place, modify, and cancel orders (coming soon)
 
 ### 🎨 Enhanced UI/UX
+
 - **Account Management Dashboard**: Dedicated page to manage trading accounts
 - **Multi-account Tables**: Enhanced tables showing data from multiple brokers
 - **Account Badges**: Visual indicators showing which broker each entry belongs to
@@ -108,22 +111,25 @@ interface UnifiedOrder {
 - `POST /api/auth/upstox/login` - Initiate Upstox OAuth
 - `GET /api/auth/upstox/callback` - Handle OAuth callback
 - `GET /api/trading/orders?userId=X` - Get unified orders
-- `GET /api/trading/positions?userId=X` - Get unified positions  
+- `GET /api/trading/positions?userId=X` - Get unified positions
 - `GET /api/trading/holdings?userId=X` - Get unified holdings
 
 ## Key Components
 
 ### 1. Account Management
+
 - **AccountCard**: Displays account info with connection status
 - **AddAccountModal**: Form for adding new trading accounts
 - **AccountsPage**: Main account management interface
 
 ### 2. Unified Trading Service
+
 - **TradingService**: Central service handling multiple brokers
 - **UpstoxAPI**: Upstox-specific API client
 - **Data Normalization**: Converts broker-specific data to unified format
 
 ### 3. Enhanced Pages
+
 - **Orders Page**: Shows orders from all connected accounts
 - **Positions Page**: Displays positions across all brokers
 - **Holdings Page**: Portfolio view with multi-account support
@@ -146,6 +152,7 @@ interface UnifiedOrder {
 ## Support
 
 For issues or questions:
+
 1. Check the application logs for error details
 2. Verify API credentials and permissions
 3. Ensure proper OAuth redirect URI configuration

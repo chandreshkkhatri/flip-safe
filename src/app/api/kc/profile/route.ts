@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { checkAuth, getProfile } from '@/lib/kiteconnect-handler';
+import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 

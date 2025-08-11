@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface TradingTabsProps {
   className?: string;
@@ -48,7 +48,9 @@ export default function TradingTabs({ className = '' }: TradingTabsProps) {
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm">Refresh</Button>
+              <Button variant="outline" size="sm">
+                Refresh
+              </Button>
             </div>
           </div>
 
@@ -61,9 +63,7 @@ export default function TradingTabs({ className = '' }: TradingTabsProps) {
               <div>Status</div>
               <div>Actions</div>
             </div>
-            <div className="p-8 text-center text-muted-foreground">
-              No active orders
-            </div>
+            <div className="p-8 text-center text-muted-foreground">No active orders</div>
           </div>
         </TabsContent>
 
@@ -81,7 +81,9 @@ export default function TradingTabs({ className = '' }: TradingTabsProps) {
                   <SelectItem value="upstox">Upstox</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm">Square Off All</Button>
+              <Button variant="outline" size="sm">
+                Square Off All
+              </Button>
             </div>
           </div>
 
@@ -95,9 +97,7 @@ export default function TradingTabs({ className = '' }: TradingTabsProps) {
               <div>Day Change</div>
               <div>Actions</div>
             </div>
-            <div className="p-8 text-center text-muted-foreground">
-              No open positions
-            </div>
+            <div className="p-8 text-center text-muted-foreground">No open positions</div>
           </div>
         </TabsContent>
 
@@ -131,9 +131,7 @@ export default function TradingTabs({ className = '' }: TradingTabsProps) {
               <div>Day Change</div>
               <div>Actions</div>
             </div>
-            <div className="p-8 text-center text-muted-foreground">
-              No holdings found
-            </div>
+            <div className="p-8 text-center text-muted-foreground">No holdings found</div>
           </div>
         </TabsContent>
 
@@ -141,8 +139,12 @@ export default function TradingTabs({ className = '' }: TradingTabsProps) {
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Market Watchlist</h3>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">Add Symbol</Button>
-              <Button variant="trading" size="sm">Create Alert</Button>
+              <Button variant="outline" size="sm">
+                Add Symbol
+              </Button>
+              <Button variant="trading" size="sm">
+                Create Alert
+              </Button>
             </div>
           </div>
 
@@ -163,7 +165,9 @@ export default function TradingTabs({ className = '' }: TradingTabsProps) {
                 <div className="text-green-600">+0.51%</div>
                 <div className="text-sm text-muted-foreground">-</div>
                 <div>
-                  <Button variant="ghost" size="sm">Trade</Button>
+                  <Button variant="ghost" size="sm">
+                    Trade
+                  </Button>
                 </div>
               </div>
               <div className="grid grid-cols-6 gap-4 p-2 hover:bg-muted/50 rounded">
@@ -173,7 +177,9 @@ export default function TradingTabs({ className = '' }: TradingTabsProps) {
                 <div className="text-red-600">-0.83%</div>
                 <div className="text-sm text-muted-foreground">1,23,456</div>
                 <div>
-                  <Button variant="ghost" size="sm">Trade</Button>
+                  <Button variant="ghost" size="sm">
+                    Trade
+                  </Button>
                 </div>
               </div>
             </div>

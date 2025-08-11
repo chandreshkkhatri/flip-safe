@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { createUpstoxClient } from '@/lib/upstox';
 import { getAccountById } from '@/models/account';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,10 +18,10 @@ export async function POST(request: NextRequest) {
     const upstoxClient = createUpstoxClient(account);
     const loginUrl = upstoxClient.generateLoginURL(`${accountId}_upstox_auth`);
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       loginUrl,
-      message: 'Redirect to Upstox login' 
+      message: 'Redirect to Upstox login',
     });
   } catch (error) {
     console.error('Error generating Upstox login URL:', error);

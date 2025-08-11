@@ -1,23 +1,14 @@
-import { NextResponse } from 'next/server';
 import { createBinanceClient } from '@/lib/binance';
 import connectDB from '@/lib/mongodb';
 import Account from '@/models/account';
+import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
     await connectDB();
-    
-    const {
-      accountId,
-      symbol,
-      side,
-      type,
-      quantity,
-      price,
-      stopPrice,
-      reduceOnly,
-      leverage,
-    } = await request.json();
+
+    const { accountId, symbol, side, type, quantity, price, stopPrice, reduceOnly, leverage } =
+      await request.json();
 
     // Validate required fields
     if (!accountId || !symbol || !side || !type || !quantity) {
@@ -30,10 +21,7 @@ export async function POST(request: Request) {
     // Find the Binance account
     const account = await Account.findById(accountId);
     if (!account) {
-      return NextResponse.json(
-        { success: false, error: 'Account not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Account not found' }, { status: 404 });
     }
 
     if (account.accountType !== 'binance') {
@@ -44,10 +32,7 @@ export async function POST(request: Request) {
     }
 
     if (!account.isActive) {
-      return NextResponse.json(
-        { success: false, error: 'Account is not active' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Account is not active' }, { status: 400 });
     }
 
     // Create Binance client
@@ -124,15 +109,14 @@ export async function POST(request: Request) {
       },
       message: `${side} order placed successfully for ${quantity} ${symbol}`,
     });
-
   } catch (error: any) {
     console.error('Order placement error:', error);
-    
+
     // Handle specific Binance API errors
     if (error.response?.data?.code) {
       const binanceError = error.response.data;
       let errorMessage = binanceError.msg || 'Binance API error';
-      
+
       // Map common error codes to user-friendly messages
       switch (binanceError.code) {
         case -2010:
@@ -156,16 +140,13 @@ export async function POST(request: Request) {
         default:
           errorMessage = `${errorMessage} (Code: ${binanceError.code})`;
       }
-      
-      return NextResponse.json(
-        { success: false, error: errorMessage },
-        { status: 400 }
-      );
+
+      return NextResponse.json({ success: false, error: errorMessage }, { status: 400 });
     }
-    
+
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: error.message || 'Failed to place order',
       },
       { status: 500 }

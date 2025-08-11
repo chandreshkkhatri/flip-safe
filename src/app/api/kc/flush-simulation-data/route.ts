@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { checkAuth } from '@/lib/kiteconnect-handler';
 import { flushSimulationData } from '@/models/simulator';
+import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 

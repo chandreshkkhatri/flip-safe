@@ -28,29 +28,29 @@ export function useApi<T = any>(
 
   const fetchData = async () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
-    
+
     try {
       const response = await axios.get(url);
       const data = response.data;
-      
+
       setState({
         data,
         loading: false,
         error: null,
       });
-      
+
       onSuccess?.(data);
     } catch (error) {
       const errorMessage = axios.isAxiosError(error)
         ? error.response?.data?.message || error.message
         : 'An unexpected error occurred';
-        
+
       setState({
         data: null,
         loading: false,
         error: errorMessage,
       });
-      
+
       onError?.(errorMessage);
     }
   };
@@ -80,34 +80,34 @@ export function useApiMutation<TData = any, TVariables = any>() {
     method: 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'POST'
   ): Promise<TData | null> => {
     setState({ data: null, loading: true, error: null });
-    
+
     try {
       const response = await axios({
         method,
         url,
         data: variables,
       });
-      
+
       const data = response.data;
-      
+
       setState({
         data,
         loading: false,
         error: null,
       });
-      
+
       return data;
     } catch (error) {
       const errorMessage = axios.isAxiosError(error)
         ? error.response?.data?.message || error.message
         : 'An unexpected error occurred';
-        
+
       setState({
         data: null,
         loading: false,
         error: errorMessage,
       });
-      
+
       throw new Error(errorMessage);
     }
   };

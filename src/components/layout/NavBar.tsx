@@ -1,9 +1,9 @@
 'use client';
 
+import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { useAuth } from '@/lib/auth-context';
 
 interface NavBarProps {
   title?: string;
@@ -66,14 +66,14 @@ export default function NavBar({
 
             {/* Desktop navigation */}
             <ul className="right hide-on-med-and-down">
-              {navItems.map((item) => (
+              {navItems.map(item => (
                 <li key={item.href} className={isActiveRoute(item.href) ? 'active' : ''}>
                   <Link href={item.href} className="nav-link">
                     {item.label}
                   </Link>
                 </li>
               ))}
-              
+
               {showNightModeToggle && (
                 <li>
                   <button
@@ -86,7 +86,7 @@ export default function NavBar({
                   </button>
                 </li>
               )}
-              
+
               {showApiConfig && (
                 <li>
                   <button
@@ -99,7 +99,7 @@ export default function NavBar({
                   </button>
                 </li>
               )}
-              
+
               {isLoggedIn && (
                 <li>
                   <button
@@ -117,26 +117,27 @@ export default function NavBar({
       </nav>
 
       {/* Mobile side navigation */}
-      <ul className={`sidenav ${isMenuOpen ? 'sidenav-open' : ''} ${nightMode ? 'sidenav-dark' : ''}`}>
+      <ul
+        className={`sidenav ${isMenuOpen ? 'sidenav-open' : ''} ${nightMode ? 'sidenav-dark' : ''}`}
+      >
         <li>
           <div className="user-view">
             <span className="name">{title}</span>
           </div>
         </li>
-        
-        {navItems.map((item) => (
+
+        {navItems.map(item => (
           <li key={item.href} className={isActiveRoute(item.href) ? 'active' : ''}>
-            <Link 
-              href={item.href}
-              onClick={() => setIsMenuOpen(false)}
-            >
+            <Link href={item.href} onClick={() => setIsMenuOpen(false)}>
               {item.label}
             </Link>
           </li>
         ))}
-        
-        <li><div className="divider"></div></li>
-        
+
+        <li>
+          <div className="divider"></div>
+        </li>
+
         {showNightModeToggle && (
           <li>
             <button
@@ -149,7 +150,7 @@ export default function NavBar({
             </button>
           </li>
         )}
-        
+
         {showApiConfig && (
           <li>
             <button
@@ -162,29 +163,22 @@ export default function NavBar({
             </button>
           </li>
         )}
-        
+
         {isLoggedIn && (
           <li>
-            <button onClick={handleLogout}>
-              Logout
-            </button>
+            <button onClick={handleLogout}>Logout</button>
           </li>
         )}
       </ul>
 
       {/* Overlay for mobile menu */}
-      {isMenuOpen && (
-        <div
-          className="sidenav-overlay"
-          onClick={() => setIsMenuOpen(false)}
-        />
-      )}
+      {isMenuOpen && <div className="sidenav-overlay" onClick={() => setIsMenuOpen(false)} />}
 
       <style jsx>{`
         .navbar-dark .nav-wrapper {
           background-color: #424242;
         }
-        
+
         .sidenav-trigger {
           background: none;
           border: none;
@@ -216,7 +210,7 @@ export default function NavBar({
           display: block;
           pointer-events: none;
         }
-        
+
         .sidenav {
           position: fixed;
           top: 0;
@@ -227,14 +221,14 @@ export default function NavBar({
           background-color: #fff;
           z-index: 999;
           transition: transform 0.3s ease-in-out;
-          box-shadow: 2px 0 20px rgba(0,0,0,0.3);
+          box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3);
           overflow-y: auto;
           padding: 0;
           margin: 0;
           list-style: none;
           transform: translateX(-100%);
         }
-        
+
         .sidenav-open {
           transform: translateX(0) !important;
         }
@@ -279,7 +273,7 @@ export default function NavBar({
         .sidenav li button:hover {
           background-color: #f5f5f5;
         }
-        
+
         .sidenav-dark {
           background-color: #424242;
           color: white;
@@ -307,7 +301,7 @@ export default function NavBar({
         .sidenav-dark li button:hover {
           background-color: #555;
         }
-        
+
         .sidenav-dark .name {
           color: white !important;
         }
@@ -333,7 +327,7 @@ export default function NavBar({
         .sidenav-dark .divider {
           background-color: #555;
         }
-        
+
         .sidenav-overlay {
           position: fixed;
           top: 0;
@@ -343,7 +337,7 @@ export default function NavBar({
           background-color: rgba(0, 0, 0, 0.5);
           z-index: 998;
         }
-        
+
         .nav-link {
           padding: 0 15px;
           line-height: 64px;
@@ -351,20 +345,20 @@ export default function NavBar({
           color: white;
           text-decoration: none;
         }
-        
+
         .nav-link:hover {
           background-color: rgba(255, 255, 255, 0.1);
         }
-        
+
         .active .nav-link {
           background-color: rgba(255, 255, 255, 0.2);
         }
-        
+
         @media only screen and (max-width: 992px) {
           .sidenav-trigger {
             display: block !important;
           }
-          
+
           .hide-on-med-and-down {
             display: none !important;
           }

@@ -38,7 +38,7 @@ export default function Table({
             border: 1px dashed #ddd;
             font-size: 0.9rem;
           }
-          
+
           .empty-state.dark {
             background: #2d3748;
             color: #a0aec0;
@@ -55,7 +55,7 @@ export default function Table({
         <table className="responsive-table">
           <thead>
             <tr>
-              {columns.map((column) => (
+              {columns.map(column => (
                 <th key={column.key} className={column.className}>
                   {column.header}
                 </th>
@@ -65,11 +65,9 @@ export default function Table({
           <tbody>
             {data.map((row, index) => (
               <tr key={index} className="table-row">
-                {columns.map((column) => (
+                {columns.map(column => (
                   <td key={column.key} className={column.className}>
-                    {column.render
-                      ? column.render(row[column.key], row, index)
-                      : row[column.key]}
+                    {column.render ? column.render(row[column.key], row, index) : row[column.key]}
                   </td>
                 ))}
               </tr>
@@ -85,22 +83,22 @@ export default function Table({
           overflow: hidden;
           box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        
+
         .table-container.dark {
           background: #1e1e1e;
           color: white;
         }
-        
+
         .table-wrapper {
           overflow-x: auto;
         }
-        
+
         .responsive-table {
           width: 100%;
           border-collapse: collapse;
           font-size: 13px;
         }
-        
+
         .responsive-table th {
           background-color: #f8f9fa;
           padding: 8px 10px;
@@ -110,59 +108,59 @@ export default function Table({
           border-bottom: 1px solid #e9ecef;
           font-size: 0.8rem;
         }
-        
+
         .dark .responsive-table th {
           background-color: #2d3748;
           color: #e2e8f0;
           border-bottom-color: #4a5568;
         }
-        
+
         .responsive-table td {
           padding: 8px 10px;
           border-bottom: 1px solid #f1f3f4;
           vertical-align: middle;
         }
-        
+
         .dark .responsive-table td {
           border-bottom-color: #2d3748;
         }
-        
+
         .table-row {
           transition: background-color 0.2s ease;
         }
-        
+
         .table-row:hover {
           background-color: #f8f9fa;
         }
-        
+
         .dark .table-row:hover {
           background-color: #2d3748;
         }
-        
+
         .table-row:last-child td {
           border-bottom: none;
         }
-        
+
         @media only screen and (max-width: 768px) {
           .responsive-table {
             font-size: 11px;
           }
-          
+
           .responsive-table th,
           .responsive-table td {
             padding: 6px 6px;
           }
-          
+
           .responsive-table th {
             font-size: 0.7rem;
           }
         }
-        
+
         @media only screen and (max-width: 480px) {
           .table-wrapper {
             margin: 0 -8px;
           }
-          
+
           .responsive-table th,
           .responsive-table td {
             padding: 4px 4px;

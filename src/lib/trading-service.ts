@@ -1,5 +1,5 @@
 import { IAccount } from '@/models/account';
-import { createBinanceClient, BinanceAPI } from './binance';
+import { BinanceAPI, createBinanceClient } from './binance';
 import { createUpstoxClient, UpstoxAPI } from './upstox';
 // Note: Import KiteConnect based on your existing implementation
 // import KiteConnect from './kiteconnect';
@@ -120,7 +120,9 @@ export class TradingService {
       }
     }
 
-    return allOrders.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    return allOrders.sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
   }
 
   // Fetch orders from specific account
@@ -154,23 +156,25 @@ export class TradingService {
       if (!client) throw new Error('Upstox client not initialized');
 
       const orders = await client.getOrders();
-      return orders.map((order): UnifiedOrder => ({
-        id: `${account._id}_${order.order_id}`,
-        accountId: account._id!,
-        accountType: 'upstox',
-        symbol: order.trading_symbol,
-        exchange: order.exchange,
-        quantity: order.quantity,
-        price: order.price,
-        averagePrice: order.average_price,
-        orderType: order.order_type,
-        transactionType: order.transaction_type,
-        status: order.order_status,
-        product: order.product,
-        validity: order.validity,
-        timestamp: order.order_timestamp,
-        rawData: order,
-      }));
+      return orders.map(
+        (order): UnifiedOrder => ({
+          id: `${account._id}_${order.order_id}`,
+          accountId: account._id!,
+          accountType: 'upstox',
+          symbol: order.trading_symbol,
+          exchange: order.exchange,
+          quantity: order.quantity,
+          price: order.price,
+          averagePrice: order.average_price,
+          orderType: order.order_type,
+          transactionType: order.transaction_type,
+          status: order.order_status,
+          product: order.product,
+          validity: order.validity,
+          timestamp: order.order_timestamp,
+          rawData: order,
+        })
+      );
     } catch (error) {
       console.error('Error fetching Upstox orders:', error);
       return [];
@@ -183,23 +187,25 @@ export class TradingService {
       if (!client) throw new Error('Binance client not initialized');
 
       const orders = await client.getOpenOrders();
-      return orders.map((order): UnifiedOrder => ({
-        id: `${account._id}_${order.orderId}`,
-        accountId: account._id!,
-        accountType: 'binance',
-        symbol: order.symbol,
-        exchange: 'BINANCE-F',
-        quantity: parseFloat(order.origQty),
-        price: parseFloat(order.price) || undefined,
-        averagePrice: parseFloat(order.avgPrice) || undefined,
-        orderType: order.type,
-        transactionType: order.side,
-        status: order.status,
-        product: order.positionSide,
-        validity: order.timeInForce,
-        timestamp: new Date(order.time).toISOString(),
-        rawData: order,
-      }));
+      return orders.map(
+        (order): UnifiedOrder => ({
+          id: `${account._id}_${order.orderId}`,
+          accountId: account._id!,
+          accountType: 'binance',
+          symbol: order.symbol,
+          exchange: 'BINANCE-F',
+          quantity: parseFloat(order.origQty),
+          price: parseFloat(order.price) || undefined,
+          averagePrice: parseFloat(order.avgPrice) || undefined,
+          orderType: order.type,
+          transactionType: order.side,
+          status: order.status,
+          product: order.positionSide,
+          validity: order.timeInForce,
+          timestamp: new Date(order.time).toISOString(),
+          rawData: order,
+        })
+      );
     } catch (error) {
       console.error('Error fetching Binance orders:', error);
       return [];
@@ -253,20 +259,24 @@ export class TradingService {
       if (!client) throw new Error('Upstox client not initialized');
 
       const positions = await client.getPositions();
-      return positions.map((position): UnifiedPosition => ({
-        id: `${account._id}_${position.trading_symbol}_${position.product}`,
-        accountId: account._id!,
-        accountType: 'upstox',
-        symbol: position.trading_symbol,
-        exchange: position.exchange,
-        quantity: position.quantity,
-        averagePrice: position.average_price,
-        lastPrice: position.last_price,
-        pnl: position.pnl,
-        pnlPercentage: position.pnl ? (position.pnl / (position.average_price * Math.abs(position.quantity))) * 100 : 0,
-        product: position.product,
-        rawData: position,
-      }));
+      return positions.map(
+        (position): UnifiedPosition => ({
+          id: `${account._id}_${position.trading_symbol}_${position.product}`,
+          accountId: account._id!,
+          accountType: 'upstox',
+          symbol: position.trading_symbol,
+          exchange: position.exchange,
+          quantity: position.quantity,
+          averagePrice: position.average_price,
+          lastPrice: position.last_price,
+          pnl: position.pnl,
+          pnlPercentage: position.pnl
+            ? (position.pnl / (position.average_price * Math.abs(position.quantity))) * 100
+            : 0,
+          product: position.product,
+          rawData: position,
+        })
+      );
     } catch (error) {
       console.error('Error fetching Upstox positions:', error);
       return [];

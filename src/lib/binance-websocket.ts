@@ -39,7 +39,7 @@ export class BinanceWebSocket implements WebSocketManager {
       this.ws.onopen = () => {
         console.log('Binance WebSocket connected');
         this.isConnecting = false;
-        
+
         // Clear any existing reconnect timer
         if (this.reconnectTimer) {
           clearTimeout(this.reconnectTimer);
@@ -47,13 +47,13 @@ export class BinanceWebSocket implements WebSocketManager {
         }
       };
 
-      this.ws.onmessage = (event) => {
+      this.ws.onmessage = event => {
         try {
           const data = JSON.parse(event.data);
-          
+
           // Handle array of tickers
           if (Array.isArray(data)) {
-            data.forEach((ticker) => {
+            data.forEach(ticker => {
               const symbol = ticker.s; // Symbol
               if (this.subscribedSymbols.has(symbol.toLowerCase())) {
                 const priceUpdate: PriceUpdate = {
@@ -79,11 +79,10 @@ export class BinanceWebSocket implements WebSocketManager {
         this.scheduleReconnect();
       };
 
-      this.ws.onerror = (error) => {
+      this.ws.onerror = error => {
         console.error('Binance WebSocket error:', error);
         this.isConnecting = false;
       };
-
     } catch (error) {
       console.error('Failed to create WebSocket connection:', error);
       this.isConnecting = false;
@@ -97,7 +96,7 @@ export class BinanceWebSocket implements WebSocketManager {
     this.reconnectTimer = setTimeout(() => {
       console.log('Attempting to reconnect WebSocket...');
       this.reconnectTimer = null;
-      
+
       if (this.onMessageCallback && this.subscribedSymbols.size > 0) {
         this.connect(Array.from(this.subscribedSymbols), this.onMessageCallback);
       }
@@ -122,7 +121,7 @@ export class BinanceWebSocket implements WebSocketManager {
 
   addSymbol(symbol: string): void {
     this.subscribedSymbols.add(symbol.toLowerCase());
-    
+
     // If WebSocket is connected, we don't need to do anything special
     // as we're already subscribed to all tickers
   }

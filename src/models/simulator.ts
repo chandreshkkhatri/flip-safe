@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
 import connectDB from '@/lib/mongodb';
+import mongoose from 'mongoose';
 
 export interface ISimulationData {
   instrument_token: string;

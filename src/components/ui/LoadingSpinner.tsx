@@ -36,27 +36,27 @@ export default function LoadingSpinner({
           padding: 40px 20px;
           text-align: center;
         }
-        
+
         .spinner {
           display: inline-block;
           position: relative;
         }
-        
+
         .spinner-small {
           width: 32px;
           height: 32px;
         }
-        
+
         .spinner-medium {
           width: 48px;
           height: 48px;
         }
-        
+
         .spinner-large {
           width: 64px;
           height: 64px;
         }
-        
+
         .spinner-circle {
           box-sizing: border-box;
           display: block;
@@ -69,26 +69,26 @@ export default function LoadingSpinner({
           animation: spinner-rotate 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
           border-color: #2196f3 transparent transparent transparent;
         }
-        
+
         .spinner-circle:nth-child(1) {
           animation-delay: -0.45s;
         }
-        
+
         .spinner-circle:nth-child(2) {
           animation-delay: -0.3s;
         }
-        
+
         .spinner-circle:nth-child(3) {
           animation-delay: -0.15s;
         }
-        
+
         .loading-message {
           margin-top: 16px;
           color: #666;
           font-size: 16px;
           font-weight: 400;
         }
-        
+
         @keyframes spinner-rotate {
           0% {
             transform: rotate(0deg);

@@ -1,13 +1,10 @@
+import { deleteAccount, getAccountById, updateAccount } from '@/models/account';
 import { NextRequest, NextResponse } from 'next/server';
-import { getAccountById, updateAccount, deleteAccount } from '@/models/account';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const account = await getAccountById(params.id);
-    
+
     if (!account) {
       return NextResponse.json({ error: 'Account not found' }, { status: 404 });
     }
@@ -26,10 +23,7 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await request.json();
     const { accountName, apiKey, apiSecret, isActive, metadata } = body;
@@ -42,7 +36,7 @@ export async function PUT(
     if (metadata !== undefined) updates.metadata = metadata;
 
     const updatedAccount = await updateAccount(params.id, updates);
-    
+
     if (!updatedAccount) {
       return NextResponse.json({ error: 'Account not found' }, { status: 404 });
     }
@@ -53,10 +47,10 @@ export async function PUT(
       apiSecret: undefined,
     };
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       account: safeAccount,
-      message: 'Account updated successfully' 
+      message: 'Account updated successfully',
     });
   } catch (error) {
     console.error('Error updating account:', error);
@@ -64,20 +58,17 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const success = await deleteAccount(params.id);
-    
+
     if (!success) {
       return NextResponse.json({ error: 'Account not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Account deleted successfully' 
+    return NextResponse.json({
+      success: true,
+      message: 'Account deleted successfully',
     });
   } catch (error) {
     console.error('Error deleting account:', error);

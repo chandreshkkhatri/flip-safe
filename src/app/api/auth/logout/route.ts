@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
 import kiteConnectService, { API_KEY } from '@/lib/kiteconnect';
 import { clearSession } from '@/models/session';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {

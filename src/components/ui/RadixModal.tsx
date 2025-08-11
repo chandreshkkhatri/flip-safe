@@ -1,13 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from './dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './dialog';
 
 interface RadixModalProps {
   isOpen: boolean;

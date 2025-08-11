@@ -1,16 +1,14 @@
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog';
-
-
+import { useState } from 'react';
 
 interface RadixAccountModalProps {
   isOpen: boolean;
@@ -52,14 +50,14 @@ export default function RadixAccountModal({ isOpen, onClose, onSubmit }: RadixAc
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const newErrors: Record<string, string> = {};
     if (!formData.accountName.trim()) newErrors.accountName = 'Account name is required';
     if (!formData.apiKey.trim()) newErrors.apiKey = 'API Key is required';
     if (!formData.apiSecret.trim()) newErrors.apiSecret = 'API Secret is required';
 
     setErrors(newErrors);
-    
+
     if (Object.keys(newErrors).length > 0) {
       return;
     }
@@ -73,7 +71,7 @@ export default function RadixAccountModal({ isOpen, onClose, onSubmit }: RadixAc
         apiSecret: formData.apiSecret.trim(),
         ...(formData.redirectUri && { redirectUri: formData.redirectUri.trim() }),
       });
-      
+
       resetForm();
     } finally {
       setIsSubmitting(false);
@@ -106,27 +104,27 @@ export default function RadixAccountModal({ isOpen, onClose, onSubmit }: RadixAc
   };
 
   const brokerOptions = [
-    { 
-      id: 'kite', 
-      name: 'Zerodha Kite', 
-      description: 'India\'s largest stock broker',
+    {
+      id: 'kite',
+      name: 'Zerodha Kite',
+      description: "India's largest stock broker",
       icon: '🟢',
       available: true,
     },
-    { 
-      id: 'upstox', 
-      name: 'Upstox', 
+    {
+      id: 'upstox',
+      name: 'Upstox',
       description: 'Technology-first discount broker',
       icon: '🟠',
       available: true,
     },
-    { 
-      id: 'binance', 
-      name: 'Binance Futures', 
+    {
+      id: 'binance',
+      name: 'Binance Futures',
       description: 'USD-M perpetual futures trading',
       icon: '🟡',
       available: true,
-    }
+    },
   ];
 
   const getModalTitle = () => {
@@ -146,9 +144,9 @@ export default function RadixAccountModal({ isOpen, onClose, onSubmit }: RadixAc
             <p className="text-center text-muted-foreground">
               Select which trading platform you'd like to connect:
             </p>
-            
+
             <div className="grid gap-4">
-              {brokerOptions.map((broker) => (
+              {brokerOptions.map(broker => (
                 <div
                   key={broker.id}
                   className={`
@@ -156,7 +154,10 @@ export default function RadixAccountModal({ isOpen, onClose, onSubmit }: RadixAc
                     hover:border-primary hover:shadow-md
                     ${!broker.available ? 'opacity-50 cursor-not-allowed bg-muted/50' : ''}
                   `}
-                  onClick={() => broker.available && handleBrokerSelect(broker.id as 'kite' | 'upstox' | 'binance')}
+                  onClick={() =>
+                    broker.available &&
+                    handleBrokerSelect(broker.id as 'kite' | 'upstox' | 'binance')
+                  }
                 >
                   <div className="flex items-start gap-4">
                     <span className="text-3xl">{broker.icon}</span>
@@ -198,13 +199,11 @@ export default function RadixAccountModal({ isOpen, onClose, onSubmit }: RadixAc
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Account Name *
-                </label>
+                <label className="block text-sm font-medium mb-2">Account Name *</label>
                 <input
                   type="text"
                   value={formData.accountName}
-                  onChange={(e) => handleChange('accountName', e.target.value)}
+                  onChange={e => handleChange('accountName', e.target.value)}
                   placeholder={`e.g., My ${selectedBroker === 'kite' ? 'Kite' : selectedBroker === 'upstox' ? 'Upstox' : 'Binance'} Account`}
                   className={`
                     w-full px-3 py-2 border rounded-md bg-background
@@ -218,13 +217,11 @@ export default function RadixAccountModal({ isOpen, onClose, onSubmit }: RadixAc
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  API Key *
-                </label>
+                <label className="block text-sm font-medium mb-2">API Key *</label>
                 <input
                   type="text"
                   value={formData.apiKey}
-                  onChange={(e) => handleChange('apiKey', e.target.value)}
+                  onChange={e => handleChange('apiKey', e.target.value)}
                   placeholder="Your API Key"
                   className={`
                     w-full px-3 py-2 border rounded-md bg-background
@@ -232,19 +229,15 @@ export default function RadixAccountModal({ isOpen, onClose, onSubmit }: RadixAc
                     focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring
                   `}
                 />
-                {errors.apiKey && (
-                  <p className="text-destructive text-sm mt-1">{errors.apiKey}</p>
-                )}
+                {errors.apiKey && <p className="text-destructive text-sm mt-1">{errors.apiKey}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  API Secret *
-                </label>
+                <label className="block text-sm font-medium mb-2">API Secret *</label>
                 <input
                   type="password"
                   value={formData.apiSecret}
-                  onChange={(e) => handleChange('apiSecret', e.target.value)}
+                  onChange={e => handleChange('apiSecret', e.target.value)}
                   placeholder="Your API Secret"
                   className={`
                     w-full px-3 py-2 border rounded-md bg-background
@@ -263,7 +256,7 @@ export default function RadixAccountModal({ isOpen, onClose, onSubmit }: RadixAc
                     type="checkbox"
                     id="testnet"
                     checked={formData.redirectUri === 'testnet'}
-                    onChange={(e) => handleChange('redirectUri', e.target.checked ? 'testnet' : '')}
+                    onChange={e => handleChange('redirectUri', e.target.checked ? 'testnet' : '')}
                     className="rounded border-input"
                   />
                   <label htmlFor="testnet" className="text-sm font-medium">
@@ -274,13 +267,11 @@ export default function RadixAccountModal({ isOpen, onClose, onSubmit }: RadixAc
 
               {selectedBroker === 'upstox' && (
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Redirect URI (Optional)
-                  </label>
+                  <label className="block text-sm font-medium mb-2">Redirect URI (Optional)</label>
                   <input
                     type="url"
                     value={formData.redirectUri}
-                    onChange={(e) => handleChange('redirectUri', e.target.value)}
+                    onChange={e => handleChange('redirectUri', e.target.value)}
                     placeholder="https://your-domain.com/callback"
                     className="w-full px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
                   />
@@ -300,12 +291,10 @@ export default function RadixAccountModal({ isOpen, onClose, onSubmit }: RadixAc
               >
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                variant="trading"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Adding Account...' : `Add ${selectedBroker === 'kite' ? 'Kite' : selectedBroker === 'upstox' ? 'Upstox' : 'Binance'} Account`}
+              <Button type="submit" variant="trading" disabled={isSubmitting}>
+                {isSubmitting
+                  ? 'Adding Account...'
+                  : `Add ${selectedBroker === 'kite' ? 'Kite' : selectedBroker === 'upstox' ? 'Upstox' : 'Binance'} Account`}
               </Button>
             </DialogFooter>
           </form>

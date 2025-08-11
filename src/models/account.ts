@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
 import connectDB from '@/lib/mongodb';
+import mongoose from 'mongoose';
 
 export interface IAccount {
   _id?: string;
@@ -79,7 +79,9 @@ accountSchema.index({ userId: 1, accountType: 1, accountName: 1 }, { unique: tru
 const Account = mongoose.models.Account || mongoose.model<IAccount>('Account', accountSchema);
 
 // Account management functions
-export const createAccount = async (accountData: Omit<IAccount, '_id' | 'createdAt' | 'updatedAt'>): Promise<IAccount> => {
+export const createAccount = async (
+  accountData: Omit<IAccount, '_id' | 'createdAt' | 'updatedAt'>
+): Promise<IAccount> => {
   try {
     await connectDB();
     const account = new Account(accountData);
@@ -113,7 +115,10 @@ export const getAccountById = async (accountId: string): Promise<IAccount | null
   }
 };
 
-export const updateAccount = async (accountId: string, updates: Partial<IAccount>): Promise<IAccount | null> => {
+export const updateAccount = async (
+  accountId: string,
+  updates: Partial<IAccount>
+): Promise<IAccount | null> => {
   try {
     await connectDB();
     const account = await Account.findByIdAndUpdate(
@@ -143,7 +148,10 @@ export const deleteAccount = async (accountId: string): Promise<boolean> => {
   }
 };
 
-export const getAccountByType = async (userId: string, accountType: string): Promise<IAccount | null> => {
+export const getAccountByType = async (
+  userId: string,
+  accountType: string
+): Promise<IAccount | null> => {
   try {
     await connectDB();
     const account = await Account.findOne({ userId, accountType, isActive: true });

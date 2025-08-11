@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { createUpstoxClient } from '@/lib/upstox';
 import { getAccountById, updateAccount } from '@/models/account';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,13 +12,19 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('Upstox OAuth error:', error);
       return NextResponse.redirect(
-        new URL(`/dashboard?error=upstox_auth_failed&message=${encodeURIComponent(error)}`, request.url)
+        new URL(
+          `/dashboard?error=upstox_auth_failed&message=${encodeURIComponent(error)}`,
+          request.url
+        )
       );
     }
 
     if (!code || !state) {
       return NextResponse.redirect(
-        new URL('/dashboard?error=upstox_auth_failed&message=Missing_authorization_code', request.url)
+        new URL(
+          '/dashboard?error=upstox_auth_failed&message=Missing_authorization_code',
+          request.url
+        )
       );
     }
 
@@ -53,7 +59,10 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.redirect(
-      new URL('/dashboard?success=upstox_auth_success&message=Account_connected_successfully', request.url)
+      new URL(
+        '/dashboard?success=upstox_auth_success&message=Account_connected_successfully',
+        request.url
+      )
     );
   } catch (error) {
     console.error('Error in Upstox callback:', error);

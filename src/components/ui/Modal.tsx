@@ -49,7 +49,7 @@ export default function Modal({
     <div className="modal-overlay" onClick={onClose}>
       <div
         className={`modal-content ${sizeClasses[size]} ${className}`}
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
@@ -59,19 +59,13 @@ export default function Modal({
             <h3 id="modal-title" className="modal-title">
               {title}
             </h3>
-            <button
-              className="modal-close-btn"
-              onClick={onClose}
-              aria-label="Close modal"
-            >
+            <button className="modal-close-btn" onClick={onClose} aria-label="Close modal">
               ✕
             </button>
           </div>
         )}
-        
-        <div className="modal-body">
-          {children}
-        </div>
+
+        <div className="modal-body">{children}</div>
       </div>
 
       <style jsx>{`
@@ -90,7 +84,7 @@ export default function Modal({
           padding-top: 30px;
           padding-bottom: 30px;
         }
-        
+
         .modal-content {
           background: white;
           border-radius: 12px;
@@ -100,22 +94,22 @@ export default function Modal({
           margin: 0 20px;
           position: relative;
         }
-        
+
         .modal-small {
           max-width: 400px;
           width: 100%;
         }
-        
+
         .modal-medium {
           max-width: 600px;
           width: 100%;
         }
-        
+
         .modal-large {
           max-width: 900px;
           width: 100%;
         }
-        
+
         .modal-header {
           display: flex;
           justify-content: space-between;
@@ -124,14 +118,14 @@ export default function Modal({
           border-bottom: 1px solid #e9ecef;
           margin-bottom: 24px;
         }
-        
+
         .modal-title {
           margin: 0;
           font-size: 1.5rem;
           font-weight: 600;
           color: #333;
         }
-        
+
         .modal-close-btn {
           background: none;
           border: none;
@@ -147,17 +141,17 @@ export default function Modal({
           justify-content: center;
           transition: all 0.2s ease;
         }
-        
+
         .modal-close-btn:hover {
           background-color: #f1f3f4;
           color: #333;
         }
-        
+
         .modal-body {
           padding: 24px;
           overflow: visible;
         }
-        
+
         @keyframes modalAppear {
           from {
             opacity: 0;
@@ -168,22 +162,22 @@ export default function Modal({
             transform: scale(1) translateY(0);
           }
         }
-        
+
         @media only screen and (max-width: 768px) {
           .modal-overlay {
             padding-top: 20px;
             padding-bottom: 20px;
           }
-          
+
           .modal-content {
             margin: 0 10px;
           }
-          
+
           .modal-header,
           .modal-body {
             padding: 16px;
           }
-          
+
           .modal-header {
             margin-bottom: 16px;
           }

@@ -1,11 +1,11 @@
 'use client';
 
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import EnhancedCard from '@/components/enhanced-card';
 import PageLayout from '@/components/layout/PageLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useAuth } from '@/lib/auth-context';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function DashboardPage() {
   const [nightMode, setNightMode] = useState(false);

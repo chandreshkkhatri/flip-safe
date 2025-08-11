@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { createAccount, getAccountsByUserId } from '@/models/account';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     }
 
     const accounts = await getAccountsByUserId(userId);
-    
+
     // Remove sensitive data before sending to client
     const safeAccounts = accounts.map(account => ({
       ...account,
@@ -32,9 +32,12 @@ export async function POST(request: NextRequest) {
     const { userId, accountType, accountName, apiKey, apiSecret, redirectUri } = body;
 
     if (!userId || !accountType || !accountName || !apiKey || !apiSecret) {
-      return NextResponse.json({ 
-        error: 'Missing required fields: userId, accountType, accountName, apiKey, apiSecret' 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Missing required fields: userId, accountType, accountName, apiKey, apiSecret',
+        },
+        { status: 400 }
+      );
     }
 
     if (!['kite', 'upstox', 'binance'].includes(accountType)) {
@@ -54,27 +57,33 @@ export async function POST(request: NextRequest) {
     };
 
     const newAccount = await createAccount(accountData);
-    
+
     // Remove sensitive data before sending response
     const safeAccount = {
       ...newAccount,
       apiSecret: undefined,
     };
 
-    return NextResponse.json({ 
-      success: true, 
-      account: safeAccount,
-      message: 'Account created successfully' 
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        account: safeAccount,
+        message: 'Account created successfully',
+      },
+      { status: 201 }
+    );
   } catch (error: any) {
     console.error('Error creating account:', error);
-    
+
     if (error.code === 11000) {
-      return NextResponse.json({ 
-        error: 'Account with this name already exists for this user' 
-      }, { status: 409 });
+      return NextResponse.json(
+        {
+          error: 'Account with this name already exists for this user',
+        },
+        { status: 409 }
+      );
     }
-    
+
     return NextResponse.json({ error: 'Failed to create account' }, { status: 500 });
   }
 }

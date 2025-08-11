@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import AccountCard from '@/components/accounts/AccountCard';
 import RadixAccountModal from '@/components/accounts/RadixAccountModal';
 import EnhancedCard from '@/components/enhanced-card';
@@ -8,6 +7,7 @@ import PageLayout from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { IAccount } from '@/models/account';
+import { useEffect, useState } from 'react';
 
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState<IAccount[]>([]);
@@ -27,7 +27,7 @@ export default function AccountsPage() {
       setLoading(true);
       const response = await fetch(`/api/accounts?userId=${userId}`);
       const data = await response.json();
-      
+
       if (data.success) {
         setAccounts(data.accounts);
       } else {
@@ -61,7 +61,7 @@ export default function AccountsPage() {
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         await fetchAccounts(); // Refresh accounts list
         setShowAddModal(false);
@@ -90,7 +90,7 @@ export default function AccountsPage() {
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         await fetchAccounts(); // Refresh accounts list
       } else {
@@ -113,7 +113,7 @@ export default function AccountsPage() {
       });
 
       const data = await response.json();
-      
+
       if (data.success && data.loginUrl) {
         // Redirect to broker's OAuth page
         window.location.href = data.loginUrl;
@@ -138,11 +138,7 @@ export default function AccountsPage() {
             <h1>Trading Accounts</h1>
             <p>Manage your connected trading accounts and credentials</p>
           </div>
-          <Button
-            onClick={() => setShowAddModal(true)}
-            variant="trading"
-            size="lg"
-          >
+          <Button onClick={() => setShowAddModal(true)} variant="trading" size="lg">
             + Add Account
           </Button>
         </div>
@@ -159,20 +155,17 @@ export default function AccountsPage() {
               <div className="empty-icon">📱</div>
               <h3>No Trading Accounts</h3>
               <p>
-                Connect your first trading account to start managing your portfolio across multiple brokers.
+                Connect your first trading account to start managing your portfolio across multiple
+                brokers.
               </p>
-              <Button
-                onClick={() => setShowAddModal(true)}
-                variant="success"
-                size="lg"
-              >
+              <Button onClick={() => setShowAddModal(true)} variant="success" size="lg">
                 Add Your First Account
               </Button>
             </div>
           </EnhancedCard>
         ) : (
           <div className="accounts-grid">
-            {accounts.map((account) => (
+            {accounts.map(account => (
               <AccountCard
                 key={account._id}
                 account={account}
@@ -194,9 +187,7 @@ export default function AccountsPage() {
                   <div className="stat-label">Total Accounts</div>
                 </div>
                 <div className="stat-item">
-                  <div className="stat-value">
-                    {accounts.filter(acc => acc.accessToken).length}
-                  </div>
+                  <div className="stat-value">{accounts.filter(acc => acc.accessToken).length}</div>
                   <div className="stat-label">Connected</div>
                 </div>
                 <div className="stat-item">

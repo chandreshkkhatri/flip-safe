@@ -1,7 +1,7 @@
 'use client';
 
 import axios from 'axios';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface TradingWindowProps {
   symbol: string;
@@ -67,12 +67,13 @@ export default function TradingWindow({
 
   const calculateLiquidationPrice = () => {
     const leverage = parseFloat(orderForm.leverage) || 1;
-    const entryPrice = orderForm.type === 'MARKET' ? currentPrice : parseFloat(orderForm.price) || currentPrice;
-    
+    const entryPrice =
+      orderForm.type === 'MARKET' ? currentPrice : parseFloat(orderForm.price) || currentPrice;
+
     if (orderForm.side === 'BUY') {
-      return (entryPrice * (1 - 1/leverage)).toFixed(2);
+      return (entryPrice * (1 - 1 / leverage)).toFixed(2);
     } else {
-      return (entryPrice * (1 + 1/leverage)).toFixed(2);
+      return (entryPrice * (1 + 1 / leverage)).toFixed(2);
     }
   };
 
@@ -117,14 +118,14 @@ export default function TradingWindow({
       };
 
       const response = await axios.post('/api/trading/binance/place-order', orderData);
-      
+
       if (!response.data.success) {
         throw new Error(response.data.error || 'Failed to place order');
       }
-      
+
       setSuccess(`${orderForm.side} order placed successfully for ${orderForm.quantity} ${symbol}`);
       onOrderPlaced();
-      
+
       // Reset form
       setOrderForm(prev => ({
         ...prev,
@@ -132,7 +133,6 @@ export default function TradingWindow({
         price: currentPrice.toFixed(2),
         stopPrice: '',
       }));
-
     } catch (err: any) {
       console.error('Order placement error:', err);
       setError(err.response?.data?.error || 'Failed to place order');
@@ -153,9 +153,7 @@ export default function TradingWindow({
     <div className="trading-window">
       <div className="trading-header">
         <h3>{symbol} Trading</h3>
-        <div className="current-price">
-          ${currentPrice.toFixed(2)}
-        </div>
+        <div className="current-price">${currentPrice.toFixed(2)}</div>
       </div>
 
       <div className="trading-form">
@@ -164,10 +162,10 @@ export default function TradingWindow({
           <label>Account</label>
           <select
             value={orderForm.accountId}
-            onChange={(e) => handleInputChange('accountId', e.target.value)}
+            onChange={e => handleInputChange('accountId', e.target.value)}
             className="form-select"
           >
-            {binanceAccounts.map((account) => (
+            {binanceAccounts.map(account => (
               <option key={account._id} value={account._id}>
                 {account.accountName}
               </option>
@@ -201,7 +199,7 @@ export default function TradingWindow({
           <label>Type</label>
           <select
             value={orderForm.type}
-            onChange={(e) => handleInputChange('type', e.target.value as any)}
+            onChange={e => handleInputChange('type', e.target.value as any)}
             className="form-select"
           >
             <option value="MARKET">Market</option>
@@ -218,16 +216,24 @@ export default function TradingWindow({
             <input
               type="number"
               value={orderForm.quantity}
-              onChange={(e) => handleInputChange('quantity', e.target.value)}
+              onChange={e => handleInputChange('quantity', e.target.value)}
               className="form-input"
               placeholder="0.001"
               step="0.000001"
             />
             <div className="quick-buttons">
-              <button type="button" onClick={() => setQuickQuantity(25)}>25%</button>
-              <button type="button" onClick={() => setQuickQuantity(50)}>50%</button>
-              <button type="button" onClick={() => setQuickQuantity(75)}>75%</button>
-              <button type="button" onClick={() => setQuickQuantity(100)}>Max</button>
+              <button type="button" onClick={() => setQuickQuantity(25)}>
+                25%
+              </button>
+              <button type="button" onClick={() => setQuickQuantity(50)}>
+                50%
+              </button>
+              <button type="button" onClick={() => setQuickQuantity(75)}>
+                75%
+              </button>
+              <button type="button" onClick={() => setQuickQuantity(100)}>
+                Max
+              </button>
             </div>
           </div>
         </div>
@@ -239,7 +245,7 @@ export default function TradingWindow({
             <input
               type="number"
               value={orderForm.price}
-              onChange={(e) => handleInputChange('price', e.target.value)}
+              onChange={e => handleInputChange('price', e.target.value)}
               className="form-input"
               placeholder="0.00"
               step="0.01"
@@ -254,7 +260,7 @@ export default function TradingWindow({
             <input
               type="number"
               value={orderForm.stopPrice}
-              onChange={(e) => handleInputChange('stopPrice', e.target.value)}
+              onChange={e => handleInputChange('stopPrice', e.target.value)}
               className="form-input"
               placeholder="0.00"
               step="0.01"
@@ -267,7 +273,7 @@ export default function TradingWindow({
           <label>Leverage</label>
           <select
             value={orderForm.leverage}
-            onChange={(e) => handleInputChange('leverage', e.target.value)}
+            onChange={e => handleInputChange('leverage', e.target.value)}
             className="form-select"
           >
             <option value="1">1x</option>
@@ -288,7 +294,7 @@ export default function TradingWindow({
               type="checkbox"
               id="reduceOnly"
               checked={orderForm.reduceOnly}
-              onChange={(e) => handleInputChange('reduceOnly', e.target.checked)}
+              onChange={e => handleInputChange('reduceOnly', e.target.checked)}
               className="form-checkbox"
             />
             <label htmlFor="reduceOnly" className="checkbox-label">

@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 import { createBinanceClient } from '@/lib/binance';
+import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
 
     // Test the connection and credentials
     const isConnected = await client.testConnection();
-    
+
     if (!isConnected) {
       return NextResponse.json(
         { success: false, error: 'Failed to connect to Binance API' },
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     // Try to fetch account info to validate credentials
     try {
       const accountInfo = await client.getAccountInfo();
-      
+
       return NextResponse.json({
         success: true,
         accountInfo: {
@@ -50,15 +50,16 @@ export async function POST(request: Request) {
           { status: 401 }
         );
       }
-      
+
       throw error;
     }
   } catch (error: any) {
     console.error('Binance validation error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error.response?.data?.msg || error.message || 'Failed to validate Binance credentials',
+      {
+        success: false,
+        error:
+          error.response?.data?.msg || error.message || 'Failed to validate Binance credentials',
       },
       { status: 500 }
     );

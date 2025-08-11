@@ -1,6 +1,6 @@
-import crypto from 'crypto';
 import axios, { AxiosInstance } from 'axios';
 import Bottleneck from 'bottleneck';
+import crypto from 'crypto';
 
 export interface BinanceConfig {
   apiKey: string;
@@ -100,7 +100,7 @@ export class BinanceAPI {
   constructor(config: BinanceConfig) {
     this.apiKey = config.apiKey;
     this.apiSecret = config.apiSecret;
-    
+
     // Use testnet or production URL
     this.baseURL = config.testnet
       ? 'https://testnet.binancefuture.com'
@@ -123,10 +123,7 @@ export class BinanceAPI {
 
   // Generate signature for requests
   private generateSignature(queryString: string): string {
-    return crypto
-      .createHmac('sha256', this.apiSecret)
-      .update(queryString)
-      .digest('hex');
+    return crypto.createHmac('sha256', this.apiSecret).update(queryString).digest('hex');
   }
 
   // Build query string with signature
@@ -153,7 +150,7 @@ export class BinanceAPI {
     params: Record<string, any> = {}
   ): Promise<any> {
     const signedQuery = this.buildSignedQuery(params);
-    
+
     try {
       const response = await this.limiter.schedule(() => {
         if (method === 'GET' || method === 'DELETE') {
@@ -189,7 +186,7 @@ export class BinanceAPI {
   async getOpenOrders(symbol?: string): Promise<BinanceFuturesOrder[]> {
     const params: any = {};
     if (symbol) params.symbol = symbol;
-    
+
     return this.makeSignedRequest('GET', '/fapi/v1/openOrders', params);
   }
 
@@ -204,13 +201,13 @@ export class BinanceAPI {
   // Get current positions
   async getPositions(symbol?: string): Promise<BinanceFuturesPosition[]> {
     const accountInfo = await this.getAccountInfo();
-    
+
     if (symbol) {
-      return accountInfo.positions.filter(p => 
-        p.symbol === symbol && parseFloat(p.positionAmt) !== 0
+      return accountInfo.positions.filter(
+        p => p.symbol === symbol && parseFloat(p.positionAmt) !== 0
       );
     }
-    
+
     // Return only positions with non-zero amounts
     return accountInfo.positions.filter(p => parseFloat(p.positionAmt) !== 0);
   }
@@ -263,7 +260,7 @@ export class BinanceAPI {
     const endpoint = '/fapi/v1/premiumIndex';
     const params: any = {};
     if (symbol) params.symbol = symbol;
-    
+
     const response = await this.client.get(endpoint, { params });
     return response.data;
   }
@@ -275,11 +272,7 @@ export class BinanceAPI {
   }
 
   // Get klines/candlestick data
-  async getKlines(
-    symbol: string,
-    interval: string,
-    limit: number = 500
-  ): Promise<any[]> {
+  async getKlines(symbol: string, interval: string, limit: number = 500): Promise<any[]> {
     const response = await this.client.get('/fapi/v1/klines', {
       params: {
         symbol,
