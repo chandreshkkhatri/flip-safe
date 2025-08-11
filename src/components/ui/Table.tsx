@@ -14,7 +14,7 @@ interface TableProps {
   data: any[];
   emptyMessage?: string;
   className?: string;
-  nightMode?: boolean;
+  dense?: boolean; // compact rows
 }
 
 export default function Table({
@@ -22,11 +22,11 @@ export default function Table({
   data,
   emptyMessage = 'No data available',
   className = '',
-  nightMode = false,
+  dense = true,
 }: TableProps) {
   if (data.length === 0) {
     return (
-      <div className={`empty-state ${nightMode ? 'dark' : ''}`}>
+      <div className="empty-state">
         <p>{emptyMessage}</p>
         <style jsx>{`
           .empty-state {
@@ -38,8 +38,7 @@ export default function Table({
             border: 1px dashed #ddd;
             font-size: 0.9rem;
           }
-
-          .empty-state.dark {
+          :global(.dark) .empty-state {
             background: #2d3748;
             color: #a0aec0;
             border-color: #4a5568;
@@ -50,7 +49,7 @@ export default function Table({
   }
 
   return (
-    <div className={`table-container ${nightMode ? 'dark' : ''} ${className}`}>
+    <div className={`table-container ${dense ? 'dense' : ''} ${className}`}>
       <div className="table-wrapper">
         <table className="responsive-table">
           <thead>
@@ -78,93 +77,72 @@ export default function Table({
 
       <style jsx>{`
         .table-container {
-          background: white;
-          border-radius: 8px;
+          background: var(--card);
+          border-radius: 10px;
           overflow: hidden;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+          border: 1px solid var(--border);
         }
-
-        .table-container.dark {
-          background: #1e1e1e;
-          color: white;
-        }
-
         .table-wrapper {
           overflow-x: auto;
         }
-
         .responsive-table {
           width: 100%;
           border-collapse: collapse;
-          font-size: 13px;
+          font-size: 12.5px;
         }
-
         .responsive-table th {
-          background-color: #f8f9fa;
-          padding: 8px 10px;
+          background: var(--surface-100);
+          padding: 6px 8px;
           text-align: left;
           font-weight: 600;
-          color: #495057;
-          border-bottom: 1px solid #e9ecef;
-          font-size: 0.8rem;
+          color: var(--text-primary);
+          border-bottom: 1px solid var(--border);
+          font-size: 0.65rem;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
         }
-
-        .dark .responsive-table th {
-          background-color: #2d3748;
-          color: #e2e8f0;
-          border-bottom-color: #4a5568;
+        :global(.dark) .responsive-table th {
+          background: var(--surface-200);
+          color: var(--foreground);
         }
-
         .responsive-table td {
-          padding: 8px 10px;
-          border-bottom: 1px solid #f1f3f4;
+          padding: 6px 8px;
+          border-bottom: 1px solid var(--border);
           vertical-align: middle;
         }
-
-        .dark .responsive-table td {
-          border-bottom-color: #2d3748;
+        :global(.dark) .responsive-table td {
+          border-bottom-color: var(--surface-200);
         }
-
         .table-row {
-          transition: background-color 0.2s ease;
+          transition: background 0.18s ease;
         }
-
         .table-row:hover {
-          background-color: #f8f9fa;
+          background: var(--surface-100);
         }
-
-        .dark .table-row:hover {
-          background-color: #2d3748;
+        :global(.dark) .table-row:hover {
+          background: var(--surface-200);
         }
-
+        .dense .responsive-table td {
+          padding: 4px 6px;
+        }
+        .dense .responsive-table th {
+          padding: 4px 6px;
+        }
         .table-row:last-child td {
           border-bottom: none;
         }
-
-        @media only screen and (max-width: 768px) {
+        @media (max-width: 860px) {
           .responsive-table {
             font-size: 11px;
           }
-
-          .responsive-table th,
-          .responsive-table td {
-            padding: 6px 6px;
-          }
-
-          .responsive-table th {
-            font-size: 0.7rem;
-          }
         }
-
-        @media only screen and (max-width: 480px) {
-          .table-wrapper {
-            margin: 0 -8px;
+        @media (max-width: 640px) {
+          .responsive-table {
+            font-size: 10px;
           }
-
           .responsive-table th,
           .responsive-table td {
             padding: 4px 4px;
-            min-width: 80px;
           }
         }
       `}</style>

@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
@@ -134,6 +135,7 @@ export default function TradingWindow({
         stopPrice: '',
       }));
     } catch (err: any) {
+      // eslint-disable-next-line no-console -- surfaced during order error handling
       console.error('Order placement error:', err);
       setError(err.response?.data?.error || 'Failed to place order');
     } finally {
@@ -177,20 +179,22 @@ export default function TradingWindow({
         <div className="form-group">
           <label>Side</label>
           <div className="button-group">
-            <button
+            <Button
               type="button"
-              className={`btn-side ${orderForm.side === 'BUY' ? 'buy selected' : 'buy'}`}
+              variant={orderForm.side === 'BUY' ? 'success' : 'outline'}
+              size="sm"
               onClick={() => handleInputChange('side', 'BUY')}
             >
-              BUY
-            </button>
-            <button
+              Buy
+            </Button>
+            <Button
               type="button"
-              className={`btn-side ${orderForm.side === 'SELL' ? 'sell selected' : 'sell'}`}
+              variant={orderForm.side === 'SELL' ? 'danger' : 'outline'}
+              size="sm"
               onClick={() => handleInputChange('side', 'SELL')}
             >
-              SELL
-            </button>
+              Sell
+            </Button>
           </div>
         </div>
 
@@ -205,13 +209,13 @@ export default function TradingWindow({
             <option value="MARKET">Market</option>
             <option value="LIMIT">Limit</option>
             <option value="STOP_MARKET">Stop Market</option>
-            <option value="TAKE_PROFIT_MARKET">Take Profit</option>
+            <option value="TAKE_PROFIT_MARKET">Take Profit Mkt</option>
           </select>
         </div>
 
         {/* Quantity */}
         <div className="form-group">
-          <label>Quantity</label>
+          <label>Quantity (Contracts)</label>
           <div className="quantity-input-group">
             <input
               type="number"
@@ -247,22 +251,7 @@ export default function TradingWindow({
               value={orderForm.price}
               onChange={e => handleInputChange('price', e.target.value)}
               className="form-input"
-              placeholder="0.00"
-              step="0.01"
-            />
-          </div>
-        )}
-
-        {/* Stop Price (for stop orders) */}
-        {orderForm.type.includes('STOP') && (
-          <div className="form-group">
-            <label>Stop Price (USDT)</label>
-            <input
-              type="number"
-              value={orderForm.stopPrice}
-              onChange={e => handleInputChange('stopPrice', e.target.value)}
-              className="form-input"
-              placeholder="0.00"
+              placeholder={currentPrice.toFixed(2)}
               step="0.01"
             />
           </div>
@@ -320,14 +309,14 @@ export default function TradingWindow({
         {success && <div className="success-message">{success}</div>}
 
         {/* Submit Button */}
-        <button
-          type="button"
-          onClick={submitOrder}
+        <Button
+          variant={orderForm.side === 'BUY' ? 'success' : 'danger'}
+          size="sm"
           disabled={isSubmitting}
-          className={`btn-submit ${orderForm.side.toLowerCase()}`}
+          onClick={submitOrder}
         >
           {isSubmitting ? 'Placing Order...' : `${orderForm.side} ${symbol}`}
-        </button>
+        </Button>
       </div>
 
       <style jsx>{`
@@ -408,36 +397,7 @@ export default function TradingWindow({
           gap: 4px;
         }
 
-        .btn-side {
-          padding: 6px 12px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          font-size: 0.8rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          background: white;
-        }
-
-        .btn-side.buy {
-          color: #4caf50;
-          border-color: #4caf50;
-        }
-
-        .btn-side.buy.selected {
-          background: #4caf50;
-          color: white;
-        }
-
-        .btn-side.sell {
-          color: #f44336;
-          border-color: #f44336;
-        }
-
-        .btn-side.sell.selected {
-          background: #f44336;
-          color: white;
-        }
+        /* Removed legacy .btn-side styles (using Button variants) */
 
         .quantity-input-group {
           display: flex;
@@ -520,37 +480,7 @@ export default function TradingWindow({
           margin-bottom: 8px;
         }
 
-        .btn-submit {
-          width: 100%;
-          padding: 10px;
-          border: none;
-          border-radius: 6px;
-          font-size: 0.9rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .btn-submit.buy {
-          background: linear-gradient(135deg, #4caf50, #45a049);
-          color: white;
-        }
-
-        .btn-submit.sell {
-          background: linear-gradient(135deg, #f44336, #d32f2f);
-          color: white;
-        }
-
-        .btn-submit:hover:not(:disabled) {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-submit:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          transform: none;
-        }
+        /* Removed legacy .btn-submit styles (using Button variants) */
       `}</style>
     </div>
   );

@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { Suspense, useEffect, useState } from 'react';
@@ -35,7 +36,7 @@ const LoginCard: React.FC<{
         <input
           className="validate form-input"
           placeholder="API Key"
-          type="text"
+          // Swallow login error (optionally hook into a toast system)
           name="apikey"
           value={apikey}
           onChange={e => onApiKeyChange(e.target.value)}
@@ -50,17 +51,21 @@ const LoginCard: React.FC<{
         />
         <br />
         <br />
-        <button type="button" onClick={onLogin} className="waves-effect waves-light btn">
-          Login with Kite
-        </button>
-        <p>or</p>
-        <button
-          type="button"
-          className="waves-effect grey lighten-2 black-text waves-light btn-small"
-          onClick={onRunOfflineMode}
-        >
-          Offline mode
-        </button>
+        <div className="flex flex-col items-center gap-2">
+          <Button type="button" onClick={onLogin} variant="trading" className="w-full">
+            Login with Kite
+          </Button>
+          <p className="text-xs text-muted-foreground">or</p>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={onRunOfflineMode}
+            className="w-full"
+          >
+            Offline mode
+          </Button>
+        </div>
       </form>
     </div>
   </div>
@@ -121,8 +126,7 @@ function LoginPageContent() {
         login();
       }
     } catch (err) {
-      console.error('Login error:', err);
-      setError('Failed to initiate login. Please try again.');
+      setError('Failed to initiate login. Please try again.'); // Silently handle login error (could integrate toast later)
       setVisibility('hidden');
     }
   };
@@ -141,9 +145,9 @@ function LoginPageContent() {
   }
 
   return (
-    <div className="container login-container">
+    <div className="login-container max-w-md mx-auto py-10 px-6">
       {error && (
-        <div className="card-panel red lighten-4 red-text text-darken-2">
+        <div className="mb-4 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300">
           <p>{error}</p>
         </div>
       )}

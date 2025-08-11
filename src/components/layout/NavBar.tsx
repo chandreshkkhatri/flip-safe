@@ -1,37 +1,33 @@
 'use client';
 
 import { useAuth } from '@/lib/auth-context';
+import { useTheme } from '@/lib/theme-context';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
 interface NavBarProps {
   title?: string;
-  showNightModeToggle?: boolean;
   showApiConfig?: boolean;
-  onToggleNightMode?: () => void;
   onShowApiPanel?: () => void;
-  nightMode?: boolean;
 }
 
 export default function NavBar({
   title = 'Flip Safe',
-  showNightModeToggle = false,
   showApiConfig = false,
-  onToggleNightMode,
   onShowApiPanel,
-  nightMode = false,
 }: NavBarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const { isLoggedIn, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
 
   const handleLogout = async () => {
     try {
       await logout();
       setIsMenuOpen(false);
     } catch (error) {
-      console.error('Error during logout:', error);
+      // Swallow logout errors to avoid UI noise
     }
   };
 
@@ -48,81 +44,57 @@ export default function NavBar({
 
   return (
     <>
-      <nav className={`navbar-fixed ${nightMode ? 'navbar-dark' : ''}`}>
-        <nav className={`${nightMode ? 'grey darken-4' : 'blue'} z-depth-1`}>
-          <div className="nav-wrapper container">
-            <Link href="/dashboard" className="brand-logo">
-              {title}
-            </Link>
-
-            {/* Mobile menu trigger */}
+      <header className={`fs-navbar ${isDark ? 'dark' : ''}`}>
+        <div className="fs-navbar-inner">
+          <div className="left-group">
             <button
-              className="sidenav-trigger"
+              className="menu-btn"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label="Toggle navigation menu"
             >
-              <span className="hamburger-icon">☰</span>
+              <span className="hamburger" />
             </button>
-
-            {/* Desktop navigation */}
-            <ul className="right hide-on-med-and-down">
-              {navItems.map(item => (
-                <li key={item.href} className={isActiveRoute(item.href) ? 'active' : ''}>
-                  <Link href={item.href} className="nav-link">
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-
-              {showNightModeToggle && (
-                <li>
-                  <button
-                    onClick={onToggleNightMode}
-                    className="btn-flat white-text"
-                    title={nightMode ? 'Light Mode' : 'Dark Mode'}
-                    aria-label={nightMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                  >
-                    {nightMode ? '☀️' : '🌙'}
-                  </button>
-                </li>
-              )}
-
-              {showApiConfig && (
-                <li>
-                  <button
-                    onClick={onShowApiPanel}
-                    className="btn-flat white-text"
-                    title="Configure API"
-                    aria-label="Configure API credentials"
-                  >
-                    ⚙️ API Config
-                  </button>
-                </li>
-              )}
-
-              {isLoggedIn && (
-                <li>
-                  <button
-                    onClick={handleLogout}
-                    className="btn-flat white-text"
-                    aria-label="Logout"
-                  >
-                    Logout
-                  </button>
-                </li>
-              )}
-            </ul>
+            <Link href="/dashboard" className="brand" aria-label="Home">
+              <span className="brand-accent">⚡</span> {title}
+            </Link>
           </div>
-        </nav>
-      </nav>
+          <nav className="nav-links">
+            {navItems.map(item => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`nav-item ${isActiveRoute(item.href) ? 'active' : ''}`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="right-group">
+            {showApiConfig && (
+              <button
+                className="icon-btn"
+                onClick={onShowApiPanel}
+                aria-label="Configure API credentials"
+                title="Configure API"
+              >
+                ⚙️
+              </button>
+            )}
+            {isLoggedIn && (
+              <button className="icon-btn" onClick={handleLogout} aria-label="Logout">
+                ⏻
+              </button>
+            )}
+          </div>
+        </div>
+      </header>
 
       {/* Mobile side navigation */}
-      <ul
-        className={`sidenav ${isMenuOpen ? 'sidenav-open' : ''} ${nightMode ? 'sidenav-dark' : ''}`}
-      >
+      <ul className={`fs-drawer ${isMenuOpen ? 'open' : ''} ${isDark ? 'dark' : ''}`}>
         <li>
-          <div className="user-view">
+          <div className="drawer-head">
             <span className="name">{title}</span>
+            <button className="close-btn" onClick={() => setIsMenuOpen(false)} aria-label="Close" />
           </div>
         </li>
 
@@ -137,19 +109,6 @@ export default function NavBar({
         <li>
           <div className="divider"></div>
         </li>
-
-        {showNightModeToggle && (
-          <li>
-            <button
-              onClick={() => {
-                onToggleNightMode?.();
-                setIsMenuOpen(false);
-              }}
-            >
-              {nightMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
-            </button>
-          </li>
-        )}
 
         {showApiConfig && (
           <li>
@@ -172,195 +131,282 @@ export default function NavBar({
       </ul>
 
       {/* Overlay for mobile menu */}
-      {isMenuOpen && <div className="sidenav-overlay" onClick={() => setIsMenuOpen(false)} />}
+      {isMenuOpen && <div className="fs-drawer-overlay" onClick={() => setIsMenuOpen(false)} />}
 
       <style jsx>{`
-        .navbar-dark .nav-wrapper {
-          background-color: #424242;
+        .fs-navbar {
+          position: sticky;
+          top: 0;
+          width: 100%;
+          backdrop-filter: blur(8px) saturate(160%);
+          -webkit-backdrop-filter: blur(8px) saturate(160%);
+          background: linear-gradient(90deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.6));
+          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+          z-index: 100;
         }
-
-        .sidenav-trigger {
-          background: none;
-          border: none;
-          color: white;
-          cursor: pointer;
-          display: none;
-          position: absolute;
-          top: 12px;
-          right: 16px;
-          padding: 10px;
-          border-radius: 4px;
-          font-size: 1.2rem;
+        .fs-navbar.dark {
+          background: linear-gradient(90deg, rgba(30, 41, 59, 0.9), rgba(30, 41, 59, 0.75));
+          border-bottom-color: rgba(255, 255, 255, 0.08);
+        }
+        .fs-navbar-inner {
+          max-width: 1400px;
+          margin: 0 auto;
+          padding: 0 1rem;
+          height: 54px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+        }
+        .left-group,
+        .right-group {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        .brand {
+          font-weight: 600;
+          font-size: 0.95rem;
+          letter-spacing: 0.5px;
+          text-decoration: none;
+          color: inherit;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+        .brand-accent {
+          font-size: 1.05rem;
+        }
+        .nav-links {
+          display: flex;
+          gap: 0.25rem;
+        }
+        .nav-item {
+          position: relative;
+          padding: 0.45rem 0.75rem;
+          font-size: 0.75rem;
+          font-weight: 500;
+          text-decoration: none;
+          color: var(--text-secondary);
+          border-radius: 6px;
           line-height: 1;
-          z-index: 1000;
-          min-width: 44px;
-          min-height: 44px;
+          transition:
+            background 0.25s var(--easing-spring),
+            color 0.25s ease;
+        }
+        .dark .nav-item {
+          color: var(--color-neutral);
+        }
+        .nav-item:hover {
+          background: var(--surface-100);
+          color: var(--text-primary);
+        }
+        .dark .nav-item:hover {
+          background: var(--surface-200);
+          color: var(--foreground);
+        }
+        .nav-item.active {
+          background: var(--primary-color);
+          color: #fff;
+        }
+        .dark .nav-item.active {
+          background: var(--primary);
+          color: var(--primary-foreground);
         }
 
-        .sidenav-trigger:hover {
-          background-color: rgba(255, 255, 255, 0.1);
+        .menu-btn {
+          display: none;
+          background: none;
+          border: 1px solid transparent;
+          width: 38px;
+          height: 38px;
+          border-radius: 8px;
+          position: relative;
+          cursor: pointer;
+        }
+        .menu-btn:hover {
+          background: var(--surface-100);
+        }
+        .dark .menu-btn:hover {
+          background: var(--surface-200);
+        }
+        .hamburger,
+        .hamburger:before,
+        .hamburger:after {
+          position: absolute;
+          left: 9px;
+          right: 9px;
+          height: 2px;
+          background: currentColor;
+          content: '';
+          transition: 0.3s ease;
+        }
+        .hamburger {
+          top: 50%;
+          transform: translateY(-50%);
+        }
+        .hamburger:before {
+          top: -6px;
+        }
+        .hamburger:after {
+          top: 6px;
+        }
+        .icon-btn {
+          background: none;
+          border: 1px solid var(--border);
+          width: 34px;
+          height: 34px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          transition:
+            background 0.25s ease,
+            border-color 0.25s ease,
+            transform 0.25s var(--easing-spring);
+        }
+        .icon-btn:hover {
+          background: var(--surface-100);
+          transform: translateY(-2px);
+        }
+        .dark .icon-btn:hover {
+          background: var(--surface-200);
+        }
+        .icon-btn:active {
+          transform: translateY(0);
         }
 
-        .sidenav-trigger:active {
-          background-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .hamburger-icon {
-          font-size: 1.5rem;
-          display: block;
-          pointer-events: none;
-        }
-
-        .sidenav {
+        /* Drawer */
+        .fs-drawer {
           position: fixed;
           top: 0;
           left: 0;
-          width: 300px;
-          max-width: 85vw;
           height: 100vh;
-          background-color: #fff;
-          z-index: 999;
-          transition: transform 0.3s ease-in-out;
-          box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3);
-          overflow-y: auto;
+          width: 280px;
+          background: var(--card);
+          box-shadow: 2px 0 18px -4px rgba(0, 0, 0, 0.25);
+          transform: translateX(-100%);
+          transition: transform 0.35s var(--easing-spring);
+          z-index: 150;
           padding: 0;
           margin: 0;
           list-style: none;
-          transform: translateX(-100%);
+          display: flex;
+          flex-direction: column;
         }
-
-        .sidenav-open {
-          transform: translateX(0) !important;
+        .fs-drawer.dark {
+          background: var(--surface-100);
         }
-
-        .sidenav li {
-          margin: 0;
-          padding: 0;
+        .fs-drawer.open {
+          transform: translateX(0);
         }
-
-        .sidenav li a {
-          display: block;
-          padding: 16px 32px;
-          color: #333;
-          text-decoration: none;
-          border-bottom: 1px solid #f0f0f0;
-          transition: background-color 0.2s ease;
+        .drawer-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 1rem 1rem 0.75rem;
+          font-weight: 600;
+          font-size: 0.9rem;
         }
-
-        .sidenav li a:hover {
-          background-color: #f5f5f5;
+        .close-btn {
+          position: relative;
+          width: 32px;
+          height: 32px;
+          border: none;
+          background: none;
+          cursor: pointer;
         }
-
-        .sidenav li.active a {
-          background-color: #e3f2fd;
-          color: #1976d2;
-          font-weight: 500;
+        .close-btn:before,
+        .close-btn:after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 16px;
+          height: 2px;
+          background: currentColor;
         }
-
-        .sidenav li button {
+        .close-btn:before {
+          transform: translate(-50%, -50%) rotate(45deg);
+        }
+        .close-btn:after {
+          transform: translate(-50%, -50%) rotate(-45deg);
+        }
+        .fs-drawer li a,
+        .fs-drawer li button {
           display: block;
           width: 100%;
-          padding: 16px 32px;
-          background: none;
-          border: none;
-          color: #333;
           text-align: left;
+          border: none;
+          background: none;
+          padding: 0.85rem 1rem;
+          font-size: 0.8rem;
+          font-weight: 500;
+          text-decoration: none;
+          color: var(--text-secondary);
           cursor: pointer;
-          border-bottom: 1px solid #f0f0f0;
-          transition: background-color 0.2s ease;
+          transition:
+            background 0.25s ease,
+            color 0.25s ease;
         }
-
-        .sidenav li button:hover {
-          background-color: #f5f5f5;
+        .dark .fs-drawer li a,
+        .dark .fs-drawer li button {
+          color: var(--color-neutral);
         }
-
-        .sidenav-dark {
-          background-color: #424242;
-          color: white;
+        .fs-drawer li a:hover,
+        .fs-drawer li button:hover {
+          background: var(--surface-100);
+          color: var(--text-primary);
         }
-
-        .sidenav-dark li a {
-          color: white;
-          border-bottom-color: #555;
+        .dark .fs-drawer li a:hover,
+        .dark .fs-drawer li button:hover {
+          background: var(--surface-200);
+          color: var(--foreground);
         }
-
-        .sidenav-dark li a:hover {
-          background-color: #555;
+        .fs-drawer li.active a {
+          background: var(--primary-color);
+          color: #fff;
         }
-
-        .sidenav-dark li.active a {
-          background-color: #1976d2;
-          color: white;
+        .dark .fs-drawer li.active a {
+          background: var(--primary);
+          color: var(--primary-foreground);
         }
-
-        .sidenav-dark li button {
-          color: white;
-          border-bottom-color: #555;
-        }
-
-        .sidenav-dark li button:hover {
-          background-color: #555;
-        }
-
-        .sidenav-dark .name {
-          color: white !important;
-        }
-
-        .user-view {
-          padding: 32px 32px 16px;
-          background: linear-gradient(135deg, #1976d2, #1565c0);
-          margin-bottom: 0;
-        }
-
-        .user-view .name {
-          font-size: 1.2rem;
-          font-weight: 600;
-          margin: 0;
-        }
-
         .divider {
           height: 1px;
-          background-color: #f0f0f0;
-          margin: 8px 0;
+          width: 100%;
+          background: var(--border);
+          margin: 0.5rem 0;
         }
-
-        .sidenav-dark .divider {
-          background-color: #555;
-        }
-
-        .sidenav-overlay {
+        .fs-drawer-overlay {
           position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
-          background-color: rgba(0, 0, 0, 0.5);
-          z-index: 998;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.45);
+          z-index: 140;
         }
 
-        .nav-link {
-          padding: 0 15px;
-          line-height: 64px;
-          display: block;
-          color: white;
-          text-decoration: none;
-        }
-
-        .nav-link:hover {
-          background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .active .nav-link {
-          background-color: rgba(255, 255, 255, 0.2);
-        }
-
-        @media only screen and (max-width: 992px) {
-          .sidenav-trigger {
-            display: block !important;
+        @media (max-width: 960px) {
+          .nav-links {
+            display: none;
           }
-
-          .hide-on-med-and-down {
-            display: none !important;
+          .menu-btn {
+            display: inline-flex;
+          }
+          .fs-navbar-inner {
+            height: 50px;
+          }
+        }
+        @media (max-width: 640px) {
+          .fs-navbar-inner {
+            padding: 0 0.75rem;
+          }
+          .icon-btn {
+            width: 32px;
+            height: 32px;
+          }
+          .brand {
+            font-size: 0.85rem;
           }
         }
       `}</style>

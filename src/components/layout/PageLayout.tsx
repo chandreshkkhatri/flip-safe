@@ -1,39 +1,29 @@
 'use client';
 
+import { useTheme } from '@/lib/theme-context';
 import { ReactNode } from 'react';
-import NavBar from './NavBar';
+// Legacy NavBar replaced by new Radix-based Header
+import { Header } from './Header';
 
 interface PageLayoutProps {
   children: ReactNode;
   title?: string;
-  showNightModeToggle?: boolean;
   showApiConfig?: boolean;
-  onToggleNightMode?: () => void;
   onShowApiPanel?: () => void;
-  nightMode?: boolean;
   className?: string;
 }
 
 export default function PageLayout({
   children,
   title,
-  showNightModeToggle = false,
   showApiConfig = false,
-  onToggleNightMode,
   onShowApiPanel,
-  nightMode = false,
   className = '',
 }: PageLayoutProps) {
+  const { isDark } = useTheme();
   return (
-    <div className={`page-layout ${nightMode ? 'dark-theme' : ''} ${className}`}>
-      <NavBar
-        title={title}
-        showNightModeToggle={showNightModeToggle}
-        showApiConfig={showApiConfig}
-        onToggleNightMode={onToggleNightMode}
-        onShowApiPanel={onShowApiPanel}
-        nightMode={nightMode}
-      />
+    <div className={`page-layout ${isDark ? 'dark-theme' : ''} ${className}`}>
+      <Header />
 
       <main className="main-content">
         <div className="container">{children}</div>
@@ -42,32 +32,27 @@ export default function PageLayout({
       <style jsx>{`
         .page-layout {
           min-height: 100vh;
-          background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
         }
-
         .page-layout.dark-theme {
-          background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
-          color: #ffffff;
+          color: var(--foreground);
         }
-
         .main-content {
-          margin-top: 80px;
-          padding-bottom: 40px;
+          margin-top: 64px;
+          padding-bottom: 32px;
         }
-
         .container {
-          max-width: 1200px;
+          max-width: 1400px;
           margin: 0 auto;
-          padding: 0 20px;
+          padding: 0 1rem;
         }
-
-        @media only screen and (max-width: 600px) {
+        @media (max-width: 960px) {
           .main-content {
-            margin-top: 70px;
+            margin-top: 56px;
           }
-
+        }
+        @media (max-width: 640px) {
           .container {
-            padding: 0 15px;
+            padding: 0 0.75rem;
           }
         }
       `}</style>

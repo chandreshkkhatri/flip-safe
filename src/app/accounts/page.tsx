@@ -34,6 +34,7 @@ export default function AccountsPage() {
         setError(data.error || 'Failed to fetch accounts');
       }
     } catch (error) {
+      // eslint-disable-next-line no-console -- temporary surface
       console.error('Error fetching accounts:', error);
       setError('Failed to fetch accounts');
     } finally {
@@ -69,17 +70,21 @@ export default function AccountsPage() {
         throw new Error(data.error || 'Failed to create account');
       }
     } catch (error: any) {
+      // eslint-disable-next-line no-console
       console.error('Error creating account:', error);
+      // eslint-disable-next-line no-alert
       alert(error.message || 'Failed to create account');
     }
   };
 
   const handleEditAccount = (account: IAccount) => {
     // TODO: Implement edit functionality
+    // eslint-disable-next-line no-console -- placeholder implementation
     console.log('Edit account:', account);
   };
 
   const handleDeleteAccount = async (accountId: string) => {
+    // eslint-disable-next-line no-alert -- replace with modal confirm
     if (!confirm('Are you sure you want to delete this account?')) {
       return;
     }
@@ -97,7 +102,9 @@ export default function AccountsPage() {
         throw new Error(data.error || 'Failed to delete account');
       }
     } catch (error: any) {
+      // eslint-disable-next-line no-console
       console.error('Error deleting account:', error);
+      // eslint-disable-next-line no-alert
       alert(error.message || 'Failed to delete account');
     }
   };
@@ -121,7 +128,9 @@ export default function AccountsPage() {
         throw new Error(data.error || 'Failed to initiate authentication');
       }
     } catch (error: any) {
+      // eslint-disable-next-line no-console
       console.error('Error authenticating account:', error);
+      // eslint-disable-next-line no-alert
       alert(error.message || 'Failed to authenticate account');
     }
   };
@@ -240,22 +249,7 @@ export default function AccountsPage() {
           margin: 0;
         }
 
-        .btn-add-account {
-          background: linear-gradient(135deg, #2196f3, #1976d2);
-          color: white;
-          border: none;
-          padding: 12px 24px;
-          border-radius: 8px;
-          font-size: 1rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .btn-add-account:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 8px 20px rgba(33, 150, 243, 0.3);
-        }
+        /* Removed legacy .btn-add-account styles (using shared Button) */
 
         .error-message {
           background: #fff3cd;
@@ -292,22 +286,7 @@ export default function AccountsPage() {
           margin-right: auto;
         }
 
-        .btn-get-started {
-          background: linear-gradient(135deg, #4caf50, #45a049);
-          color: white;
-          border: none;
-          padding: 14px 28px;
-          border-radius: 8px;
-          font-size: 1rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .btn-get-started:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
-        }
+        /* Removed legacy .btn-get-started styles (using shared Button) */
 
         .accounts-grid {
           display: grid;

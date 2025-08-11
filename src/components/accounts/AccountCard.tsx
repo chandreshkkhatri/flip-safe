@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import { IAccount } from '@/models/account';
 import { useState } from 'react';
 
@@ -70,22 +71,18 @@ export default function AccountCard({ account, onEdit, onDelete, onAuth }: Accou
 
       <div className="account-actions">
         {!isAuthenticated && account.accountType !== 'kite' && (
-          <button onClick={handleAuth} disabled={isLoading} className="btn-auth">
+          <Button variant="trading" size="sm" onClick={handleAuth} disabled={isLoading}>
             {isLoading ? 'Connecting...' : 'Connect Account'}
-          </button>
+          </Button>
         )}
 
         <div className="action-buttons">
-          <button onClick={() => onEdit(account)} className="btn-edit" title="Edit Account">
-            ✏️
-          </button>
-          <button
-            onClick={() => onDelete(account._id!)}
-            className="btn-delete"
-            title="Delete Account"
-          >
-            🗑️
-          </button>
+          <Button variant="secondary" size="icon" onClick={() => onEdit(account)}>
+            ✎
+          </Button>
+          <Button variant="danger" size="icon" onClick={() => onDelete(account._id!)}>
+            ×
+          </Button>
         </div>
       </div>
 
@@ -189,55 +186,11 @@ export default function AccountCard({ account, onEdit, onDelete, onAuth }: Accou
           padding-top: 16px;
         }
 
-        .btn-auth {
-          background: linear-gradient(135deg, #2196f3, #1976d2);
-          color: white;
-          border: none;
-          padding: 10px 20px;
-          border-radius: 8px;
-          font-size: 0.9rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          flex: 1;
-          max-width: 150px;
-        }
-
-        .btn-auth:hover:not(:disabled) {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
-        }
-
-        .btn-auth:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
         .action-buttons {
           display: flex;
           gap: 8px;
         }
-
-        .btn-edit,
-        .btn-delete {
-          background: #f8f9fa;
-          border: 1px solid #dee2e6;
-          padding: 8px;
-          border-radius: 6px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          font-size: 1rem;
-        }
-
-        .btn-edit:hover {
-          background: #e9ecef;
-          border-color: #adb5bd;
-        }
-
-        .btn-delete:hover {
-          background: #f8d7da;
-          border-color: #f5c6cb;
-        }
+        /* Legacy .btn-* styles removed (migrated to shared Button) */
 
         @media (max-width: 768px) {
           .account-card {
@@ -255,10 +208,7 @@ export default function AccountCard({ account, onEdit, onDelete, onAuth }: Accou
             gap: 12px;
           }
 
-          .btn-auth {
-            max-width: none;
-            width: 100%;
-          }
+          /* Removed legacy .btn-auth responsive rule */
         }
       `}</style>
     </div>

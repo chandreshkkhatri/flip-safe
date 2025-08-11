@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import { binanceWebSocket } from '@/lib/binance-websocket';
 import { useEffect, useState } from 'react';
 import TradingWindow from './TradingWindow';
@@ -81,7 +82,8 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
           );
         });
       } catch (err) {
-        console.error('Error initializing watchlist:', err);
+        // eslint-disable-next-line no-console -- surfaced during init for debugging failures
+        console.error('Watchlist init failed', err);
         setError('Failed to initialize price data');
         setLoading(false);
       }
@@ -133,7 +135,9 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
         <div className="no-accounts">
           <h3>Binance Trading</h3>
           <p>Connect a Binance account to start trading futures</p>
-          <button className="btn-add-account">Add Binance Account</button>
+          <Button variant="trading" size="sm">
+            Add Binance Account
+          </Button>
         </div>
       </div>
     );
@@ -144,15 +148,18 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
       <div className="watchlist-panel">
         <div className="watchlist-header">
           <h3>Market Watch</h3>
-          <button
-            className="btn-add-symbol"
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => {
+              // Basic prompt kept for now; replace with proper modal later.
+              // eslint-disable-next-line no-alert
               const symbol = prompt('Enter symbol (e.g., LINKUSDT):');
               if (symbol) addSymbol(symbol.toUpperCase());
             }}
           >
             + Add
-          </button>
+          </Button>
         </div>
 
         {error && <div className="error-message">{error}</div>}
@@ -167,15 +174,16 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
               <div className="symbol-row">
                 <div className="symbol-info">
                   <span className="symbol-name">{item.symbol}</span>
-                  <button
-                    className="btn-remove"
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={e => {
                       e.stopPropagation();
                       removeSymbol(item.symbol);
                     }}
                   >
                     ×
-                  </button>
+                  </Button>
                 </div>
                 <div className="price-info">
                   <span className="last-price">${item.lastPrice.toFixed(2)}</span>
@@ -200,6 +208,7 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
           binanceAccounts={binanceAccounts}
           onOrderPlaced={() => {
             // Refresh data or show success message
+            // eslint-disable-next-line no-console -- user feedback placeholder
             console.log('Order placed successfully');
           }}
         />
@@ -248,21 +257,7 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
           font-size: 0.9rem;
         }
 
-        .btn-add-account {
-          background: linear-gradient(135deg, #f3ba2f, #f0b90b);
-          color: white;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 6px;
-          font-size: 0.8rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: transform 0.2s ease;
-        }
-
-        .btn-add-account:hover {
-          transform: translateY(-1px);
-        }
+        /* Add account button migrated to Button */
 
         .watchlist-panel {
           border-right: 1px solid #e9ecef;
@@ -285,20 +280,7 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
           color: #333;
         }
 
-        .btn-add-symbol {
-          background: #2196f3;
-          color: white;
-          border: none;
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 0.75rem;
-          cursor: pointer;
-          transition: background 0.2s ease;
-        }
-
-        .btn-add-symbol:hover {
-          background: #1976d2;
-        }
+        /* Add symbol button migrated to Button */
 
         .error-message {
           background: #fff3cd;
@@ -348,23 +330,7 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
           color: #333;
         }
 
-        .btn-remove {
-          background: none;
-          border: none;
-          color: #999;
-          font-size: 1rem;
-          cursor: pointer;
-          padding: 0;
-          width: 16px;
-          height: 16px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .btn-remove:hover {
-          color: #f44336;
-        }
+        /* Remove symbol button migrated to Button */
 
         .price-info {
           display: flex;

@@ -1,8 +1,12 @@
-@import 'tailwindcss';
+@import 'tailwindcss/preflight';
+@import 'tailwindcss/theme';
+@import 'tailwindcss/utilities';
+
+/* Core imports (fonts & animations) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import 'tw-animate-css';
 
-@custom-variant dark (&:is(.dark *));
+/* Tailwind is now configured (see tailwind.config.js). Custom design tokens remain below. */
 
 * {
   box-sizing: border-box;
@@ -87,6 +91,20 @@ body {
   --sidebar-accent-foreground: oklch(0.216 0.006 56.043);
   --sidebar-border: oklch(0.923 0.003 48.717);
   --sidebar-ring: oklch(0.709 0.01 56.259);
+  /* Trading specific semantic colors */
+  --color-up: #16a34a; /* green */
+  --color-up-soft: #22c55e33;
+  --color-down: #dc2626; /* red */
+  --color-down-soft: #ef444433;
+  --color-neutral: #64748b;
+  --surface-50: #f8fafc;
+  --surface-100: #f1f5f9;
+  --surface-200: #e2e8f0;
+  --surface-300: #cbd5e1;
+  --surface-800: #1e293b;
+  --surface-900: #0f172a;
+  --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.4);
+  --easing-spring: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Dark theme variables */
@@ -131,35 +149,7 @@ body {
   text-align: right;
 }
 
-/* Button improvements */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 20px;
-  border: none;
-  border-radius: var(--radius-small);
-  font-size: 0.9rem;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-height: 40px;
-}
-
-.btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--shadow-medium);
-}
-
-.btn.blue {
-  background: var(--primary-color);
-  color: white;
-}
-
-.btn.blue:hover {
-  background: var(--primary-dark);
-}
+/* Legacy .btn styles removed (using shared Button component) */
 
 /* Card improvements */
 .card {
@@ -202,10 +192,7 @@ textarea:focus {
     font-size: 14px;
   }
 
-  .btn {
-    padding: 8px 16px;
-    font-size: 0.85rem;
-  }
+  /* Removed responsive overrides for legacy .btn */
 }
 
 .loading {
@@ -275,43 +262,14 @@ textarea:focus {
   background: var(--text-secondary);
 }
 
-@theme inline {
+/* Radius & token aliases (kept as comments for potential future design systems)
+   :root already contains semantic tokens; add more if needed. */
+/*
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-}
+*/
 
 .dark {
   --background: oklch(0.147 0.004 49.25);
@@ -345,13 +303,101 @@ textarea:focus {
   --sidebar-accent-foreground: oklch(0.985 0.001 106.423);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.553 0.013 58.071);
+  --color-up: #22c55e;
+  --color-up-soft: #22c55e1a;
+  --color-down: #f87171;
+  --color-down-soft: #f871711a;
+  --color-neutral: #94a3b8;
+  --surface-50: #0f172a;
+  --surface-100: #1e293b;
+  --surface-200: #334155;
+  --surface-300: #475569;
+  --surface-800: #0f172a;
+  --surface-900: #020617;
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+/* Base element normalization (replaces removed Tailwind layer/apply) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+body {
+  background: var(--background);
+  color: var(--foreground);
+  transition:
+    background-color 0.4s var(--easing-spring),
+    color 0.4s ease;
+  -webkit-font-smoothing: antialiased;
+}
+* {
+  border-color: var(--border);
+}
+
+/* Utility tokens & helpers */
+.gradient-text {
+  background: linear-gradient(120deg, var(--primary-color), var(--primary-dark));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.price-up {
+  color: var(--color-up);
+}
+.price-down {
+  color: var(--color-down);
+}
+.badge-up {
+  background: var(--color-up-soft);
+  color: var(--color-up);
+}
+.badge-down {
+  background: var(--color-down-soft);
+  color: var(--color-down);
+}
+
+.surface-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-medium);
+  box-shadow:
+    0 4px 12px var(--shadow-light),
+    0 1px 3px var(--shadow-medium);
+  transition:
+    transform 0.25s var(--easing-spring),
+    box-shadow 0.25s ease;
+}
+
+.surface-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 28px -4px rgba(0, 0, 0, 0.15),
+    0 6px 10px -4px rgba(0, 0, 0, 0.08);
+}
+
+.glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.3));
+  backdrop-filter: blur(10px) saturate(160%) contrast(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%) contrast(120%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.dark .glass {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.75), rgba(51, 65, 85, 0.55));
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Focus ring helper */
+.focus-outline:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Subtle scrollbar color refinement for dark mode */
+.dark ::-webkit-scrollbar-track {
+  background: var(--surface-100);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--surface-300);
 }

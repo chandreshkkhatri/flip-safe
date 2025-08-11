@@ -9,7 +9,6 @@ export type EnhancedCardProps = {
   className?: string;
   hoverable?: boolean;
   action?: ReactNode;
-  nightMode?: boolean;
   imageUrl?: string;
   imageAlt?: string;
   clickable?: boolean;
@@ -25,7 +24,6 @@ export default function EnhancedCard({
   className = '',
   hoverable = true,
   action,
-  nightMode = false,
   imageUrl,
   imageAlt = 'Card media',
   clickable = false,
@@ -37,9 +35,7 @@ export default function EnhancedCard({
   const isOverlayLink = clickable && href && !action;
 
   return (
-    <div
-      className={`enhanced-card ${hoverable ? 'hoverable' : ''} ${nightMode ? 'night-mode' : ''} ${className}`}
-    >
+    <div className={`enhanced-card ${hoverable ? 'hoverable' : ''} ${className}`}>
       {isOverlayLink && (
         <Link
           href={href!}
@@ -99,20 +95,14 @@ export default function EnhancedCard({
           border-color: ${customBackground ? 'rgba(255,255,255,0.4)' : '#3b82f6'};
         }
 
-        .enhanced-card.night-mode {
-          background: #1e293b;
-          border-color: #475569;
-          color: #f1f5f9;
-          box-shadow:
-            0 4px 20px rgba(0, 0, 0, 0.25),
-            0 2px 8px rgba(0, 0, 0, 0.15);
+        :global(.dark) .enhanced-card {
+          background: var(--surface-100);
+          border-color: var(--surface-300);
+          color: var(--foreground);
+          box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.4);
         }
-
-        .enhanced-card.night-mode:hover {
-          border-color: #3b82f6;
-          box-shadow:
-            0 12px 40px rgba(0, 0, 0, 0.4),
-            0 4px 16px rgba(0, 0, 0, 0.25);
+        :global(.dark) .enhanced-card:hover {
+          border-color: var(--primary);
         }
 
         .card-overlay-link {
@@ -186,20 +176,17 @@ export default function EnhancedCard({
           margin-top: auto;
         }
 
-        .night-mode .card-footer {
-          border-top-color: #475569;
+        :global(.dark) .card-footer {
+          border-top-color: var(--surface-300);
           background: rgba(30, 41, 59, 0.5);
         }
-
-        .night-mode .card-title {
+        :global(.dark) .card-title {
           color: ${customTextColor || '#f1f5f9'};
         }
-
-        .night-mode .card-description {
+        :global(.dark) .card-description {
           color: ${customTextColor || '#cbd5e1'};
         }
-
-        .night-mode .card-content {
+        :global(.dark) .card-content {
           color: ${customTextColor || '#e2e8f0'};
         }
 

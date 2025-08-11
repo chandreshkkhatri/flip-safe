@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import Modal from '@/components/ui/Modal';
 import { useState } from 'react';
 
@@ -141,7 +142,7 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
         // Step 1: Broker Selection
         <div className="broker-selection">
           <div className="selection-header">
-            <p>Select which trading platform you'd like to connect:</p>
+            <p>Select which trading platform you&apos;d like to connect:</p>
           </div>
 
           <div className="broker-grid">
@@ -182,9 +183,9 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
             </span>
             <div>
               <h4>{brokerOptions.find(b => b.id === selectedBroker)?.name}</h4>
-              <button type="button" onClick={handleBackToSelection} className="btn-back">
+              <Button type="button" variant="ghost" size="sm" onClick={handleBackToSelection}>
                 ← Change Platform
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -319,7 +320,7 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
                   </a>
                 </p>
                 <p>2. Create a new app and get your API credentials</p>
-                <p>3. Set redirect URI to your application's callback URL</p>
+                <p>3. Set redirect URI to your application&apos;s callback URL</p>
               </div>
             )}
             {selectedBroker === 'binance' && (
@@ -348,7 +349,8 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
                   </a>
                 </p>
                 <p>
-                  4. <strong>Important:</strong> Enable "Enable Futures" permission for your API key
+                  4. <strong>Important:</strong> Enable &quot;Enable Futures&quot; permission for
+                  your API key
                 </p>
               </div>
             )}
@@ -356,19 +358,20 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
 
           {/* Form Actions */}
           <div className="form-actions">
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
               onClick={handleModalClose}
-              className="btn-cancel"
               disabled={isSubmitting}
             >
               Cancel
-            </button>
-            <button type="submit" className="btn-submit" disabled={isSubmitting}>
+            </Button>
+            <Button type="submit" variant="trading" size="sm" disabled={isSubmitting}>
               {isSubmitting
                 ? 'Adding Account...'
                 : `Add ${selectedBroker === 'kite' ? 'Kite' : selectedBroker === 'upstox' ? 'Upstox' : 'Binance'} Account`}
-            </button>
+            </Button>
           </div>
         </form>
       )}
@@ -492,19 +495,7 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
           font-size: 1.1rem;
         }
 
-        .btn-back {
-          background: none;
-          border: none;
-          color: #2196f3;
-          font-size: 0.9rem;
-          cursor: pointer;
-          padding: 0;
-          text-decoration: underline;
-        }
-
-        .btn-back:hover {
-          color: #1976d2;
-        }
+        /* Legacy .btn-back replaced with Button (ghost) */
 
         .form-group {
           display: flex;
@@ -615,52 +606,14 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
           border-top: 1px solid #e9ecef;
         }
 
-        .btn-cancel,
-        .btn-submit {
-          padding: 10px 20px;
-          border-radius: 8px;
-          font-size: 0.9rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          border: none;
-        }
-
-        .btn-cancel {
-          background: #f8f9fa;
-          color: #6c757d;
-          border: 1px solid #dee2e6;
-        }
-
-        .btn-cancel:hover:not(:disabled) {
-          background: #e9ecef;
-        }
-
-        .btn-submit {
-          background: linear-gradient(135deg, #2196f3, #1976d2);
-          color: white;
-        }
-
-        .btn-submit:hover:not(:disabled) {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
-        }
-
-        .btn-submit:disabled,
-        .btn-cancel:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
+        /* Legacy form action buttons migrated to Button component */
 
         @media (max-width: 768px) {
           .form-actions {
             flex-direction: column;
           }
 
-          .btn-cancel,
-          .btn-submit {
-            width: 100%;
-          }
+          /* Removed legacy responsive full-width buttons */
         }
       `}</style>
     </Modal>

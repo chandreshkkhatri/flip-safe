@@ -1,6 +1,8 @@
 'use client';
 
 import PageLayout from '@/components/layout/PageLayout';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Table from '@/components/ui/Table';
 import { useAuth } from '@/lib/auth-context';
@@ -37,7 +39,6 @@ export default function OrdersPage() {
         throw new Error(response.data?.error || 'Failed to fetch orders');
       }
     } catch (error) {
-      console.error('Error fetching orders:', error);
       setError('Failed to fetch orders');
       // Fallback to mock data for demo
       setOrders([
@@ -63,12 +64,11 @@ export default function OrdersPage() {
   const cancelOrder = async (orderId: string) => {
     try {
       // TODO: Implement cancel order for multi-account
-      alert('Cancel order functionality will be implemented soon');
+      // TODO: Implement cancel order functionality
       // await axios.post(API_ROUTES.orders.cancelOrder, { order_id: orderId });
       // fetchOrders(); // Refresh the orders list
     } catch (error) {
-      console.error('Error canceling order:', error);
-      alert('Failed to cancel order');
+      // Swallow cancel error; add toast later
     }
   };
 
@@ -113,7 +113,21 @@ export default function OrdersPage() {
       key: 'status',
       header: 'Status',
       render: (value: string) => (
-        <span className={`status-badge status-${value.toLowerCase()}`}>{value}</span>
+        <Badge
+          variant={
+            value.toLowerCase() === 'complete'
+              ? 'success'
+              : value.toLowerCase() === 'open'
+                ? 'info'
+                : value.toLowerCase() === 'cancelled'
+                  ? 'danger'
+                  : 'neutral'
+          }
+          tone="soft"
+          className="uppercase"
+        >
+          {value}
+        </Badge>
       ),
     },
     {
@@ -121,9 +135,9 @@ export default function OrdersPage() {
       header: 'Actions',
       render: (_: any, row: UnifiedOrder) =>
         row.status === 'OPEN' ? (
-          <button className="btn-cancel" onClick={() => cancelOrder(row.id)}>
+          <Button variant="danger" size="sm" onClick={() => cancelOrder(row.id)}>
             Cancel
-          </button>
+          </Button>
         ) : null,
     },
   ];
@@ -186,48 +200,9 @@ export default function OrdersPage() {
           font-size: 0.8rem;
         }
 
-        .status-badge {
-          padding: 3px 8px;
-          border-radius: 10px;
-          font-size: 0.7rem;
-          font-weight: 500;
-          text-transform: uppercase;
-        }
+        /* Status badge styles migrated to shared Badge component */
 
-        .status-complete {
-          background: #4caf50;
-          color: white;
-        }
-
-        .status-open {
-          background: #2196f3;
-          color: white;
-        }
-
-        .status-cancelled {
-          background: #f44336;
-          color: white;
-        }
-
-        .status-rejected {
-          background: #9e9e9e;
-          color: white;
-        }
-
-        .btn-cancel {
-          background: #f44336;
-          color: white;
-          border: none;
-          padding: 4px 8px;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 0.7rem;
-          transition: background 0.2s ease;
-        }
-
-        .btn-cancel:hover {
-          background: #d32f2f;
-        }
+        /* .btn-cancel styles removed (replaced with Button) */
 
         .symbol-info {
           display: flex;

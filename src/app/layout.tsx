@@ -1,4 +1,5 @@
 import { AuthProvider } from '@/lib/auth-context';
+import { ThemeProvider } from '@/lib/theme-context';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import React from 'react';
@@ -14,23 +15,22 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-        <link
-          href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
-          rel="stylesheet"
-        />
+        {/* Inline script to avoid flash of incorrect theme */}
         <script
-          defer
-          src="https://use.fontawesome.com/releases/v6.5.1/js/all.js"
-          crossOrigin="anonymous"
+          dangerouslySetInnerHTML={{
+            __html: `(() => { try { const k='flip-safe-theme'; const s=localStorage.getItem(k); const m=window.matchMedia('(prefers-color-scheme: dark)').matches; const t=s|| (m?'dark':'light'); if(t==='dark'){ document.documentElement.classList.add('dark'); } } catch(_) {} })();`,
+          }}
         />
       </head>
       <body className={inter.className}>
-        <AuthProvider>
-          <div id="root">{children}</div>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <div id="root">{children}</div>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

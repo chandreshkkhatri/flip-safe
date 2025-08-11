@@ -2,22 +2,22 @@
 
 import EnhancedCard from '@/components/enhanced-card';
 import PageLayout from '@/components/layout/PageLayout';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 export default function DashboardPage() {
-  const [nightMode, setNightMode] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const { isLoggedIn, allowOfflineAccess, checkedLoginStatus, runOfflineMode } = useAuth();
 
   useEffect(() => {
-    // Load night mode preference
-    const savedNightMode = localStorage.getItem('nightMode') === 'true';
-    setNightMode(savedNightMode);
-    setLoading(false);
+    // Theme is handled by provider; just hide spinner after short delay
+    const t = setTimeout(() => setLoading(false), 80);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -28,24 +28,13 @@ export default function DashboardPage() {
     }
   }, [isLoggedIn, allowOfflineAccess, checkedLoginStatus, runOfflineMode]);
 
-  const toggleNightMode = () => {
-    const newNightMode = !nightMode;
-    setNightMode(newNightMode);
-    localStorage.setItem('nightMode', String(newNightMode));
-  };
-
   if (!checkedLoginStatus || loading) {
     return <LoadingSpinner message="Loading dashboard..." />;
   }
 
   return (
     <>
-      <PageLayout
-        title="Flip Safe"
-        showNightModeToggle={true}
-        onToggleNightMode={toggleNightMode}
-        nightMode={nightMode}
-      >
+      <PageLayout title="Flip Safe">
         <div className="dashboard-header">
           <h1 className="dashboard-title">Trading Dashboard</h1>
           <p className="dashboard-subtitle">Welcome to Flip Safe - Your Unified Trading Platform</p>
@@ -56,96 +45,89 @@ export default function DashboardPage() {
           <EnhancedCard
             title="Market Watch"
             description="Monitor your favorite instruments in real-time"
-            hoverable={true}
-            nightMode={nightMode}
+            hoverable
             action={
-              <Link href="/terminal" className="btn blue waves-effect">
-                View Terminal
-              </Link>
+              <Button asChild size="sm" variant="trading">
+                <Link href="/terminal">View Terminal</Link>
+              </Button>
             }
           />
 
           <EnhancedCard
             title="Orders"
             description="View and manage your trading orders"
-            hoverable={true}
-            nightMode={nightMode}
+            hoverable
             action={
-              <Link href="/orders" className="btn blue waves-effect">
-                View Orders
-              </Link>
+              <Button asChild size="sm" variant="trading">
+                <Link href="/orders">View Orders</Link>
+              </Button>
             }
           />
 
           <EnhancedCard
             title="Positions"
             description="Track your current trading positions"
-            hoverable={true}
-            nightMode={nightMode}
+            hoverable
             action={
-              <Link href="/positions" className="btn blue waves-effect">
-                View Positions
-              </Link>
+              <Button asChild size="sm" variant="trading">
+                <Link href="/positions">View Positions</Link>
+              </Button>
             }
           />
 
           <EnhancedCard
             title="Holdings"
             description="Manage your investment portfolio"
-            hoverable={true}
-            nightMode={nightMode}
+            hoverable
             action={
-              <Link href="/holdings" className="btn blue waves-effect">
-                View Holdings
-              </Link>
+              <Button asChild size="sm" variant="trading">
+                <Link href="/holdings">View Holdings</Link>
+              </Button>
             }
           />
 
           <EnhancedCard
             title="Alerts"
             description="Set up price alerts and notifications"
-            hoverable={true}
-            nightMode={nightMode}
+            hoverable
             action={
-              <Link href="/alerts" className="btn blue waves-effect">
-                Manage Alerts
-              </Link>
+              <Button asChild size="sm" variant="trading">
+                <Link href="/alerts">Manage Alerts</Link>
+              </Button>
             }
           />
 
           <EnhancedCard
             title="Simulator"
             description="Practice trading with historical data"
-            hoverable={true}
-            nightMode={nightMode}
+            hoverable
             action={
-              <Link href="/simulator" className="btn blue waves-effect">
-                Open Simulator
-              </Link>
+              <Button asChild size="sm" variant="trading">
+                <Link href="/simulator">Open Simulator</Link>
+              </Button>
             }
           />
 
           <EnhancedCard
             title="Account Management"
             description="Connect and manage multiple trading accounts"
-            hoverable={true}
-            nightMode={nightMode}
+            hoverable
             action={
-              <Link href="/accounts" className="btn blue waves-effect">
-                Manage Accounts
-              </Link>
+              <Button asChild size="sm" variant="trading">
+                <Link href="/accounts">Manage Accounts</Link>
+              </Button>
             }
           />
         </div>
 
         {/* Status Information */}
-        <EnhancedCard title="Connection Status" nightMode={nightMode}>
+        <EnhancedCard title="Connection Status">
           <div className="status-info">
             <div className="status-item">
               <strong>Mode:</strong>{' '}
-              <span className={`status-badge ${isLoggedIn ? 'live' : 'offline'}`}>
+              <Badge variant={isLoggedIn ? 'success' : 'warning'} tone="soft">
                 {isLoggedIn ? 'Live Trading' : 'Offline Mode'}
-              </span>
+              </Badge>
             </div>
             {!isLoggedIn && allowOfflineAccess && (
               <div className="status-warning">
@@ -197,22 +179,7 @@ export default function DashboardPage() {
           gap: 8px;
         }
 
-        .status-badge {
-          padding: 4px 12px;
-          border-radius: 16px;
-          font-size: 0.85rem;
-          font-weight: 500;
-        }
-
-        .status-badge.live {
-          background-color: #4caf50;
-          color: white;
-        }
-
-        .status-badge.offline {
-          background-color: #ff9800;
-          color: white;
-        }
+        /* Status badge styles migrated to shared Badge component */
 
         .status-warning {
           padding: 12px;
