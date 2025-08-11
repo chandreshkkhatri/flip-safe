@@ -1,8 +1,10 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import TradingChart from './TradingChart';
 
 interface TradingWindowProps {
   symbol: string;
@@ -43,6 +45,7 @@ export default function TradingWindow({
     reduceOnly: false,
   });
 
+  const [positionSizePercentage, setPositionSizePercentage] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -58,6 +61,12 @@ export default function TradingWindow({
     setOrderForm(prev => ({ ...prev, [field]: value }));
     setError(null);
     setSuccess(null);
+  };
+
+  const handleSliderChange = (value: number[]) => {
+    const percentage = value[0];
+    setPositionSizePercentage(percentage);
+    setQuickQuantity(percentage);
   };
 
   const calculateOrderValue = () => {
@@ -134,6 +143,7 @@ export default function TradingWindow({
         price: currentPrice.toFixed(2),
         stopPrice: '',
       }));
+      setPositionSizePercentage(0);
     } catch (err: any) {
       // eslint-disable-next-line no-console -- surfaced during order error handling
       console.error('Order placement error:', err);
@@ -153,6 +163,7 @@ export default function TradingWindow({
 
   return (
     <div className="trading-window">
+      <TradingChart symbol={symbol} />
       <div className="trading-header">
         <h3>{symbol} Trading</h3>
         <div className="current-price">${currentPrice.toFixed(2)}</div>
@@ -216,28 +227,39 @@ export default function TradingWindow({
         {/* Quantity */}
         <div className="form-group">
           <label>Quantity (Contracts)</label>
-          <div className="quantity-input-group">
-            <input
-              type="number"
-              value={orderForm.quantity}
-              onChange={e => handleInputChange('quantity', e.target.value)}
-              className="form-input"
-              placeholder="0.001"
-              step="0.000001"
+          <input
+            type="number"
+            value={orderForm.quantity}
+            onChange={e => handleInputChange('quantity', e.target.value)}
+            className="form-input"
+            placeholder="0.001"
+            step="0.000001"
+          />
+        </div>
+
+        {/* Position Sizing Slider */}
+        <div className="form-group">
+          <label>Position Size</label>
+          <div className="slider-container">
+            <Slider
+              value={[positionSizePercentage]}
+              onValueChange={handleSliderChange}
+              max={100}
+              step={10}
+              className="w-full"
             />
-            <div className="quick-buttons">
-              <button type="button" onClick={() => setQuickQuantity(25)}>
-                25%
-              </button>
-              <button type="button" onClick={() => setQuickQuantity(50)}>
-                50%
-              </button>
-              <button type="button" onClick={() => setQuickQuantity(75)}>
-                75%
-              </button>
-              <button type="button" onClick={() => setQuickQuantity(100)}>
-                Max
-              </button>
+            <div className="slider-labels">
+              <span>0%</span>
+              <span>10%</span>
+              <span>20%</span>
+              <span>30%</span>
+              <span>40%</span>
+              <span>50%</span>
+              <span>60%</span>
+              <span>70%</span>
+              <span>80%</span>
+              <span>90%</span>
+              <span>100%</span>
             </div>
           </div>
         </div>
@@ -397,32 +419,16 @@ export default function TradingWindow({
           gap: 4px;
         }
 
-        /* Removed legacy .btn-side styles (using Button variants) */
+        .slider-container {
+          padding: 8px 0;
+        }
 
-        .quantity-input-group {
+        .slider-labels {
           display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .quick-buttons {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 2px;
-        }
-
-        .quick-buttons button {
-          padding: 2px 4px;
-          background: #f8f9fa;
-          border: 1px solid #ddd;
-          border-radius: 2px;
+          justify-content: space-between;
           font-size: 0.7rem;
-          cursor: pointer;
-          transition: background 0.2s ease;
-        }
-
-        .quick-buttons button:hover {
-          background: #e9ecef;
+          color: #666;
+          margin-top: 4px;
         }
 
         .checkbox-group {
@@ -479,8 +485,6 @@ export default function TradingWindow({
           font-size: 0.8rem;
           margin-bottom: 8px;
         }
-
-        /* Removed legacy .btn-submit styles (using Button variants) */
       `}</style>
     </div>
   );

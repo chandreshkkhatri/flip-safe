@@ -21,15 +21,25 @@ export class BinanceWebSocket implements WebSocketManager {
   private reconnectInterval: number = 5000;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private isConnecting: boolean = false;
+  private intentionalDisconnect: boolean = false;
 
   connect(symbols: string[], onMessage: (data: PriceUpdate) => void): void {
-    if (this.isConnecting || this.ws?.readyState === WebSocket.OPEN) {
+    // Prevent double connections
+    if (this.isConnecting) {
+      return;
+    }
+    
+    // If already connected, just update the callback and symbols
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.onMessageCallback = onMessage;
+      this.subscribedSymbols = new Set(symbols.map(s => s.toLowerCase()));
       return;
     }
 
     this.onMessageCallback = onMessage;
     this.subscribedSymbols = new Set(symbols.map(s => s.toLowerCase()));
     this.isConnecting = true;
+    this.intentionalDisconnect = false;
 
     try {
       // Binance WebSocket URL for 24hr ticker data
@@ -76,7 +86,11 @@ export class BinanceWebSocket implements WebSocketManager {
       this.ws.onclose = () => {
         console.log('Binance WebSocket disconnected');
         this.isConnecting = false;
-        this.scheduleReconnect();
+        
+        // Only schedule reconnect if it wasn't an intentional disconnect
+        if (!this.intentionalDisconnect) {
+          this.scheduleReconnect();
+        }
       };
 
       this.ws.onerror = error => {
@@ -104,13 +118,31 @@ export class BinanceWebSocket implements WebSocketManager {
   }
 
   disconnect(): void {
+    // Mark as intentional disconnect to prevent auto-reconnect
+    this.intentionalDisconnect = true;
+    
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
 
     if (this.ws) {
-      this.ws.close();
+      // Remove event handlers first to prevent any callbacks during cleanup
+      this.ws.onclose = null;
+      this.ws.onerror = null;
+      this.ws.onmessage = null;
+      this.ws.onopen = null;
+      
+      // Only close if the WebSocket is fully open
+      // Avoid closing CONNECTING sockets to prevent the warning
+      if (this.ws.readyState === WebSocket.OPEN) {
+        this.ws.close(1000, 'Normal closure');
+      } else if (this.ws.readyState === WebSocket.CONNECTING) {
+        // For connecting sockets, just nullify the reference
+        // The connection will fail naturally without error messages
+        console.log('WebSocket still connecting, canceling...');
+      }
+      
       this.ws = null;
     }
 
