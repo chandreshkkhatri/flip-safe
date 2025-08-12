@@ -145,14 +145,24 @@ export default function AccountsPage() {
       const data = await response.json();
 
       if (data.success) {
-        if (data.loginUrl) {
-          // Redirect to broker's OAuth page (for Upstox/Kite)
+        if (data.loginUrl && account.accountType !== 'binance') {
+          // Redirect to broker's OAuth page (for Upstox/Kite only)
           window.location.href = data.loginUrl;
         } else {
-          // Direct validation successful (for Binance)
+          // Direct validation successful (for Binance) or OAuth success
           await fetchAccounts();
-          // eslint-disable-next-line no-alert
-          alert(`${account.accountType.charAt(0).toUpperCase() + account.accountType.slice(1)} account authenticated successfully!`);
+          
+          // Use a more user-friendly notification instead of alert
+          const accountTypeName = account.accountType.charAt(0).toUpperCase() + account.accountType.slice(1);
+          
+          // For Binance, show validation success message
+          if (account.accountType === 'binance') {
+            console.log(`✅ ${accountTypeName} API credentials validated successfully!`);
+            // You could replace this with a toast notification or inline message
+            alert(`✅ ${accountTypeName} API credentials validated successfully!`);
+          } else {
+            alert(`${accountTypeName} account authenticated successfully!`);
+          }
         }
       } else {
         throw new Error(data.error || 'Failed to initiate authentication');

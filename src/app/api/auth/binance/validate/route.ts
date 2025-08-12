@@ -109,6 +109,8 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         message: 'Binance account validated successfully',
+        validationType: 'binance',
+        accountId: body.accountId,
         accountInfo: {
           canTrade: accountInfo.canTrade,
           totalWalletBalance: accountInfo.totalWalletBalance,

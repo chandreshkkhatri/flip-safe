@@ -23,6 +23,19 @@ const accountTypeColors = {
   binance: '#FFC107',
 };
 
+const getConnectButtonText = (accountType: string) => {
+  switch (accountType) {
+    case 'binance':
+      return 'Validate API';
+    case 'upstox':
+      return 'Authorize';
+    case 'kite':
+      return 'Login';
+    default:
+      return 'Connect';
+  }
+};
+
 export default function AccountCard({ account, onEdit, onDelete, onAuth }: AccountCardProps) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -35,7 +48,12 @@ export default function AccountCard({ account, onEdit, onDelete, onAuth }: Accou
     }
   };
 
-  const isAuthenticated = !!account.accessToken;
+  // For Binance accounts, check if we have API credentials and they're working
+  // For other accounts, check if we have access token
+  const isAuthenticated = account.accountType === 'binance' 
+    ? !!(account.apiKey && account.apiSecret && account.lastSyncAt)
+    : !!account.accessToken;
+  
   const lastSync = account.lastSyncAt ? new Date(account.lastSyncAt).toLocaleString() : 'Never';
 
   return (
@@ -70,9 +88,15 @@ export default function AccountCard({ account, onEdit, onDelete, onAuth }: Accou
       </div>
 
       <div className="account-actions">
-        {!isAuthenticated && account.accountType !== 'kite' && (
+        {!isAuthenticated && (
           <Button variant="trading" size="sm" onClick={handleAuth} disabled={isLoading}>
-            {isLoading ? 'Connecting...' : 'Connect Account'}
+            {isLoading ? 'Connecting...' : getConnectButtonText(account.accountType)}
+          </Button>
+        )}
+        
+        {isAuthenticated && account.accountType === 'binance' && (
+          <Button variant="secondary" size="sm" onClick={handleAuth} disabled={isLoading}>
+            {isLoading ? 'Validating...' : 'Validate API'}
           </Button>
         )}
 
