@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import PageLayout from '@/components/layout/PageLayout';
+import AccountSelector from '@/components/account-selector/AccountSelector';
 import { binanceWebSocket } from '@/lib/binance-websocket';
 import { useAuth } from '@/lib/auth-context';
 import { API_ROUTES } from '@/lib/constants';
@@ -35,11 +36,16 @@ interface BinanceAccount {
   isActive: boolean;
 }
 
-const MAJOR_INDICES = [
-  { name: 'NIFTY 50', value: 24500, change: 125.5, changePercent: 0.51 },
-  { name: 'SENSEX', value: 80850, change: 420.25, changePercent: 0.52 },
-  { name: 'BANK NIFTY', value: 52300, change: -180.75, changePercent: -0.34 },
-];
+// Account-specific watchlist symbols based on selected account
+const getAccountWatchlistSymbols = (accountId: string | null): string[] => {
+  if (!accountId) {
+    return DEFAULT_SYMBOLS; // Fallback to default symbols
+  }
+  
+  // In a real implementation, you might fetch this from an API
+  // For now, return default crypto symbols for all Binance accounts
+  return DEFAULT_SYMBOLS;
+};
 
 const DEFAULT_SYMBOLS = [
   'BTCUSDT',
@@ -71,6 +77,8 @@ export default function MarketWatchPage() {
   const [fundsError, setFundsError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [binanceAccounts, setBinanceAccounts] = useState<BinanceAccount[]>([]);
+  const [selectedAccount, setSelectedAccount] = useState<BinanceAccount | null>(null);
+  const [accountsLoading, setAccountsLoading] = useState(true);
   const { isLoggedIn, allowOfflineAccess, runOfflineMode } = useAuth();
 
   // Rotate trading tips every 10 seconds
@@ -128,25 +136,40 @@ export default function MarketWatchPage() {
   const fetchBinanceAccounts = async () => {
     const userId = 'default_user';
     try {
+      setAccountsLoading(true);
       const response = await axios.get(`${API_ROUTES.accounts.getAccounts}?userId=${userId}`);
       if (response.data?.success) {
         const binanceAccs = response.data.accounts.filter(
           (acc: any) => acc.accountType === 'binance'
         );
         setBinanceAccounts(binanceAccs);
+        
+        // Auto-select the first active account or the first account
+        if (binanceAccs.length > 0) {
+          const activeAccount = binanceAccs.find((acc: any) => acc.isActive) || binanceAccs[0];
+          setSelectedAccount(activeAccount);
+        }
       }
     } catch (error) {
       console.error('Error fetching Binance accounts:', error);
-      // Don't set mock accounts - let the user know they need to add real accounts
       setBinanceAccounts([]);
+    } finally {
+      setAccountsLoading(false);
     }
   };
 
-  // Initialize watchlist
+  // Initialize watchlist based on selected account
   useEffect(() => {
     const initializeWatchlist = async () => {
+      if (accountsLoading) return; // Wait for accounts to load
+      
       try {
-        const initialData: WatchlistItem[] = DEFAULT_SYMBOLS.map(symbol => ({
+        setLoading(true);
+        
+        // Get symbols for the selected account
+        const symbols = getAccountWatchlistSymbols(selectedAccount?._id || null);
+        
+        const initialData: WatchlistItem[] = symbols.map(symbol => ({
           symbol,
           lastPrice: 0,
           priceChange: 0,
@@ -160,7 +183,7 @@ export default function MarketWatchPage() {
         setLoading(false);
 
         // Start WebSocket connection
-        binanceWebSocket.connect(DEFAULT_SYMBOLS, (priceUpdate) => {
+        binanceWebSocket.connect(symbols, (priceUpdate) => {
           setWatchlistItems(prev =>
             prev.map(item => {
               if (item.symbol === priceUpdate.symbol) {
@@ -193,7 +216,7 @@ export default function MarketWatchPage() {
     return () => {
       binanceWebSocket.disconnect();
     };
-  }, []);
+  }, [selectedAccount, accountsLoading]);
 
   const addSymbol = (symbol: string) => {
     if (!watchlistItems.find(item => item.symbol === symbol)) {
@@ -233,23 +256,23 @@ export default function MarketWatchPage() {
   return (
     <PageLayout>
       <div className="market-watch-container">
-        {/* Header with Market Overview */}
+        {/* Header with Account Selection */}
         <div className="market-header">
           <div className="header-content">
             <h1>Market Watch</h1>
-            <p className="subtitle">Real-time market data with responsible trading insights</p>
+            <p className="subtitle">Real-time market data for your selected account</p>
           </div>
           
-          <div className="indices-grid">
-            {MAJOR_INDICES.map((index, i) => (
-              <div key={i} className="index-card">
-                <div className="index-name">{index.name}</div>
-                <div className="index-value">{index.value.toLocaleString()}</div>
-                <div className={`index-change ${index.change >= 0 ? 'positive' : 'negative'}`}>
-                  {index.change >= 0 ? '+' : ''}{index.change.toFixed(2)} ({index.changePercent >= 0 ? '+' : ''}{index.changePercent.toFixed(2)}%)
-                </div>
-              </div>
-            ))}
+          <div className="account-selection">
+            <div className="account-selector-wrapper">
+              <label className="account-label">Selected Account:</label>
+              <AccountSelector
+                accounts={binanceAccounts}
+                selectedAccount={selectedAccount}
+                onAccountSelect={setSelectedAccount}
+                loading={accountsLoading}
+              />
+            </div>
           </div>
         </div>
 
@@ -486,56 +509,34 @@ export default function MarketWatchPage() {
             color: #a1a1aa !important;
           }
 
-          .indices-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
+          .account-selection {
+            display: flex;
+            justify-content: center;
           }
 
-          .index-card {
+          .account-selector-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
             background: #f8f9fa;
             border-radius: 8px;
-            padding: 16px;
-            text-align: center;
           }
           
-          :global(.dark) .index-card {
+          :global(.dark) .account-selector-wrapper {
             background: #27272a !important;
           }
 
-          .index-name {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 4px;
-          }
-          
-          :global(.dark) .index-name {
-            color: #a1a1aa !important;
-          }
-
-          .index-value {
-            font-size: 1.5rem;
-            font-weight: 600;
+          .account-label {
+            font-weight: 500;
             color: #333;
-            margin-bottom: 4px;
+            font-size: 0.9rem;
           }
           
-          :global(.dark) .index-value {
+          :global(.dark) .account-label {
             color: #ffffff !important;
           }
 
-          .index-change {
-            font-size: 0.9rem;
-            font-weight: 500;
-          }
-
-          .index-change.positive {
-            color: #16a34a;
-          }
-
-          .index-change.negative {
-            color: #dc2626;
-          }
 
           .tip-banner {
             background: linear-gradient(135deg, #3b82f6, #1e40af);
@@ -928,8 +929,9 @@ export default function MarketWatchPage() {
               grid-template-columns: 1fr;
             }
             
-            .indices-grid {
-              grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            .account-selector-wrapper {
+              flex-direction: column;
+              gap: 8px;
             }
           }
 

@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import PageLayout from '@/components/layout/PageLayout';
 import TradingWindow from '@/components/watchlist/TradingWindow';
+import AccountSelector from '@/components/account-selector/AccountSelector';
 import { useAuth } from '@/lib/auth-context';
 import { API_ROUTES } from '@/lib/constants';
 import { binanceWebSocket } from '@/lib/binance-websocket';
@@ -33,6 +34,8 @@ export default function TradingPage() {
   const symbol = searchParams.get('symbol') || 'BTCUSDT';
   
   const [binanceAccounts, setBinanceAccounts] = useState<BinanceAccount[]>([]);
+  const [selectedAccount, setSelectedAccount] = useState<BinanceAccount | null>(null);
+  const [accountsLoading, setAccountsLoading] = useState(true);
   const [currentPrice, setCurrentPrice] = useState(0);
   const [priceData, setPriceData] = useState<WatchlistItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -104,16 +107,25 @@ export default function TradingPage() {
   const fetchBinanceAccounts = async () => {
     const userId = 'default_user';
     try {
+      setAccountsLoading(true);
       const response = await axios.get(`${API_ROUTES.accounts.getAccounts}?userId=${userId}`);
       if (response.data?.success) {
         const binanceAccs = response.data.accounts.filter(
           (acc: any) => acc.accountType === 'binance'
         );
         setBinanceAccounts(binanceAccs);
+        
+        // Auto-select the first active account or the first account
+        if (binanceAccs.length > 0) {
+          const activeAccount = binanceAccs.find((acc: any) => acc.isActive) || binanceAccs[0];
+          setSelectedAccount(activeAccount);
+        }
       }
     } catch (error) {
       console.error('Error fetching Binance accounts:', error);
       setBinanceAccounts([]);
+    } finally {
+      setAccountsLoading(false);
     }
   };
 
@@ -195,13 +207,24 @@ export default function TradingPage() {
               </div>
             )}
           </div>
+          <div className="account-selection">
+            <div className="account-selector-wrapper">
+              <label className="account-label">Account:</label>
+              <AccountSelector
+                accounts={binanceAccounts}
+                selectedAccount={selectedAccount}
+                onAccountSelect={setSelectedAccount}
+                loading={accountsLoading}
+              />
+            </div>
+          </div>
         </div>
 
         <div className="trading-content">
           <TradingWindow
             symbol={symbol}
             currentPrice={currentPrice}
-            binanceAccounts={binanceAccounts}
+            binanceAccounts={selectedAccount ? [selectedAccount] : binanceAccounts}
             onOrderPlaced={handleOrderPlaced}
           />
         </div>
@@ -304,6 +327,34 @@ export default function TradingPage() {
           background: rgba(220, 38, 38, 0.1);
         }
 
+        .account-selection {
+          margin-left: auto;
+        }
+
+        .account-selector-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          background: #f8f9fa;
+          border-radius: 6px;
+        }
+        
+        :global(.dark) .account-selector-wrapper {
+          background: #27272a !important;
+        }
+
+        .account-label {
+          font-weight: 500;
+          color: #333;
+          font-size: 0.85rem;
+          white-space: nowrap;
+        }
+        
+        :global(.dark) .account-label {
+          color: #ffffff !important;
+        }
+
         .trading-content {
           background: #ffffff;
           border-radius: 12px;
@@ -387,6 +438,15 @@ export default function TradingPage() {
 
           .back-button {
             align-self: flex-start;
+          }
+
+          .account-selection {
+            margin-left: 0;
+            align-self: stretch;
+          }
+
+          .account-selector-wrapper {
+            justify-content: center;
           }
         }
       `}</style>
