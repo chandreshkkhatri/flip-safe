@@ -48,7 +48,7 @@ export default function DashboardPage() {
             hoverable
             action={
               <Button asChild size="sm" variant="trading">
-                <Link href="/terminal">View Terminal</Link>
+                <Link href="/market-watch">View Market</Link>
               </Button>
             }
           />

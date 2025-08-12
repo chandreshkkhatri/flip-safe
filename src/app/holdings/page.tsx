@@ -223,6 +223,89 @@ export default function HoldingsPage() {
           margin: 0;
         }
 
+        .binance-summary {
+          margin-bottom: 32px;
+          padding: 24px;
+          background: var(--card);
+          border-radius: 12px;
+          border: 1px solid var(--border);
+        }
+        
+        .binance-summary h2 {
+          margin: 0 0 16px 0;
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: var(--foreground);
+        }
+        
+        .binance-cards {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 16px;
+          margin-bottom: 24px;
+        }
+        
+        .assets-breakdown h3 {
+          margin: 0 0 12px 0;
+          font-size: 1rem;
+          font-weight: 600;
+          color: var(--foreground);
+        }
+        
+        .assets-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 12px;
+        }
+        
+        .asset-item {
+          padding: 12px;
+          background: var(--muted);
+          border-radius: 8px;
+          text-align: center;
+        }
+        
+        .asset-symbol {
+          font-weight: 600;
+          font-size: 0.9rem;
+          color: var(--foreground);
+          margin-bottom: 4px;
+        }
+        
+        .asset-balance {
+          font-size: 0.8rem;
+          color: var(--muted-foreground);
+          margin-bottom: 2px;
+        }
+        
+        .asset-usd {
+          font-weight: 500;
+          font-size: 0.9rem;
+          color: var(--foreground);
+        }
+        
+        .funds-loading {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: var(--muted-foreground);
+          font-size: 0.9rem;
+        }
+        
+        .loading-spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid var(--muted);
+          border-top: 2px solid var(--primary);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
         .portfolio-summary {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));

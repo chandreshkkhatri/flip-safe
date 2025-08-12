@@ -8,7 +8,7 @@ import { useState } from 'react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard' },
-  { href: '/trading', label: 'Trading' },
+  { href: '/market-watch', label: 'Market Watch' },
   { href: '/orders', label: 'Orders' },
   { href: '/positions', label: 'Positions' },
   { href: '/holdings', label: 'Holdings' },

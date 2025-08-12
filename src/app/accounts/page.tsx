@@ -111,7 +111,30 @@ export default function AccountsPage() {
 
   const handleAuthAccount = async (accountId: string) => {
     try {
-      const response = await fetch('/api/auth/upstox/login', {
+      // Find the account to determine its type
+      const account = accounts.find(acc => acc._id === accountId);
+      if (!account) {
+        throw new Error('Account not found');
+      }
+
+      let authEndpoint = '';
+      
+      // Route to correct authentication endpoint based on account type
+      switch (account.accountType) {
+        case 'upstox':
+          authEndpoint = '/api/auth/upstox/login';
+          break;
+        case 'binance':
+          authEndpoint = '/api/auth/binance/validate';
+          break;
+        case 'kite':
+          authEndpoint = '/api/auth/kite/login';
+          break;
+        default:
+          throw new Error(`Unsupported account type: ${account.accountType}`);
+      }
+
+      const response = await fetch(authEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -121,9 +144,16 @@ export default function AccountsPage() {
 
       const data = await response.json();
 
-      if (data.success && data.loginUrl) {
-        // Redirect to broker's OAuth page
-        window.location.href = data.loginUrl;
+      if (data.success) {
+        if (data.loginUrl) {
+          // Redirect to broker's OAuth page (for Upstox/Kite)
+          window.location.href = data.loginUrl;
+        } else {
+          // Direct validation successful (for Binance)
+          await fetchAccounts();
+          // eslint-disable-next-line no-alert
+          alert(`${account.accountType.charAt(0).toUpperCase() + account.accountType.slice(1)} account authenticated successfully!`);
+        }
       } else {
         throw new Error(data.error || 'Failed to initiate authentication');
       }
@@ -131,7 +161,8 @@ export default function AccountsPage() {
       // eslint-disable-next-line no-console
       console.error('Error authenticating account:', error);
       // eslint-disable-next-line no-alert
-      alert(error.message || 'Failed to authenticate account');
+      const accountType = accounts.find(acc => acc._id === accountId)?.accountType;
+      alert(error.message || `Failed to authenticate ${accountType || 'account'}`);
     }
   };
 

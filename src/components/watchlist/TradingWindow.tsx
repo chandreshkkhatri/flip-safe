@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import TradingChart from './TradingChart';
+import MultiTimeframeChart from './MultiTimeframeChart';
 
 interface TradingWindowProps {
   symbol: string;
@@ -163,7 +163,7 @@ export default function TradingWindow({
 
   return (
     <div className="trading-window">
-      <TradingChart symbol={symbol} />
+      <MultiTimeframeChart symbol={symbol} />
       <div className="trading-header">
         <h3>{symbol} Trading</h3>
         <div className="current-price">${currentPrice.toFixed(2)}</div>
