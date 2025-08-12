@@ -44,6 +44,17 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Memoized values that were previously in JSX
+  const currentPrice = useMemo(() => 
+    watchlistItems.find(item => item.symbol === selectedSymbol)?.lastPrice || 0,
+    [watchlistItems, selectedSymbol]
+  );
+
+  const handleOrderPlaced = useCallback(() => {
+    // Refresh data or show success message
+    console.log('Order placed successfully');
+  }, []);
+
   // Initialize with default symbols and set up WebSocket
   useEffect(() => {
     const initializeWatchlist = async () => {
@@ -206,16 +217,9 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
       <div className="trading-panel">
         <TradingWindow
           symbol={selectedSymbol}
-          currentPrice={useMemo(() => 
-            watchlistItems.find(item => item.symbol === selectedSymbol)?.lastPrice || 0,
-            [watchlistItems, selectedSymbol]
-          )}
+          currentPrice={currentPrice}
           binanceAccounts={binanceAccounts}
-          onOrderPlaced={useCallback(() => {
-            // Refresh data or show success message
-            // eslint-disable-next-line no-console -- user feedback placeholder
-            console.log('Order placed successfully');
-          }, [])}
+          onOrderPlaced={handleOrderPlaced}
         />
       </div>
 
