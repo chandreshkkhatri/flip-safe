@@ -7,34 +7,110 @@ interface MultiTimeframeChartProps {
   symbol: string;
 }
 
-// Test with just one chart first to isolate the issue
-const timeframes = [
-  { interval: '1d', label: '1 Day', index: 0 },
-  // { interval: '1w', label: '1 Week', index: 1 },
-  // { interval: '1h', label: '1 Hour', index: 2 },
+const DEFAULT_TIMEFRAMES = [
+  { interval: '1h', label: '1 Hour', index: 0 },
+  { interval: '4h', label: '4 Hour', index: 1 },
+  { interval: '1d', label: '1 Day', index: 2 },
+  { interval: '1w', label: '1 Week', index: 3 },
+];
+
+const AVAILABLE_TIMEFRAMES = [
+  { interval: '1m', label: '1 Minute' },
+  { interval: '5m', label: '5 Minutes' },
+  { interval: '15m', label: '15 Minutes' },
+  { interval: '30m', label: '30 Minutes' },
+  { interval: '1h', label: '1 Hour' },
+  { interval: '2h', label: '2 Hours' },
+  { interval: '4h', label: '4 Hours' },
+  { interval: '6h', label: '6 Hours' },
+  { interval: '8h', label: '8 Hours' },
+  { interval: '12h', label: '12 Hours' },
+  { interval: '1d', label: '1 Day' },
+  { interval: '3d', label: '3 Days' },
+  { interval: '1w', label: '1 Week' },
+  { interval: '1M', label: '1 Month' },
 ];
 
 const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
-  const containerRefs = useRef<(HTMLDivElement | null)[]>([null]);
+  const [selectedTimeframes, setSelectedTimeframes] = useState(DEFAULT_TIMEFRAMES);
+  const [showTimeframeSelector, setShowTimeframeSelector] = useState(false);
+  const containerRefs = useRef<(HTMLDivElement | null)[]>(new Array(selectedTimeframes.length).fill(null));
   const chartRefs = useRef<{ chart: IChartApi; series: any | null }[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [chartTimeframes, setChartTimeframes] = useState<{[index: number]: string}>({});
+  const [autoScale, setAutoScale] = useState(false);
+  const [isLogScale, setIsLogScale] = useState(false);
   
   const setContainerRef = useCallback((index: number) => (el: HTMLDivElement | null) => {
     console.log(`Setting container ref for index ${index}:`, el ? 'element found' : 'element is null');
     containerRefs.current[index] = el;
   }, []);
 
+  // Update container refs when timeframes change
+  useEffect(() => {
+    containerRefs.current = new Array(selectedTimeframes.length).fill(null);
+  }, [selectedTimeframes.length]);
+
+  const addTimeframe = (interval: string) => {
+    const timeframe = AVAILABLE_TIMEFRAMES.find(tf => tf.interval === interval);
+    if (timeframe && !selectedTimeframes.find(tf => tf.interval === interval)) {
+      const newTimeframe = {
+        ...timeframe,
+        index: selectedTimeframes.length
+      };
+      setSelectedTimeframes(prev => [...prev, newTimeframe]);
+    }
+  };
+
+  const removeTimeframe = (index: number) => {
+    if (selectedTimeframes.length > 1) {
+      setSelectedTimeframes(prev => 
+        prev.filter((_, i) => i !== index).map((tf, i) => ({ ...tf, index: i }))
+      );
+      // Clean up chart timeframe override for removed chart
+      setChartTimeframes(prev => {
+        const newTimeframes = { ...prev };
+        delete newTimeframes[index];
+        // Reindex remaining timeframes
+        const reindexed: {[index: number]: string} = {};
+        Object.entries(newTimeframes).forEach(([oldIndex, timeframe]) => {
+          const newIndex = parseInt(oldIndex) > index ? parseInt(oldIndex) - 1 : parseInt(oldIndex);
+          reindexed[newIndex] = timeframe;
+        });
+        return reindexed;
+      });
+    }
+  };
+
+  const changeChartTimeframe = (chartIndex: number, newTimeframe: string) => {
+    setChartTimeframes(prev => ({
+      ...prev,
+      [chartIndex]: newTimeframe
+    }));
+  };
+
   const createSingleChart = (container: HTMLDivElement) => {
     const isDarkMode = document.documentElement.classList.contains('dark');
     const isMobile = window.innerWidth <= 768;
-    const chartHeight = isMobile ? 180 : 220;
+    
+    // Calculate chart height based on auto-scale setting
+    let chartHeight;
+    if (autoScale) {
+      // Use container height minus some padding for header
+      chartHeight = Math.max((container.parentElement?.clientHeight || 400) - 60, 200);
+    } else {
+      chartHeight = isMobile ? 225 : 300;
+    }
     
     const containerWidth = Math.max(container.clientWidth || 300, 300);
 
+    console.log(`Creating chart with dimensions: ${containerWidth}x${chartHeight} (autoScale: ${autoScale})`);
+    
     const chart = createChart(container, {
       width: containerWidth,
       height: chartHeight,
+      autoSize: autoScale, // Enable auto-sizing when auto-scale is on
       layout: {
         background: { type: ColorType.Solid, color: isDarkMode ? '#18181b' : '#ffffff' },
         textColor: isDarkMode ? '#e4e4e7' : '#333',
@@ -49,6 +125,7 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
       rightPriceScale: {
         borderColor: isDarkMode ? '#3f3f46' : '#e0e0e0',
         scaleMargins: { top: 0.1, bottom: 0.1 },
+        mode: isLogScale ? 1 : 0, // 1 = logarithmic, 0 = normal
       },
       timeScale: {
         borderColor: isDarkMode ? '#3f3f46' : '#e0e0e0',
@@ -56,6 +133,12 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
         barSpacing: isMobile ? 2 : 4,
       },
     });
+
+    // Force resize after creation to ensure dimensions are applied
+    setTimeout(() => {
+      chart.resize(containerWidth, chartHeight);
+      console.log(`Forced resize to: ${containerWidth}x${chartHeight}`);
+    }, 100);
 
     // Use the correct v5 API: addSeries(CandlestickSeries, options)
     console.log('Creating candlestick series with v5 API...');
@@ -112,15 +195,21 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
 
         // Clear existing charts
         chartRefs.current.forEach(({ chart }) => {
-          if (chart) chart.remove();
+          if (chart) {
+            try {
+              chart.remove();
+            } catch (e) {
+              console.warn('Error removing chart:', e);
+            }
+          }
         });
         chartRefs.current = [];
 
         // Wait for container refs to be available 
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 300));
         
-        // Create chart for the single timeframe
-        const promises = timeframes.map(async (timeframe, index) => {
+        // Create charts for all selected timeframes
+        const promises = selectedTimeframes.map(async (timeframe, index) => {
           const container = containerRefs.current[index];
           if (!container) {
             console.warn(`Container not available for ${timeframe.label}`);
@@ -133,7 +222,9 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
             const { chart, series } = createSingleChart(container);
             chartRefs.current[index] = { chart, series };
 
-            const data = await fetchChartData(timeframe.interval);
+            // Use individual chart timeframe if set, otherwise use default
+            const actualTimeframe = chartTimeframes[index] || timeframe.interval;
+            const data = await fetchChartData(actualTimeframe);
             
             console.log(`Series object for ${timeframe.label}:`, series);
             console.log(`Data points:`, data.length);
@@ -168,21 +259,167 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
     return () => {
       clearTimeout(timeoutId);
       chartRefs.current.forEach(({ chart }) => {
-        if (chart) chart.remove();
+        if (chart) {
+          try {
+            chart.remove();
+          } catch (e) {
+            console.warn('Error removing chart on cleanup:', e);
+          }
+        }
       });
     };
   }, [symbol]);
+
+  // Effect to reload data when individual chart timeframes change
+  useEffect(() => {
+    if (Object.keys(chartTimeframes).length === 0) return;
+
+    const reloadChartData = async () => {
+      for (const [indexStr, timeframe] of Object.entries(chartTimeframes)) {
+        const index = parseInt(indexStr);
+        const chartRef = chartRefs.current[index];
+        
+        if (chartRef && chartRef.series) {
+          try {
+            const data = await fetchChartData(timeframe);
+            if (data.length > 0 && typeof chartRef.series.setData === 'function') {
+              chartRef.series.setData(data);
+              chartRef.chart.timeScale().fitContent();
+              console.log(`Chart ${index} updated with ${timeframe} data: ${data.length} points`);
+            }
+          } catch (error) {
+            console.error(`Error updating chart ${index} with timeframe ${timeframe}:`, error);
+          }
+        }
+      }
+    };
+
+    reloadChartData();
+  }, [chartTimeframes]);
+
+  // Effect to handle auto-scale and log-scale changes
+  useEffect(() => {
+    const updateChartSettings = async () => {
+      if (chartRefs.current.length === 0) return;
+
+      chartRefs.current.forEach(({ chart }, index) => {
+        if (chart) {
+          try {
+            const container = containerRefs.current[index];
+            if (!container) return;
+
+            // Update scale mode
+            const priceScale = chart.priceScale('right');
+            if (priceScale) {
+              priceScale.applyOptions({
+                mode: isLogScale ? 1 : 0, // 1 = logarithmic, 0 = normal
+              });
+            }
+
+            // Update chart size for auto-scale
+            const isMobile = window.innerWidth <= 768;
+            let chartHeight;
+            if (autoScale) {
+              chartHeight = Math.max((container.parentElement?.clientHeight || 400) - 60, 200);
+            } else {
+              chartHeight = isMobile ? 225 : 300;
+            }
+
+            chart.resize(Math.max(container.clientWidth || 300, 300), chartHeight);
+            
+            console.log(`Updated chart ${index}: autoScale=${autoScale}, logScale=${isLogScale}, height=${chartHeight}`);
+          } catch (error) {
+            console.error(`Error updating chart ${index} settings:`, error);
+          }
+        }
+      });
+    };
+
+    updateChartSettings();
+  }, [autoScale, isLogScale]);
 
   console.log('Component render state:', { loading, error });
 
   return (
     <div className="multi-timeframe-charts">
-      {timeframes.map((timeframe) => {
+      {/* Timeframe Controls */}
+      <div className="timeframe-controls">
+        <div className="controls-header">
+          <h3>Chart Timeframes</h3>
+          <div className="control-buttons">
+            <button
+              className={`control-btn ${autoScale ? 'active' : ''}`}
+              onClick={() => setAutoScale(!autoScale)}
+              title="Auto-scale height to fit container"
+            >
+              A
+            </button>
+            <button
+              className={`control-btn ${isLogScale ? 'active' : ''}`}
+              onClick={() => setIsLogScale(!isLogScale)}
+              title="Toggle logarithmic scale"
+            >
+              L
+            </button>
+            <button 
+              className="add-timeframe-btn"
+              onClick={() => setShowTimeframeSelector(!showTimeframeSelector)}
+            >
+              + Add Timeframe
+            </button>
+          </div>
+        </div>
+        
+        {showTimeframeSelector && (
+          <div className="timeframe-selector">
+            <div className="available-timeframes">
+              {AVAILABLE_TIMEFRAMES.filter(tf => 
+                !selectedTimeframes.find(selected => selected.interval === tf.interval)
+              ).map(timeframe => (
+                <button
+                  key={timeframe.interval}
+                  className="timeframe-option"
+                  onClick={() => {
+                    addTimeframe(timeframe.interval);
+                    setShowTimeframeSelector(false);
+                  }}
+                >
+                  {timeframe.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Charts */}
+      {selectedTimeframes.map((timeframe) => {
         return (
           <div key={timeframe.interval} className="chart-section">
             <div className="chart-header">
               <h4>{timeframe.label}</h4>
-              <span className="symbol-name">{symbol}</span>
+              <div className="header-controls">
+                <span className="symbol-name">{symbol}</span>
+                <select
+                  value={chartTimeframes[timeframe.index] || timeframe.interval}
+                  onChange={(e) => changeChartTimeframe(timeframe.index, e.target.value)}
+                  className="timeframe-select"
+                >
+                  {AVAILABLE_TIMEFRAMES.map(tf => (
+                    <option key={tf.interval} value={tf.interval}>
+                      {tf.label}
+                    </option>
+                  ))}
+                </select>
+                {selectedTimeframes.length > 1 && (
+                  <button
+                    className="remove-chart-btn"
+                    onClick={() => removeTimeframe(timeframe.index)}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             </div>
             <div className="chart-container-wrapper">
               <div ref={setContainerRef(timeframe.index)} className="chart-container" />
@@ -208,8 +445,144 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
           flex-direction: column;
           gap: 20px;
           width: 100%;
-          max-height: 80vh;
           overflow-y: auto;
+        }
+
+        .timeframe-controls {
+          background: var(--card);
+          border-radius: 8px;
+          padding: 16px;
+          border: 1px solid var(--border);
+        }
+
+        .controls-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+        }
+
+        .control-buttons {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .control-btn {
+          background: var(--background);
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          padding: 6px 10px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: var(--foreground);
+          cursor: pointer;
+          transition: all 0.2s ease;
+          min-width: 32px;
+        }
+
+        .control-btn:hover {
+          background: var(--muted);
+          border-color: var(--primary);
+        }
+
+        .control-btn.active {
+          background: var(--primary);
+          color: var(--primary-foreground);
+          border-color: var(--primary);
+        }
+
+        .controls-header h3 {
+          margin: 0;
+          font-size: 1rem;
+          font-weight: 600;
+          color: var(--foreground);
+        }
+
+        .add-timeframe-btn {
+          background: var(--primary);
+          color: var(--primary-foreground);
+          border: none;
+          border-radius: 6px;
+          padding: 6px 12px;
+          font-size: 0.85rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+        }
+
+        .add-timeframe-btn:hover {
+          background: var(--primary-dark);
+        }
+
+        .timeframe-selector {
+          border-top: 1px solid var(--border);
+          padding-top: 12px;
+        }
+
+        .available-timeframes {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+          gap: 8px;
+        }
+
+        .timeframe-option {
+          background: var(--background);
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          padding: 8px 12px;
+          font-size: 0.8rem;
+          color: var(--foreground);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .timeframe-option:hover {
+          background: var(--muted);
+          border-color: var(--primary);
+        }
+
+        .header-controls {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .timeframe-select {
+          background: var(--background);
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          padding: 4px 8px;
+          font-size: 0.8rem;
+          color: var(--foreground);
+          cursor: pointer;
+          min-width: 100px;
+        }
+
+        .timeframe-select:hover {
+          border-color: var(--primary);
+        }
+
+        .timeframe-select:focus {
+          outline: none;
+          border-color: var(--primary);
+          box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+        }
+
+        .remove-chart-btn {
+          background: none;
+          border: none;
+          color: var(--muted-foreground);
+          font-size: 1rem;
+          cursor: pointer;
+          padding: 4px 6px;
+          border-radius: 4px;
+          transition: all 0.2s ease;
+        }
+
+        .remove-chart-btn:hover {
+          background: var(--destructive);
+          color: var(--destructive-foreground);
         }
 
         .chart-section {
@@ -217,6 +590,9 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
           border-radius: 8px;
           overflow: hidden;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          display: ${autoScale ? 'flex' : 'block'};
+          flex-direction: ${autoScale ? 'column' : 'initial'};
+          height: ${autoScale ? '400px' : 'auto'};
         }
 
         :global(.dark) .chart-section {
@@ -252,14 +628,18 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
         .chart-container-wrapper {
           position: relative;
           width: 100%;
-          height: 220px;
+          height: ${autoScale ? 'auto' : '300px'} !important;
+          min-height: ${autoScale ? '200px' : '300px'} !important;
+          max-height: ${autoScale ? 'none' : 'none'} !important;
+          flex: ${autoScale ? '1' : 'none'};
         }
 
         .chart-container {
           width: 100%;
-          height: 220px;
+          height: ${autoScale ? '100%' : '300px'} !important;
           position: relative;
-          min-height: 220px;
+          min-height: ${autoScale ? '200px' : '300px'} !important;
+          max-height: none !important;
           min-width: 300px;
           background: var(--background);
           display: block;
@@ -331,11 +711,62 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
           }
 
           .chart-container-wrapper {
-            height: 180px;
+            height: ${autoScale ? 'auto' : '225px'} !important;
+            min-height: ${autoScale ? '180px' : '225px'} !important;
+            max-height: none !important;
           }
 
           .chart-container {
-            height: 180px;
+            height: ${autoScale ? '100%' : '225px'} !important;
+            min-height: ${autoScale ? '180px' : '225px'} !important;
+            max-height: none !important;
+          }
+
+          .chart-section {
+            height: ${autoScale ? '300px' : 'auto'};
+          }
+
+          .control-buttons {
+            flex-wrap: wrap;
+            gap: 4px;
+          }
+
+          .control-btn {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            min-width: 28px;
+          }
+
+          .controls-header {
+            flex-direction: column;
+            gap: 8px;
+            align-items: stretch;
+          }
+
+          .available-timeframes {
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 6px;
+          }
+
+          .timeframe-option {
+            padding: 6px 8px;
+            font-size: 0.75rem;
+          }
+
+          .header-controls {
+            flex-direction: column;
+            gap: 6px;
+            align-items: stretch;
+          }
+
+          .timeframe-select {
+            font-size: 0.75rem;
+            padding: 3px 6px;
+            min-width: 80px;
+          }
+
+          .symbol-name {
+            text-align: center;
           }
 
           .chart-header {
