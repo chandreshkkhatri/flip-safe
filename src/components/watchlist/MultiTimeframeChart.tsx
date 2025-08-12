@@ -1,42 +1,41 @@
 'use client';
 
-import { ColorType, createChart, UTCTimestamp, CandlestickSeries } from 'lightweight-charts';
-import React, { useEffect, useRef, useState } from 'react';
+import { ColorType, createChart, UTCTimestamp, IChartApi, ISeriesApi, CandlestickData } from 'lightweight-charts';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 
 interface MultiTimeframeChartProps {
   symbol: string;
 }
 
-interface ChartData {
-  time: UTCTimestamp;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-}
+type ChartData = CandlestickData;
 
 const MultiTimeframeChart: React.FC<MultiTimeframeChartProps> = ({ symbol }) => {
-  const weekChartRef = useRef<HTMLDivElement>(null);
-  const dayChartRef = useRef<HTMLDivElement>(null);
-  const hourChartRef = useRef<HTMLDivElement>(null);
-  
-  const chartRefs = useRef<{ chart: any; series: any }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const containerRefs = useRef<(HTMLDivElement | null)[]>([null, null, null]);
+  const chartRefs = useRef<{ chart: IChartApi; series: ISeriesApi<'Candlestick'> | null }[]>([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const timeframes = [
-    { interval: '1w', label: '1 Week', ref: weekChartRef },
-    { interval: '1d', label: '1 Day', ref: dayChartRef },
-    { interval: '1h', label: '1 Hour', ref: hourChartRef },
+    { interval: '1w', label: '1 Week', index: 0 },
+    { interval: '1d', label: '1 Day', index: 1 },
+    { interval: '1h', label: '1 Hour', index: 2 },
   ];
+  
+  const setContainerRef = (index: number) => (el: HTMLDivElement | null) => {
+    containerRefs.current[index] = el;
+  };
 
-  const createSingleChart = (container: HTMLDivElement, title: string) => {
+  const createSingleChart = (container: HTMLDivElement) => {
     const isDarkMode = document.documentElement.classList.contains('dark');
     const isMobile = window.innerWidth <= 768;
     const chartHeight = isMobile ? 180 : 220;
+    
+    // Ensure container has minimum dimensions
+    const containerWidth = Math.max(container.clientWidth || 300, 300);
+    console.log(`Creating chart with dimensions: ${containerWidth}x${chartHeight}`);
 
     const chart = createChart(container, {
-      width: container.clientWidth,
+      width: containerWidth,
       height: chartHeight,
       layout: {
         background: { type: ColorType.Solid, color: isDarkMode ? '#18181b' : '#ffffff' },
@@ -63,37 +62,61 @@ const MultiTimeframeChart: React.FC<MultiTimeframeChartProps> = ({ symbol }) => 
       },
     });
 
-    const series = chart.addSeries(CandlestickSeries, {
-      upColor: '#26a69a',
-      downColor: '#ef5350',
-      borderDownColor: '#ef5350',
-      borderUpColor: '#26a69a',
-      wickDownColor: '#ef5350',
-      wickUpColor: '#26a69a',
-    });
+    // Using type assertion to work around TypeScript definition issue
+    let series;
+    try {
+      series = (chart as any).addCandlestickSeries({
+        upColor: '#26a69a',
+        downColor: '#ef5350',
+        borderDownColor: '#ef5350',
+        borderUpColor: '#26a69a',
+        wickDownColor: '#ef5350',
+        wickUpColor: '#26a69a',
+      }) as ISeriesApi<'Candlestick'>;
+    } catch (seriesError) {
+      console.error('Failed to add candlestick series:', seriesError);
+      throw new Error('Chart library initialization failed');
+    }
 
     return { chart, series };
   };
 
   const fetchChartData = async (interval: string): Promise<ChartData[]> => {
-    const response = await fetch(`/api/kc/historical-data?symbol=${symbol}&interval=${interval}`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch ${interval} data`);
+    try {
+      console.log(`Fetching chart data for ${symbol} with interval ${interval}`);
+      const response = await fetch(`/api/kc/historical-data?symbol=${symbol}&interval=${interval}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Failed to fetch ${interval} data:`, errorText);
+        throw new Error(`Failed to fetch ${interval} data: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log(`Received ${data.length} data points for ${interval}`);
+      
+      if (!Array.isArray(data) || data.length === 0) {
+        console.warn(`No data received for ${interval}`);
+        return [];
+      }
+      
+      return data.map((d: any) => ({
+        time: (new Date(d.date).getTime() / 1000) as UTCTimestamp,
+        open: d.open,
+        high: d.high,
+        low: d.low,
+        close: d.close,
+      }));
+    } catch (error) {
+      console.error(`Error fetching chart data for ${interval}:`, error);
+      throw error;
     }
-    const data = await response.json();
-    
-    return data.map((d: any) => ({
-      time: (new Date(d.date).getTime() / 1000) as UTCTimestamp,
-      open: d.open,
-      high: d.high,
-      low: d.low,
-      close: d.close,
-    }));
   };
 
   useEffect(() => {
     const initializeCharts = async () => {
       try {
+        console.log('Initializing charts for symbol:', symbol);
         setLoading(true);
         setError(null);
 
@@ -103,43 +126,113 @@ const MultiTimeframeChart: React.FC<MultiTimeframeChartProps> = ({ symbol }) => 
         });
         chartRefs.current = [];
 
-        // Wait a bit for refs to be available
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Wait for DOM to be ready and refs to be available
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        while (attempts < maxAttempts) {
+          const availableContainers = timeframes.filter((tf, index) => {
+            const container = containerRefs.current[index];
+            const isAvailable = !!container;
+            if (!isAvailable) {
+              console.log(`Container for ${tf.label} is not available. Ref:`, container);
+              // Check if element exists in DOM by ID or class
+              const elements = document.querySelectorAll('.chart-container');
+              console.log(`Found ${elements.length} .chart-container elements in DOM`);
+            } else {
+              console.log(`Container for ${tf.label} is available with dimensions:`, 
+                container!.clientWidth, 'x', container!.clientHeight);
+            }
+            return isAvailable;
+          });
+          
+          console.log(`Attempt ${attempts + 1}: ${availableContainers.length} of ${timeframes.length} chart containers available`);
+          
+          if (availableContainers.length === timeframes.length) {
+            break;
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 150));
+          attempts++;
+        }
+        
+        const availableContainers = containerRefs.current.filter(ref => ref !== null);
+        if (availableContainers.length === 0) {
+          console.error('No chart containers are available after all attempts');
+          setError('Chart containers could not be initialized. This may be due to the modal not being fully rendered.');
+          setLoading(false);
+          return;
+        }
 
         // Create charts for each timeframe
         const promises = timeframes.map(async (timeframe, index) => {
-          if (!timeframe.ref.current) {
+          const container = containerRefs.current[index];
+          if (!container) {
+            console.warn(`Container not available for ${timeframe.label}`);
             return null;
           }
 
-          const { chart, series } = createSingleChart(timeframe.ref.current, timeframe.label);
-          chartRefs.current[index] = { chart, series };
+          console.log(`Creating chart for ${timeframe.label}`);
+          
+          try {
+            const { chart, series } = createSingleChart(container);
+            chartRefs.current[index] = { chart, series };
 
-          // Fetch and set data
-          const data = await fetchChartData(timeframe.interval);
-          series.setData(data);
+            try {
+              // Fetch and set data
+              const data = await fetchChartData(timeframe.interval);
+              console.log(`Setting ${data.length} data points for ${timeframe.label}`);
+              
+              if (data.length > 0) {
+                series.setData(data);
+                // Fit content to the chart
+                chart.timeScale().fitContent();
+                console.log(`Chart ${timeframe.label} loaded successfully`);
+              } else {
+                console.warn(`No data to display for ${timeframe.label}`);
+              }
+            } catch (dataError) {
+              console.error(`Failed to load data for ${timeframe.label}:`, dataError);
+              // Continue with other charts even if one fails
+            }
 
-          return { chart, series };
+            return { chart, series };
+          } catch (chartError) {
+            console.error(`Failed to create chart for ${timeframe.label}:`, chartError);
+            return null;
+          }
         });
 
-        await Promise.all(promises);
+        const results = await Promise.all(promises);
+        const successfulCharts = results.filter(result => result !== null);
+        console.log(`Successfully created ${successfulCharts.length} charts`);
         setLoading(false);
       } catch (err) {
         console.error('Error initializing charts:', err);
-        setError('Failed to load chart data');
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        setError(`Failed to load charts: ${errorMessage}`);
         setLoading(false);
       }
     };
 
-    initializeCharts();
+    // Use requestAnimationFrame to ensure DOM is ready
+    const initCharts = () => {
+      requestAnimationFrame(() => {
+        initializeCharts();
+      });
+    };
+    
+    // Delay initialization to ensure modal is fully rendered
+    const timeoutId = setTimeout(initCharts, 300);
 
     // Resize handler
     const handleResize = () => {
       chartRefs.current.forEach(({ chart }, index) => {
-        if (chart && timeframes[index].ref.current) {
+        const container = containerRefs.current[index];
+        if (chart && container) {
           const isMobile = window.innerWidth <= 768;
           const chartHeight = isMobile ? 180 : 220;
-          chart.resize(timeframes[index].ref.current.clientWidth, chartHeight);
+          chart.resize(container.clientWidth, chartHeight);
         }
       });
     };
@@ -147,6 +240,7 @@ const MultiTimeframeChart: React.FC<MultiTimeframeChartProps> = ({ symbol }) => 
     window.addEventListener('resize', handleResize);
 
     return () => {
+      clearTimeout(timeoutId);
       window.removeEventListener('resize', handleResize);
       chartRefs.current.forEach(({ chart }) => {
         if (chart) chart.remove();
@@ -154,6 +248,8 @@ const MultiTimeframeChart: React.FC<MultiTimeframeChartProps> = ({ symbol }) => 
     };
   }, [symbol]);
 
+  console.log('Component render state:', { loading, error, containerRefs: containerRefs.current });
+  
   if (loading) {
     return (
       <div className="multi-chart-loading">
@@ -206,15 +302,18 @@ const MultiTimeframeChart: React.FC<MultiTimeframeChartProps> = ({ symbol }) => 
 
   return (
     <div className="multi-timeframe-charts">
-      {timeframes.map((timeframe, index) => (
-        <div key={timeframe.interval} className="chart-section">
-          <div className="chart-header">
-            <h4>{timeframe.label}</h4>
-            <span className="symbol-name">{symbol}</span>
+      {timeframes.map((timeframe) => {
+        console.log(`Rendering ${timeframe.label} container`);
+        return (
+          <div key={timeframe.interval} className="chart-section">
+            <div className="chart-header">
+              <h4>{timeframe.label}</h4>
+              <span className="symbol-name">{symbol}</span>
+            </div>
+            <div ref={setContainerRef(timeframe.index)} className="chart-container" />
           </div>
-          <div ref={timeframe.ref} className="chart-container" />
-        </div>
-      ))}
+        );
+      })}
 
       <style jsx>{`
         .multi-timeframe-charts {
@@ -268,7 +367,9 @@ const MultiTimeframeChart: React.FC<MultiTimeframeChartProps> = ({ symbol }) => 
           height: 220px;
           position: relative;
           min-height: 220px;
+          min-width: 300px;
           background: var(--background);
+          display: block;
         }
 
         @media (max-width: 768px) {

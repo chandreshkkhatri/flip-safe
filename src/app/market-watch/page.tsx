@@ -101,12 +101,25 @@ export default function MarketWatchPage() {
           const activeAccount = binanceAccounts.find(acc => acc.isActive) || binanceAccounts[0];
           const funds = await fundsService.fetchBinanceFunds(activeAccount._id);
           setFundsData(funds);
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error fetching funds:', error);
-          setFundsError('Failed to fetch account balance');
+          // Provide more specific error messages
+          if (error.message?.includes('Invalid API')) {
+            setFundsError('Invalid API credentials. Please check your Binance API keys in the Accounts page.');
+          } else if (error.message?.includes('IP not whitelisted')) {
+            setFundsError('IP not whitelisted. Please add your IP to the API key whitelist in Binance.');
+          } else if (error.message?.includes('permissions')) {
+            setFundsError('Insufficient API permissions. Please enable Futures trading for your API key.');
+          } else {
+            setFundsError(error.message || 'Failed to fetch account balance');
+          }
         } finally {
           setFundsLoading(false);
         }
+      } else {
+        // No accounts found
+        setFundsLoading(false);
+        setFundsError('No Binance accounts found. Please add an account in the Accounts page.');
       }
     };
 
@@ -119,18 +132,14 @@ export default function MarketWatchPage() {
       const response = await axios.get(`${API_ROUTES.accounts.getAccounts}?userId=${userId}`);
       if (response.data?.success) {
         const binanceAccs = response.data.accounts.filter(
-          (acc: any) => acc.accountType === 'binance' && acc.isActive
+          (acc: any) => acc.accountType === 'binance'
         );
         setBinanceAccounts(binanceAccs);
       }
     } catch (error) {
       console.error('Error fetching Binance accounts:', error);
-      setBinanceAccounts([{
-        _id: 'mock_binance_1',
-        accountName: 'My Binance Futures',
-        accountType: 'binance',
-        isActive: true,
-      }]);
+      // Don't set mock accounts - let the user know they need to add real accounts
+      setBinanceAccounts([]);
     }
   };
 
@@ -208,11 +217,6 @@ export default function MarketWatchPage() {
     binanceWebSocket.removeSymbol(symbol);
   };
 
-  const calculatePositionSize = (riskPercentage: number, stopLossDistance: number) => {
-    if (stopLossDistance === 0) return 0;
-    const riskAmount = portfolioValue * (riskPercentage / 100);
-    return Math.floor(riskAmount / stopLossDistance);
-  };
 
   if (loading) {
     return (
@@ -270,7 +274,7 @@ export default function MarketWatchPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="search-input"
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === 'Enter' && searchQuery.trim()) {
                       addSymbol(searchQuery.trim().toUpperCase());
                       setSearchQuery('');
@@ -302,7 +306,7 @@ export default function MarketWatchPage() {
                 <div>Action</div>
               </div>
               
-              {watchlistItems.map((item, index) => (
+              {watchlistItems.map((item) => (
                 <div key={item.symbol} className="table-row">
                   <div className="symbol-cell">
                     <span className="symbol-name">{item.symbol}</span>
@@ -362,6 +366,13 @@ export default function MarketWatchPage() {
               ) : fundsError ? (
                 <div className="funds-error">
                   <span>⚠️ {fundsError}</span>
+                  {fundsError.includes('API') && (
+                    <div className="error-action">
+                      <a href="/accounts" style={{ color: 'inherit', textDecoration: 'underline', fontSize: '0.85rem', marginTop: '8px', display: 'inline-block' }}>
+                        Go to Accounts →
+                      </a>
+                    </div>
+                  )}
                 </div>
               ) : fundsData ? (
                 <>

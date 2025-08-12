@@ -20,45 +20,12 @@ interface BinanceFundsResponse {
   }>;
 }
 
-// Mock fund data for development - replace with real Binance API calls
-const getMockFunds = (): BinanceFundsResponse => {
-  return {
-    totalWalletBalance: '12500.50',
-    totalMarginBalance: '12350.25', 
-    totalUnrealizedProfit: '150.25',
-    availableBalance: '8750.00',
-    maxWithdrawAmount: '8500.00',
-    assets: [
-      {
-        asset: 'USDT',
-        walletBalance: '10000.00',
-        unrealizedProfit: '0.00',
-        marginBalance: '10000.00',
-        availableBalance: '7500.00',
-      },
-      {
-        asset: 'BTC',
-        walletBalance: '0.02156789',
-        unrealizedProfit: '125.50',
-        marginBalance: '0.02156789',
-        availableBalance: '0.01056789',
-      },
-      {
-        asset: 'ETH',
-        walletBalance: '0.95432100',
-        unrealizedProfit: '24.75',
-        marginBalance: '0.95432100',
-        availableBalance: '0.45432100',
-      },
-    ]
-  };
-};
-
 // Real Binance API implementation
 const getRealBinanceFunds = async (apiKey: string, secretKey: string): Promise<BinanceFundsResponse> => {
   try {
     const timestamp = Date.now();
-    const queryString = `timestamp=${timestamp}`;
+    const recvWindow = 5000;
+    const queryString = `recvWindow=${recvWindow}&timestamp=${timestamp}`;
     const signature = crypto.createHmac('sha256', secretKey).update(queryString).digest('hex');
     
     const url = `https://fapi.binance.com/fapi/v2/account?${queryString}&signature=${signature}`;
@@ -66,17 +33,36 @@ const getRealBinanceFunds = async (apiKey: string, secretKey: string): Promise<B
     const response = await fetch(url, {
       headers: {
         'X-MBX-APIKEY': apiKey,
+        'Content-Type': 'application/json',
       },
     });
     
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Binance API error response:', errorText);
-      throw new Error(`Binance API error: ${response.status} - ${errorText}`);
+      
+      // Parse error to provide better feedback
+      let errorMsg = `Binance API error: ${response.status}`;
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.code === -2014) {
+          errorMsg = 'Invalid API Key format';
+        } else if (errorData.code === -1022) {
+          errorMsg = 'Invalid signature. Please check your API Secret';
+        } else if (errorData.code === -2015) {
+          errorMsg = 'Invalid API Key, IP, or permissions for action';
+        } else if (errorData.msg) {
+          errorMsg = errorData.msg;
+        }
+      } catch (e) {
+        // Ignore JSON parse error
+      }
+      
+      throw new Error(errorMsg);
     }
     
     const data = await response.json();
-    console.log('Binance API response:', data);
+    console.log('Successfully fetched Binance account data');
     
     // Extract and format the data according to our interface
     return {
@@ -90,9 +76,8 @@ const getRealBinanceFunds = async (apiKey: string, secretKey: string): Promise<B
 
   } catch (error) {
     console.error('Error fetching real Binance funds:', error);
-    // Fallback to mock data on error
-    console.log('Falling back to mock data due to error');
-    return getMockFunds();
+    // Re-throw the error instead of falling back to mock data
+    throw error;
   }
 };
 
@@ -124,17 +109,49 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('Found Binance account, fetching real funds data...');
+    console.log('API Key length:', account.apiKey?.length);
+    console.log('API Key first 8 chars:', account.apiKey?.substring(0, 8));
 
-    // Fetch real funds data using stored credentials
-    const fundsData = await getRealBinanceFunds(account.apiKey, account.apiSecret);
+    try {
+      // Fetch real funds data using stored credentials (trim to be safe)
+      const fundsData = await getRealBinanceFunds(
+        account.apiKey.trim(), 
+        account.apiSecret.trim()
+      );
 
-    return NextResponse.json({
-      success: true,
-      accountId,
-      accountName: account.accountName,
-      timestamp: new Date().toISOString(),
-      data: fundsData,
-    });
+      return NextResponse.json({
+        success: true,
+        accountId,
+        accountName: account.accountName,
+        timestamp: new Date().toISOString(),
+        data: fundsData,
+      });
+    } catch (apiError) {
+      // If API call fails, return error instead of mock data
+      console.error('Binance API call failed:', apiError);
+      
+      // Check if it's an authentication error
+      const errorMessage = apiError instanceof Error ? apiError.message : 'Unknown error';
+      if (errorMessage.includes('Invalid API') || errorMessage.includes('signature')) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Invalid API credentials. Please check your API key and secret.',
+            details: errorMessage
+          }, 
+          { status: 401 }
+        );
+      }
+      
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Failed to fetch funds from Binance',
+          details: errorMessage
+        }, 
+        { status: 500 }
+      );
+    }
 
   } catch (error) {
     console.error('Error in Binance funds API:', error);

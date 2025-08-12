@@ -98,8 +98,18 @@ export class BinanceAPI {
   private limiter: Bottleneck;
 
   constructor(config: BinanceConfig) {
-    this.apiKey = config.apiKey;
-    this.apiSecret = config.apiSecret;
+    // Validate and clean API credentials
+    if (!config.apiKey || !config.apiSecret) {
+      throw new Error('API key and secret are required');
+    }
+    
+    this.apiKey = config.apiKey.trim();
+    this.apiSecret = config.apiSecret.trim();
+    
+    // Basic validation of API key format (Binance API keys are typically 64 characters)
+    if (this.apiKey.length < 20 || this.apiKey.length > 100) {
+      console.warn(`Unusual API key length: ${this.apiKey.length} characters`);
+    }
 
     // Use testnet or production URL
     this.baseURL = config.testnet
@@ -179,7 +189,19 @@ export class BinanceAPI {
 
   // Get account information
   async getAccountInfo(): Promise<BinanceAccountInfo> {
-    return this.makeSignedRequest('GET', '/fapi/v2/account');
+    try {
+      return await this.makeSignedRequest('GET', '/fapi/v2/account');
+    } catch (error: any) {
+      // Add more detailed error information
+      if (error.response?.data) {
+        console.error('Binance API error details:', {
+          code: error.response.data.code,
+          msg: error.response.data.msg,
+          status: error.response.status
+        });
+      }
+      throw error;
+    }
   }
 
   // Get all open orders

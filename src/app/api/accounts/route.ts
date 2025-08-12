@@ -44,17 +44,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid account type' }, { status: 400 });
     }
 
+    // Trim API keys to remove any accidental whitespace
     const accountData = {
       userId,
       accountType,
       accountName,
-      apiKey,
-      apiSecret,
+      apiKey: apiKey.trim(),
+      apiSecret: apiSecret.trim(),
       isActive: true,
       metadata: {
         ...(redirectUri && { redirectUri }),
       },
     };
+    
+    console.log('Creating account with API key length:', apiKey.trim().length);
 
     const newAccount = await createAccount(accountData);
 

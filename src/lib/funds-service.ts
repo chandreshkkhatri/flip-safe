@@ -36,38 +36,25 @@ class FundsService {
 
   private async fetchCryptoPrices(assets: string[]): Promise<Record<string, number>> {
     try {
-      // Get current prices for crypto assets from Binance API
-      const symbols = assets
-        .filter(asset => asset !== 'USDT' && asset !== 'USD')
-        .map(asset => `${asset}USDT`);
-
-      if (symbols.length === 0) return {};
-
-      const url = `https://api.binance.com/api/v3/ticker/price?symbols=[${symbols.map(s => `"${s}"`).join(',')}]`;
-      const response = await fetch(url);
+      // Use our API endpoint to avoid CORS issues
+      const symbolsParam = assets.join(',');
+      console.log('Fetching prices for assets:', assets);
+      console.log('Assets array contents:', assets.map((asset, i) => `${i}: ${asset}`).join(', '));
+      const response = await fetch(`/api/binance/prices?symbols=${symbolsParam}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch crypto prices');
       }
 
-      const priceData = await response.json();
-      const prices: Record<string, number> = {};
-
-      // Handle both single symbol and array responses
-      const priceArray = Array.isArray(priceData) ? priceData : [priceData];
+      const data = await response.json();
       
-      priceArray.forEach((item: any) => {
-        if (item.symbol && item.price) {
-          const asset = item.symbol.replace('USDT', '');
-          prices[asset] = parseFloat(item.price);
-        }
-      });
-
-      // USDT is always 1:1 with USD
-      prices['USDT'] = 1;
-      prices['USD'] = 1;
-
-      return prices;
+      if (!data.success) {
+        console.error('Price fetch failed:', data.error);
+        console.error('Full error response:', data);
+        return data.prices || {};
+      }
+      
+      return data.prices;
     } catch (error) {
       console.error('Error fetching crypto prices:', error);
       // Fallback prices
@@ -77,6 +64,7 @@ class FundsService {
         BNB: 300,
         USDT: 1,
         USD: 1,
+        USDC: 1,
       };
     }
   }
@@ -92,15 +80,14 @@ class FundsService {
 
     try {
       const response = await fetch(`/api/binance/funds?accountId=${accountId}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch funds: ${response.status}`);
-      }
-
       const result = await response.json();
       
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch funds');
+      if (!response.ok || !result.success) {
+        // If it's an authentication error, provide a clear message
+        if (response.status === 401 || result.error?.includes('Invalid API')) {
+          throw new Error('Invalid API credentials. Please reconnect your Binance account.');
+        }
+        throw new Error(result.error || result.details || 'Failed to fetch funds');
       }
 
       const rawData = result.data;
@@ -126,7 +113,7 @@ class FundsService {
       });
 
       // Calculate total USD value
-      const totalUsdValue = assetsWithUsdValue.reduce((total, asset) => total + asset.usdValue, 0);
+      const totalUsdValue = assetsWithUsdValue.reduce((total: number, asset: any) => total + asset.usdValue, 0);
 
       const fundsData: FundsData = {
         totalWalletBalance: parseFloat(rawData.totalWalletBalance),
