@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { binanceWebSocket } from '@/lib/binance-websocket';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import TradingWindow from './TradingWindow';
 
 export interface WatchlistItem {
@@ -37,6 +37,8 @@ const DEFAULT_SYMBOLS = [
 ];
 
 export default function Watchlist({ binanceAccounts }: WatchlistProps) {
+  console.log('Watchlist component rendering, binanceAccounts length:', binanceAccounts?.length);
+  
   const [watchlistItems, setWatchlistItems] = useState<WatchlistItem[]>([]);
   const [selectedSymbol, setSelectedSymbol] = useState<string>('BTCUSDT');
   const [loading, setLoading] = useState(true);
@@ -204,13 +206,16 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
       <div className="trading-panel">
         <TradingWindow
           symbol={selectedSymbol}
-          currentPrice={watchlistItems.find(item => item.symbol === selectedSymbol)?.lastPrice || 0}
+          currentPrice={useMemo(() => 
+            watchlistItems.find(item => item.symbol === selectedSymbol)?.lastPrice || 0,
+            [watchlistItems, selectedSymbol]
+          )}
           binanceAccounts={binanceAccounts}
-          onOrderPlaced={() => {
+          onOrderPlaced={useCallback(() => {
             // Refresh data or show success message
             // eslint-disable-next-line no-console -- user feedback placeholder
             console.log('Order placed successfully');
-          }}
+          }, [])}
         />
       </div>
 

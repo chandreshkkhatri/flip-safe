@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 import MultiTimeframeChart from './MultiTimeframeChart';
 
 interface TradingWindowProps {
@@ -28,7 +28,7 @@ interface OrderForm {
   reduceOnly: boolean;
 }
 
-export default function TradingWindow({
+const TradingWindow = memo(function TradingWindow({
   symbol,
   currentPrice,
   binanceAccounts,
@@ -580,4 +580,6 @@ export default function TradingWindow({
       `}</style>
     </div>
   );
-}
+});
+
+export default TradingWindow;

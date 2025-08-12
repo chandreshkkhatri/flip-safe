@@ -3,12 +3,12 @@
 import { Button } from '@/components/ui/button';
 import PageLayout from '@/components/layout/PageLayout';
 import { binanceWebSocket } from '@/lib/binance-websocket';
-import TradingWindow from '@/components/watchlist/TradingWindow';
 import { useAuth } from '@/lib/auth-context';
 import { API_ROUTES } from '@/lib/constants';
 import { fundsService, FundsData } from '@/lib/funds-service';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface WatchlistItem {
   symbol: string;
@@ -62,6 +62,7 @@ const TRADING_TIPS = [
 ];
 
 export default function MarketWatchPage() {
+  const router = useRouter();
   const [watchlistItems, setWatchlistItems] = useState<WatchlistItem[]>([]);
   const [selectedTip, setSelectedTip] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,8 +70,6 @@ export default function MarketWatchPage() {
   const [fundsLoading, setFundsLoading] = useState(true);
   const [fundsError, setFundsError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedSymbol, setSelectedSymbol] = useState<string>('BTCUSDT');
-  const [showTradingWindow, setShowTradingWindow] = useState(false);
   const [binanceAccounts, setBinanceAccounts] = useState<BinanceAccount[]>([]);
   const { isLoggedIn, allowOfflineAccess, runOfflineMode } = useAuth();
 
@@ -331,8 +330,7 @@ export default function MarketWatchPage() {
                       size="sm"
                       variant="default"
                       onClick={() => {
-                        setSelectedSymbol(item.symbol);
-                        setShowTradingWindow(true);
+                        router.push(`/trading?symbol=${item.symbol}`);
                       }}
                       className="trade-btn"
                       style={{ marginRight: '8px' }}
@@ -441,31 +439,6 @@ export default function MarketWatchPage() {
           </div>
         </div>
 
-        {/* Trading Window Modal */}
-        {showTradingWindow && (
-          <div className="trading-modal-overlay" onClick={() => setShowTradingWindow(false)}>
-            <div className="trading-modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>Trade {selectedSymbol}</h2>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setShowTradingWindow(false)}
-                >
-                  ✕
-                </Button>
-              </div>
-              <TradingWindow
-                symbol={selectedSymbol}
-                currentPrice={watchlistItems.find(item => item.symbol === selectedSymbol)?.lastPrice || 0}
-                binanceAccounts={binanceAccounts}
-                onOrderPlaced={() => {
-                  setShowTradingWindow(false);
-                }}
-              />
-            </div>
-          </div>
-        )}
 
         <style jsx>{`
           .market-watch-container {
@@ -755,51 +728,6 @@ export default function MarketWatchPage() {
             padding: 4px 8px;
           }
 
-          .trading-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-          }
-
-          .trading-modal-content {
-            background: white;
-            border-radius: 12px;
-            max-width: 1200px;
-            width: 100%;
-            max-height: 95vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-          }
-
-          :global(.dark) .trading-modal-content {
-            background: #18181b !important;
-          }
-
-          .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            border-bottom: 1px solid #e5e7eb;
-          }
-
-          :global(.dark) .modal-header {
-            border-bottom: 1px solid #27272a !important;
-          }
-
-          .modal-header h2 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin: 0;
-          }
 
           .funds-loading {
             display: flex;
