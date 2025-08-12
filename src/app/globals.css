@@ -42,6 +42,28 @@ body {
   min-height: 100vh;
 }
 
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  html {
+    font-size: 16px; /* Prevents zoom on iOS when focusing inputs */
+  }
+
+  body {
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Improve scrolling performance on mobile */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Prevent horizontal scroll */
+  #root {
+    overflow-x: hidden;
+  }
+}
+
 :root {
   --primary-color: #2196f3;
   --primary-dark: #1976d2;
@@ -108,19 +130,41 @@ body {
 }
 
 /* Dark theme variables */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text-primary: #ffffff;
-    --text-secondary: #b0bec5;
-    --background-light: #1e1e1e;
-    --background-dark: #121212;
-    --border-color: #333;
-  }
+.dark {
+  --text-primary: #ffffff;
+  --text-secondary: #b0bec5;
+  --background-light: #1e1e1e;
+  --background-dark: #121212;
+  --border-color: #333;
+  --background: oklch(0.09 0 0);
+  --foreground: oklch(0.985 0.001 106.423);
+  --card: oklch(0.09 0 0);
+  --card-foreground: oklch(0.985 0.001 106.423);
+  --popover: oklch(0.09 0 0);
+  --popover-foreground: oklch(0.985 0.001 106.423);
+  --primary: oklch(0.709 0.01 56.259);
+  --primary-foreground: oklch(0.147 0.004 49.25);
+  --secondary: oklch(0.167 0.003 48.717);
+  --secondary-foreground: oklch(0.985 0.001 106.423);
+  --muted: oklch(0.167 0.003 48.717);
+  --muted-foreground: oklch(0.709 0.01 56.259);
+  --accent: oklch(0.167 0.003 48.717);
+  --accent-foreground: oklch(0.985 0.001 106.423);
+  --border: oklch(0.167 0.003 48.717);
+  --input: oklch(0.167 0.003 48.717);
+  --ring: oklch(0.709 0.01 56.259);
+  --sidebar: oklch(0.09 0 0);
+  --sidebar-foreground: oklch(0.985 0.001 106.423);
+  --sidebar-primary: oklch(0.709 0.01 56.259);
+  --sidebar-primary-foreground: oklch(0.147 0.004 49.25);
+  --sidebar-accent: oklch(0.167 0.003 48.717);
+  --sidebar-accent-foreground: oklch(0.985 0.001 106.423);
+  --sidebar-border: oklch(0.167 0.003 48.717);
+}
 
-  body {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
-    color: var(--text-primary);
-  }
+.dark body {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
+  color: var(--text-primary);
 }
 
 /* Utility classes */

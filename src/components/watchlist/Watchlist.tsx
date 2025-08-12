@@ -220,10 +220,17 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
           grid-template-columns: 300px 1fr;
           gap: 16px;
           height: 600px;
-          background: white;
+          background: #ffffff;
+          color: #000000;
           border-radius: 8px;
           overflow: hidden;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        :global(.dark) .watchlist-container {
+          background: #18181b !important;
+          color: #ffffff !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         .loading-state {
@@ -263,6 +270,12 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
           border-right: 1px solid #e9ecef;
           display: flex;
           flex-direction: column;
+          background: #ffffff;
+        }
+        
+        :global(.dark) .watchlist-panel {
+          border-right: 1px solid #27272a !important;
+          background: #18181b !important;
         }
 
         .watchlist-header {
@@ -272,12 +285,19 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
           padding: 12px 16px;
           border-bottom: 1px solid #e9ecef;
           background: #f8f9fa;
+          color: #333;
+        }
+        
+        :global(.dark) .watchlist-header {
+          border-bottom: 1px solid #27272a !important;
+          background: #09090b !important;
+          color: #ffffff !important;
         }
 
         .watchlist-header h3 {
           margin: 0;
           font-size: 1rem;
-          color: #333;
+          color: var(--foreground);
         }
 
         /* Add symbol button migrated to Button */
@@ -327,7 +347,7 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
         .symbol-name {
           font-weight: 600;
           font-size: 0.85rem;
-          color: #333;
+          color: var(--foreground);
         }
 
         /* Remove symbol button migrated to Button */
@@ -341,7 +361,7 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
         .last-price {
           font-weight: 600;
           font-size: 0.8rem;
-          color: #333;
+          color: var(--foreground);
         }
 
         .price-change {
@@ -359,25 +379,118 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
 
         .volume-info {
           font-size: 0.7rem;
-          color: #666;
+          color: var(--muted-foreground);
         }
 
         .trading-panel {
           background: #fafafa;
+          color: #333;
           display: flex;
           flex-direction: column;
         }
+        
+        :global(.dark) .trading-panel {
+          background: #09090b !important;
+          color: #ffffff !important;
+        }
 
-        @media only screen and (max-width: 768px) {
+        /* Tablet view */
+        @media (max-width: 1024px) {
+          .watchlist-container {
+            grid-template-columns: 250px 1fr;
+          }
+        }
+
+        /* Mobile view */
+        @media (max-width: 768px) {
           .watchlist-container {
             grid-template-columns: 1fr;
-            grid-template-rows: 250px 1fr;
+            grid-template-rows: auto;
             height: auto;
+            min-height: 100vh;
+            border-radius: 0;
+            box-shadow: none;
           }
 
           .watchlist-panel {
             border-right: none;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 2px solid #e9ecef;
+            max-height: 40vh;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: white;
+          }
+
+          .watchlist-items {
+            max-height: 30vh;
+            overflow-y: auto;
+          }
+
+          .trading-panel {
+            min-height: 60vh;
+          }
+
+          .watchlist-header {
+            padding: 10px 12px;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+          }
+
+          .watchlist-header h3 {
+            font-size: 0.95rem;
+          }
+
+          .watchlist-item {
+            padding: 10px 12px;
+          }
+
+          .symbol-name {
+            font-size: 0.9rem;
+          }
+
+          .last-price {
+            font-size: 0.85rem;
+          }
+
+          .price-change {
+            font-size: 0.75rem;
+          }
+
+          .volume-info {
+            font-size: 0.75rem;
+          }
+        }
+
+        /* Small mobile view */
+        @media (max-width: 480px) {
+          .watchlist-container {
+            gap: 0;
+          }
+
+          .watchlist-panel {
+            max-height: 35vh;
+          }
+
+          .watchlist-items {
+            max-height: 25vh;
+          }
+
+          .watchlist-header {
+            padding: 8px 10px;
+          }
+
+          .watchlist-item {
+            padding: 8px 10px;
+          }
+
+          .symbol-info {
+            gap: 4px;
+          }
+
+          .price-info {
+            gap: 2px;
           }
         }
       `}</style>

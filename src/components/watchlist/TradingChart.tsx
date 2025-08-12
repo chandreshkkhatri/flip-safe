@@ -15,25 +15,37 @@ const TradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
+    // Adjust chart height based on screen size
+    const isMobile = window.innerWidth <= 768;
+    const chartHeight = isMobile ? 200 : 300;
+
+    const isDarkMode = document.documentElement.classList.contains('dark');
+    
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
-      height: 300,
+      height: chartHeight,
       layout: {
-        background: { type: ColorType.Solid, color: '#ffffff' },
-        textColor: '#333',
+        background: { type: ColorType.Solid, color: isDarkMode ? '#18181b' : '#ffffff' },
+        textColor: isDarkMode ? '#e4e4e7' : '#333',
       },
       grid: {
-        vertLines: { color: '#f0f0f0' },
-        horzLines: { color: '#f0f0f0' },
+        vertLines: { color: isDarkMode ? '#27272a' : '#f0f0f0' },
+        horzLines: { color: isDarkMode ? '#27272a' : '#f0f0f0' },
       },
       crosshair: {
         mode: 1, // Magnet
       },
       rightPriceScale: {
-        borderColor: '#e0e0e0',
+        borderColor: isDarkMode ? '#3f3f46' : '#e0e0e0',
+        scaleMargins: {
+          top: isMobile ? 0.15 : 0.1,
+          bottom: isMobile ? 0.15 : 0.1,
+        },
       },
       timeScale: {
-        borderColor: '#e0e0e0',
+        borderColor: isDarkMode ? '#3f3f46' : '#e0e0e0',
+        rightOffset: isMobile ? 5 : 12,
+        barSpacing: isMobile ? 3 : 6,
       },
     });
 
@@ -49,8 +61,10 @@ const TradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
     chartRef.current = { chart, series };
 
     const handleResize = () => {
-      if (chartRef.current) {
-        chartRef.current.chart.resize(chartContainerRef.current!.clientWidth, 300);
+      if (chartRef.current && chartContainerRef.current) {
+        const isMobile = window.innerWidth <= 768;
+        const chartHeight = isMobile ? 200 : 300;
+        chartRef.current.chart.resize(chartContainerRef.current.clientWidth, chartHeight);
       }
     };
 
@@ -111,7 +125,57 @@ const TradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
           <option value="1d">1d</option>
         </select>
       </div>
-      <div ref={chartContainerRef} style={{ width: '100%', height: '300px' }} />
+      <div ref={chartContainerRef} className="chart-container" />
+      <style jsx>{`
+        .trading-chart {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .chart-controls {
+          padding: 8px;
+          background: var(--muted);
+          color: var(--muted-foreground);
+          border-bottom: 1px solid var(--border);
+        }
+
+        .chart-controls select {
+          padding: 4px 8px;
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          font-size: 0.85rem;
+          background: var(--background);
+          color: var(--foreground);
+          cursor: pointer;
+        }
+
+        .chart-container {
+          width: 100%;
+          height: 300px;
+        }
+
+        @media (max-width: 768px) {
+          .chart-container {
+            height: 200px;
+          }
+
+          .chart-controls {
+            padding: 6px;
+          }
+
+          .chart-controls select {
+            font-size: 0.9rem;
+            padding: 6px 10px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .chart-container {
+            height: 180px;
+          }
+        }
+      `}</style>
     </div>
   );
 };

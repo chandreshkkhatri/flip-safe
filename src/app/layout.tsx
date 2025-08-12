@@ -11,6 +11,10 @@ export const metadata: Metadata = {
   title: 'Flip Safe - Unified Trading Platform',
   description: 'Advanced trading platform with real-time market data and analytics',
   keywords: 'trading, stocks, market watch, portfolio management',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
+  icons: {
+    icon: '/flip-safe-logo-without-name.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

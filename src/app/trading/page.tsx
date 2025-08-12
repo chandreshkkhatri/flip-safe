@@ -125,12 +125,12 @@ export default function TradingPage() {
           font-size: 1.8rem;
           font-weight: 600;
           margin-bottom: 4px;
-          color: #333;
+          color: var(--foreground);
         }
 
         .page-header p {
           font-size: 0.9rem;
-          color: #666;
+          color: var(--muted-foreground);
           margin: 0;
         }
 
@@ -143,6 +143,7 @@ export default function TradingPage() {
           color: #856404;
           font-size: 0.85rem;
         }
+        
 
         .error-message p {
           margin: 4px 0;
@@ -161,23 +162,24 @@ export default function TradingPage() {
         }
 
         .info-card {
-          background: white;
+          background: var(--card);
+          color: var(--card-foreground);
           padding: 16px;
           border-radius: 6px;
-          border: 1px solid #e9ecef;
+          border: 1px solid var(--border);
         }
 
         .info-card h4 {
           margin: 0 0 8px 0;
           font-size: 0.9rem;
-          color: #333;
+          color: var(--foreground);
           font-weight: 600;
         }
 
         .info-card p {
           margin: 0;
           font-size: 0.8rem;
-          color: #666;
+          color: var(--muted-foreground);
           line-height: 1.4;
         }
 
@@ -185,7 +187,7 @@ export default function TradingPage() {
           margin: 0;
           padding-left: 16px;
           font-size: 0.8rem;
-          color: #666;
+          color: var(--muted-foreground);
         }
 
         .info-card li {

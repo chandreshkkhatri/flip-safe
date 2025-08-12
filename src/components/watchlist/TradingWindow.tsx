@@ -346,6 +346,7 @@ export default function TradingWindow({
           display: flex;
           flex-direction: column;
           height: 100%;
+          min-width: 0;
         }
 
         .trading-window-empty {
@@ -363,13 +364,20 @@ export default function TradingWindow({
           align-items: center;
           padding: 12px 16px;
           border-bottom: 1px solid #e9ecef;
-          background: white;
+          background: #ffffff;
+          color: #333;
+        }
+        
+        :global(.dark) .trading-header {
+          border-bottom: 1px solid #27272a !important;
+          background: #18181b !important;
+          color: #ffffff !important;
         }
 
         .trading-header h3 {
           margin: 0;
           font-size: 1rem;
-          color: #333;
+          color: var(--foreground);
         }
 
         .current-price {
@@ -382,6 +390,12 @@ export default function TradingWindow({
           flex: 1;
           padding: 16px;
           overflow-y: auto;
+          max-width: 100%;
+          background: #ffffff;
+        }
+        
+        :global(.dark) .trading-form {
+          background: #09090b !important;
         }
 
         .form-group {
@@ -393,7 +407,7 @@ export default function TradingWindow({
           margin-bottom: 4px;
           font-size: 0.8rem;
           font-weight: 600;
-          color: #333;
+          color: var(--foreground);
         }
 
         .form-input,
@@ -403,7 +417,15 @@ export default function TradingWindow({
           border: 1px solid #ddd;
           border-radius: 4px;
           font-size: 0.8rem;
-          background: white;
+          background: #ffffff;
+          color: #333;
+        }
+        
+        :global(.dark) .form-input,
+        :global(.dark) .form-select {
+          border: 1px solid #27272a !important;
+          background: #18181b !important;
+          color: #ffffff !important;
         }
 
         .form-input:focus,
@@ -427,7 +449,7 @@ export default function TradingWindow({
           display: flex;
           justify-content: space-between;
           font-size: 0.7rem;
-          color: #666;
+          color: var(--muted-foreground);
           margin-top: 4px;
         }
 
@@ -451,9 +473,15 @@ export default function TradingWindow({
 
         .order-summary {
           background: #f8f9fa;
+          color: #333;
           padding: 8px;
           border-radius: 4px;
           margin-bottom: 12px;
+        }
+        
+        :global(.dark) .order-summary {
+          background: #27272a !important;
+          color: #ffffff !important;
         }
 
         .summary-row {
@@ -484,6 +512,70 @@ export default function TradingWindow({
           border-radius: 4px;
           font-size: 0.8rem;
           margin-bottom: 8px;
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 640px) {
+          .trading-header {
+            padding: 8px 12px;
+          }
+
+          .trading-header h3 {
+            font-size: 0.9rem;
+          }
+
+          .current-price {
+            font-size: 0.9rem;
+          }
+
+          .trading-form {
+            padding: 12px;
+          }
+
+          .form-group {
+            margin-bottom: 10px;
+          }
+
+          .form-group label {
+            font-size: 0.75rem;
+          }
+
+          .form-input,
+          .form-select {
+            padding: 8px;
+            font-size: 0.9rem;
+          }
+
+          .button-group {
+            gap: 8px;
+          }
+
+          .slider-labels {
+            display: none;
+          }
+
+          .slider-container {
+            padding: 12px 0;
+          }
+
+          .order-summary {
+            padding: 10px;
+          }
+
+          .summary-row {
+            font-size: 0.85rem;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .trading-form {
+            padding: 8px;
+          }
+
+          .form-input,
+          .form-select {
+            font-size: 16px; /* Prevents zoom on iOS */
+          }
         }
       `}</style>
     </div>

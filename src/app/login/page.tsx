@@ -27,9 +27,16 @@ const LoginCard: React.FC<{
       <div className="indeterminate" />
     </div>
 
-    <h2 className="row" style={{ padding: '50px 0 20px 0' }}>
-      Welcome to Flip Safe Trading Platform
-    </h2>
+    <div className="row" style={{ padding: '50px 0 20px 0', textAlign: 'center' }}>
+      <img 
+        src="/flip-safe-logo-with-name.png" 
+        alt="Flip Safe"
+        style={{ height: '64px', marginBottom: '20px' }}
+      />
+      <h2 style={{ margin: 0 }}>
+        Welcome to the Trading Platform
+      </h2>
+    </div>
 
     <div className="row">
       <form className="col s8 offset-s2">

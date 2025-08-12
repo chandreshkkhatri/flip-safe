@@ -2,7 +2,6 @@
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
 import { useTheme } from '@/lib/theme-context';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
@@ -31,17 +30,46 @@ export function Header() {
             onClick={() => setOpen(!open)}
             aria-label="Toggle navigation menu"
           >
-            <span className="h-4 w-4">
-              <span className="block h-0.5 w-4 translate-y-[-4px] rounded bg-foreground transition" />
-              <span className="block h-0.5 w-4 rounded bg-foreground transition" />
-              <span className="block h-0.5 w-4 translate-y-[4px] rounded bg-foreground transition" />
-            </span>
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              {open ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              )}
+            </svg>
           </button>
           <Link
             href="/dashboard"
-            className="font-semibold text-sm tracking-wide flex items-center gap-1"
+            className="flex items-center gap-2"
           >
-            <span className="text-primary">⚡</span> Flip Safe
+            {/* Logo with name for desktop */}
+            <img 
+              src="/flip-safe-logo-with-name.png" 
+              alt="Flip Safe"
+              className="hidden md:block h-8"
+            />
+            {/* Logo without name for mobile */}
+            <img 
+              src="/flip-safe-logo-without-name.png" 
+              alt="Flip Safe"
+              className="block md:hidden h-8 w-8"
+            />
           </Link>
         </div>
 
@@ -62,63 +90,47 @@ export function Header() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <Button
-            size="icon"
-            variant="ghost"
+          <button
             aria-label="Toggle theme"
             onClick={toggleTheme}
-            className="text-lg"
+            className="flex h-10 w-10 items-center justify-center rounded-md transition-all text-lg shadow-md"
+            style={{
+              backgroundColor: isDark ? '#fbbf24' : '#1e40af',
+              border: '2px solid',
+              borderColor: isDark ? '#f59e0b' : '#1e3a8a',
+            }}
           >
-            {isDark ? '☀️' : '🌙'}
-          </Button>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <Button variant="outline" size="sm" className="font-medium">
-                Menu
-              </Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content className="min-w-[180px] rounded-md border border-border bg-popover p-1 shadow-md focus:outline-none">
-              {navItems.map(item => (
-                <DropdownMenu.Item key={item.href} asChild>
-                  <Link
-                    href={item.href}
-                    className={`flex cursor-pointer select-none items-center rounded px-2 py-1.5 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground ${
-                      pathname === item.href ? 'text-primary font-semibold' : ''
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                </DropdownMenu.Item>
-              ))}
-              <DropdownMenu.Separator className="my-1 h-px bg-border" />
-              <DropdownMenu.Item asChild>
-                <button
-                  onClick={toggleTheme}
-                  className="w-full cursor-pointer select-none rounded px-2 py-1.5 text-left text-xs hover:bg-accent hover:text-accent-foreground"
-                >
-                  {isDark ? 'Light Mode' : 'Dark Mode'}
-                </button>
-              </DropdownMenu.Item>
-              {isLoggedIn && (
-                <DropdownMenu.Item asChild>
-                  <button
-                    onClick={() => logout()}
-                    className="w-full cursor-pointer select-none rounded px-2 py-1.5 text-left text-xs text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                  >
-                    Logout
-                  </button>
-                </DropdownMenu.Item>
-              )}
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
+            <span style={{ filter: isDark ? 'none' : 'brightness(0) invert(1)' }}>
+              {isDark ? '☀️' : '🌙'}
+            </span>
+          </button>
+          {isLoggedIn && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => logout()}
+              className="hidden md:flex text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            >
+              Logout
+            </Button>
+          )}
         </div>
       </div>
 
+      {/* Mobile drawer overlay */}
+      {open && (
+        <div
+          className="md:hidden fixed inset-0 top-14 bg-black/50 z-40"
+          onClick={() => setOpen(false)}
+        />
+      )}
+      
       {/* Mobile drawer */}
       <div
-        className={`md:hidden fixed left-0 top-14 h-[calc(100vh-56px)] w-64 transform border-r border-border bg-background px-3 py-4 transition-transform duration-300 ease-out ${
+        className={`md:hidden fixed left-0 top-14 h-[calc(100vh-56px)] w-64 transform border-r border-border bg-background px-3 py-4 transition-transform duration-300 ease-out z-50 shadow-xl ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
+        style={{ backgroundColor: isDark ? 'rgb(9, 9, 11)' : 'rgb(255, 255, 255)' }}
       >
         <div className="flex flex-col gap-0.5 text-sm">
           {navItems.map(item => (
@@ -136,9 +148,18 @@ export function Header() {
             </Link>
           ))}
           <div className="mt-2 flex gap-2">
-            <Button size="sm" variant="secondary" onClick={toggleTheme} className="flex-1">
-              {isDark ? 'Light' : 'Dark'} Mode
-            </Button>
+            <button
+              onClick={toggleTheme}
+              className="flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              style={{
+                backgroundColor: isDark ? '#fbbf24' : '#1e40af',
+                color: isDark ? '#000000' : '#ffffff',
+                border: '1px solid',
+                borderColor: isDark ? '#f59e0b' : '#1e3a8a',
+              }}
+            >
+              {isDark ? '☀️ Light' : '🌙 Dark'} Mode
+            </button>
             {isLoggedIn && (
               <Button size="sm" variant="destructive" onClick={() => logout()} className="flex-1">
                 Logout
