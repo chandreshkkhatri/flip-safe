@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface RadixAccountModalProps {
   isOpen: boolean;
@@ -35,6 +35,23 @@ export default function RadixAccountModal({ isOpen, onClose, onSubmit }: RadixAc
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    };
+    
+    checkDarkMode();
+    
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => observer.disconnect();
+  }, []);
 
   const handleBrokerSelect = (brokerType: 'kite' | 'upstox' | 'binance') => {
     setSelectedBroker(brokerType);
@@ -134,7 +151,13 @@ export default function RadixAccountModal({ isOpen, onClose, onSubmit }: RadixAc
 
   return (
     <Dialog open={isOpen} onOpenChange={handleModalClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent 
+        className="max-w-2xl max-h-[90vh] overflow-y-auto" 
+        style={{ 
+          backgroundColor: isDark ? '#1e1e1e' : 'white',
+          background: isDark ? '#1e1e1e' : 'white'
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">{getModalTitle()}</DialogTitle>
         </DialogHeader>
