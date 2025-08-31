@@ -1,4 +1,5 @@
 import { AuthProvider } from '@/lib/auth-context';
+import { AccountProvider } from '@/lib/account-context';
 import { ThemeProvider } from '@/lib/theme-context';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
@@ -32,7 +33,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <ThemeProvider>
           <AuthProvider>
-            <div id="root">{children}</div>
+            <AccountProvider>
+              <div id="root">{children}</div>
+            </AccountProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

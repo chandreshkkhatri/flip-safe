@@ -5,19 +5,12 @@ import PageLayout from '@/components/layout/PageLayout';
 import AccountSelector from '@/components/account-selector/AccountSelector';
 import Watchlist from '@/components/watchlist/Watchlist';
 import { useAuth } from '@/lib/auth-context';
-import { API_ROUTES } from '@/lib/constants';
+import { useAccount } from '@/lib/account-context';
 import { fundsService, FundsData } from '@/lib/funds-service';
-import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Activity, Users, ShieldCheck, TrendingUp } from 'lucide-react';
 
-interface BinanceAccount {
-  _id: string;
-  accountName: string;
-  accountType: 'binance';
-  isActive: boolean;
-}
 
 const TRADING_TIPS = [
   "📊 Never risk more than 2% of your portfolio on a single trade",
@@ -34,11 +27,9 @@ export default function MarketWatchPage() {
   const [fundsData, setFundsData] = useState<FundsData | null>(null);
   const [fundsLoading, setFundsLoading] = useState(true);
   const [fundsError, setFundsError] = useState<string | null>(null);
-  const [binanceAccounts, setBinanceAccounts] = useState<BinanceAccount[]>([]);
-  const [selectedAccount, setSelectedAccount] = useState<BinanceAccount | null>(null);
-  const [accountsLoading, setAccountsLoading] = useState(true);
-  const [marketType, setMarketType] = useState('binance-futures');
+  const [marketType] = useState('binance-futures');
   const { isLoggedIn, allowOfflineAccess, runOfflineMode } = useAuth();
+  const { selectedAccount, setSelectedAccount, accounts: binanceAccounts, loadingAccounts: accountsLoading } = useAccount();
 
   // Rotate trading tips every 10 seconds
   useEffect(() => {
@@ -48,24 +39,21 @@ export default function MarketWatchPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch Binance accounts and funds
+  // Handle offline mode
   useEffect(() => {
     if (!isLoggedIn && !allowOfflineAccess) {
       runOfflineMode();
     }
-    fetchBinanceAccounts();
   }, [isLoggedIn, allowOfflineAccess]);
 
-  // Fetch funds when accounts are loaded
+  // Fetch funds when selected account changes
   useEffect(() => {
     const fetchFunds = async () => {
-      if (binanceAccounts.length > 0) {
+      if (selectedAccount) {
         try {
           setFundsLoading(true);
           setFundsError(null);
-          // Use the first active account for funds
-          const activeAccount = binanceAccounts.find(acc => acc.isActive) || binanceAccounts[0];
-          const funds = await fundsService.fetchBinanceFunds(activeAccount._id);
+          const funds = await fundsService.fetchBinanceFunds(selectedAccount._id);
           setFundsData(funds);
         } catch (error: any) {
           console.error('Error fetching funds:', error);
@@ -82,40 +70,21 @@ export default function MarketWatchPage() {
         } finally {
           setFundsLoading(false);
         }
-      } else {
+      } else if (binanceAccounts.length === 0) {
         // No accounts found
         setFundsLoading(false);
         setFundsError('No Binance accounts found. Please add an account in the Accounts page.');
+      } else {
+        // Accounts exist but none selected
+        setFundsLoading(false);
+        setFundsData(null);
+        setFundsError(null);
       }
     };
 
     fetchFunds();
-  }, [binanceAccounts]);
+  }, [selectedAccount, binanceAccounts]);
 
-  const fetchBinanceAccounts = async () => {
-    const userId = 'default_user';
-    try {
-      setAccountsLoading(true);
-      const response = await axios.get(`${API_ROUTES.accounts.getAccounts}?userId=${userId}`);
-      if (response.data?.success) {
-        const binanceAccs = response.data.accounts.filter(
-          (acc: any) => acc.accountType === 'binance'
-        );
-        setBinanceAccounts(binanceAccs);
-        
-        // Auto-select the first active account or the first account
-        if (binanceAccs.length > 0) {
-          const activeAccount = binanceAccs.find((acc: any) => acc.isActive) || binanceAccs[0];
-          setSelectedAccount(activeAccount);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching Binance accounts:', error);
-      setBinanceAccounts([]);
-    } finally {
-      setAccountsLoading(false);
-    }
-  };
 
 
 
@@ -161,48 +130,64 @@ export default function MarketWatchPage() {
               />
             ) : (
               <div className="no-account-view">
-                <div className="empty-state">
-                  <Activity className="empty-icon" size={48} />
-                  <h2>Welcome to Market Watch</h2>
-                  <p className="empty-description">
-                    {binanceAccounts.length === 0 
-                      ? "Connect your Binance account to start monitoring your personalized watchlist with real-time market data."
-                      : "Select an account from the dropdown above to view your personalized watchlist and start trading."}
-                  </p>
-                  
-                  <div className="features-grid">
-                    <div className="feature-card">
-                      <TrendingUp className="feature-icon" size={24} />
-                      <h3>Real-time Data</h3>
-                      <p>Live price updates and market movements for your selected symbols</p>
+                {binanceAccounts.length === 0 ? (
+                  /* No Accounts Available */
+                  <div className="empty-state">
+                    <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Activity className="w-10 h-10 text-blue-600" />
                     </div>
-                    <div className="feature-card">
-                      <Users className="feature-icon" size={24} />
-                      <h3>Personalized Watchlist</h3>
-                      <p>Create custom watchlists for each of your trading accounts</p>
+                    <h2>Welcome to Market Watch</h2>
+                    <p className="empty-description">
+                      Connect your Binance account to start monitoring your personalized watchlist with real-time market data.
+                    </p>
+                    
+                    <div className="features-grid">
+                      <div className="feature-card">
+                        <TrendingUp className="feature-icon" size={24} />
+                        <h3>Real-time Data</h3>
+                        <p>Live price updates and market movements for your selected symbols</p>
+                      </div>
+                      <div className="feature-card">
+                        <Users className="feature-icon" size={24} />
+                        <h3>Personalized Watchlist</h3>
+                        <p>Create custom watchlists for each of your trading accounts</p>
+                      </div>
+                      <div className="feature-card">
+                        <ShieldCheck className="feature-icon" size={24} />
+                        <h3>Secure Trading</h3>
+                        <p>Your API keys are encrypted and secure</p>
+                      </div>
                     </div>
-                    <div className="feature-card">
-                      <ShieldCheck className="feature-icon" size={24} />
-                      <h3>Secure Trading</h3>
-                      <p>Your API keys are encrypted and secure</p>
-                    </div>
-                  </div>
 
-                  {binanceAccounts.length === 0 ? (
                     <Button 
                       size="lg"
                       variant="default"
                       onClick={() => router.push('/accounts')}
-                      className="cta-button"
+                      className="cta-button mt-6"
                     >
                       Add Binance Account
                     </Button>
-                  ) : (
+                  </div>
+                ) : (
+                  /* Accounts Available but None Selected */
+                  <div className="empty-state">
+                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Users className="w-10 h-10 text-gray-600" />
+                    </div>
+                    <h2>Select Your Account</h2>
+                    <p className="empty-description">
+                      Choose an account from the dropdown above to view your personalized watchlist and start trading.
+                    </p>
+                    
                     <div className="select-account-prompt">
                       <p>👆 Select an account from the dropdown above to get started</p>
                     </div>
-                  )}
-                </div>
+                    
+                    <div className="mt-6 text-sm text-gray-500">
+                      Found {binanceAccounts.length} connected account{binanceAccounts.length > 1 ? 's' : ''}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -212,7 +197,18 @@ export default function MarketWatchPage() {
             <h3>Risk Management Tools</h3>
             
             <div className="portfolio-summary">
-              {fundsLoading ? (
+              {!selectedAccount ? (
+                <div className="no-account-selected">
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Users className="w-6 h-6 text-muted-foreground" />
+                      </div>
+                      <p className="text-sm text-muted-foreground">Select an account to view balance</p>
+                    </div>
+                  </div>
+                </div>
+              ) : fundsLoading ? (
                 <div className="funds-loading">
                   <div className="loading-spinner"></div>
                   <span>Loading account balance...</span>

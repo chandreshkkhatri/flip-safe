@@ -5,18 +5,11 @@ import PageLayout from '@/components/layout/PageLayout';
 import TradingWindow from '@/components/watchlist/TradingWindow';
 import AccountSelector from '@/components/account-selector/AccountSelector';
 import { useAuth } from '@/lib/auth-context';
-import { API_ROUTES } from '@/lib/constants';
+import { useAccount } from '@/lib/account-context';
 import { binanceWebSocket } from '@/lib/binance-websocket';
-import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
-interface BinanceAccount {
-  _id: string;
-  accountName: string;
-  accountType: 'binance';
-  isActive: boolean;
-}
 
 interface WatchlistItem {
   symbol: string;
@@ -33,20 +26,17 @@ export default function TradingPage() {
   const router = useRouter();
   const symbol = searchParams.get('symbol') || 'BTCUSDT';
   
-  const [binanceAccounts, setBinanceAccounts] = useState<BinanceAccount[]>([]);
-  const [selectedAccount, setSelectedAccount] = useState<BinanceAccount | null>(null);
-  const [accountsLoading, setAccountsLoading] = useState(true);
   const [currentPrice, setCurrentPrice] = useState(0);
   const [priceData, setPriceData] = useState<WatchlistItem | null>(null);
   const [loading, setLoading] = useState(true);
   const { isLoggedIn, allowOfflineAccess, runOfflineMode } = useAuth();
+  const { selectedAccount, setSelectedAccount, accounts: binanceAccounts, loadingAccounts: accountsLoading } = useAccount();
 
-  // Fetch Binance accounts
+  // Handle offline mode
   useEffect(() => {
     if (!isLoggedIn && !allowOfflineAccess) {
       runOfflineMode();
     }
-    fetchBinanceAccounts();
   }, [isLoggedIn, allowOfflineAccess]);
 
   // Set up WebSocket for real-time price updates
@@ -104,30 +94,6 @@ export default function TradingPage() {
     };
   }, [symbol]);
 
-  const fetchBinanceAccounts = async () => {
-    const userId = 'default_user';
-    try {
-      setAccountsLoading(true);
-      const response = await axios.get(`${API_ROUTES.accounts.getAccounts}?userId=${userId}`);
-      if (response.data?.success) {
-        const binanceAccs = response.data.accounts.filter(
-          (acc: any) => acc.accountType === 'binance'
-        );
-        setBinanceAccounts(binanceAccs);
-        
-        // Auto-select the first active account or the first account
-        if (binanceAccs.length > 0) {
-          const activeAccount = binanceAccs.find((acc: any) => acc.isActive) || binanceAccs[0];
-          setSelectedAccount(activeAccount);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching Binance accounts:', error);
-      setBinanceAccounts([]);
-    } finally {
-      setAccountsLoading(false);
-    }
-  };
 
   const handleOrderPlaced = () => {
     // Could show success notification here
