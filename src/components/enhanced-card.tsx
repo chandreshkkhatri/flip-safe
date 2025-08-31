@@ -75,8 +75,8 @@ export default function EnhancedCard({
 
       <style jsx>{`
         .enhanced-card {
-          background: ${customBackground || '#ffffff'};
-          border: 2px solid ${customBackground ? 'rgba(255,255,255,0.2)' : '#e2e8f0'};
+          background: ${customBackground || 'var(--background)'};
+          border: 2px solid ${customBackground ? 'rgba(255,255,255,0.2)' : 'var(--border)'};
           border-radius: var(--radius-large);
           box-shadow:
             0 4px 20px rgba(0, 0, 0, 0.08),
@@ -92,18 +92,9 @@ export default function EnhancedCard({
           box-shadow:
             0 12px 40px rgba(0, 0, 0, 0.15),
             0 4px 16px rgba(0, 0, 0, 0.08);
-          border-color: ${customBackground ? 'rgba(255,255,255,0.4)' : '#3b82f6'};
+          border-color: ${customBackground ? 'rgba(255,255,255,0.4)' : 'var(--primary)'};
         }
 
-        :global(.dark) .enhanced-card {
-          background: var(--surface-100);
-          border-color: var(--surface-300);
-          color: var(--foreground);
-          box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.4);
-        }
-        :global(.dark) .enhanced-card:hover {
-          border-color: var(--primary);
-        }
 
         .card-overlay-link {
           position: absolute;
@@ -150,14 +141,14 @@ export default function EnhancedCard({
         .card-title {
           font-size: 1.5rem;
           font-weight: 600;
-          color: ${customTextColor || '#1e293b'};
+          color: ${customTextColor || 'var(--foreground)'};
           margin-bottom: 8px;
           line-height: 1.4;
         }
 
         .card-description {
           font-size: 0.95rem;
-          color: ${customTextColor || '#64748b'};
+          color: ${customTextColor || 'var(--muted-foreground)'};
           line-height: 1.5;
           margin-bottom: 16px;
           opacity: ${customTextColor ? '0.9' : '1'};
@@ -165,30 +156,17 @@ export default function EnhancedCard({
 
         .card-content {
           padding: 16px 24px;
-          color: ${customTextColor || '#334155'};
+          color: ${customTextColor || 'var(--foreground)'};
           line-height: 1.6;
         }
 
         .card-footer {
-          border-top: 1px solid #e2e8f0;
-          background: rgba(248, 250, 252, 0.8);
+          border-top: 1px solid var(--border);
+          background: var(--muted);
           padding: 16px 24px;
           margin-top: auto;
         }
 
-        :global(.dark) .card-footer {
-          border-top-color: var(--surface-300);
-          background: rgba(30, 41, 59, 0.5);
-        }
-        :global(.dark) .card-title {
-          color: ${customTextColor || '#f1f5f9'};
-        }
-        :global(.dark) .card-description {
-          color: ${customTextColor || '#cbd5e1'};
-        }
-        :global(.dark) .card-content {
-          color: ${customTextColor || '#e2e8f0'};
-        }
 
         .card-action-container {
           display: flex;
