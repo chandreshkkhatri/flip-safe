@@ -37,21 +37,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loginUrl, setLoginUrl] = useState<string | null>(null);
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [checkedLoginStatus, setCheckedLoginStatus] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start as false for immediate rendering
 
   useEffect(() => {
-    // Initialize state from sessionStorage
+    // Initialize state from sessionStorage immediately (synchronous)
     const storedLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
     const storedOfflineAccess = sessionStorage.getItem('allowOfflineAccess');
+    const lastAuthCheck = sessionStorage.getItem('lastAuthCheck');
+    const authCacheTime = 60000; // Cache for 1 minute
 
     setIsLoggedIn(storedLoggedIn);
-    // Default to offline access if not explicitly set
     setAllowOfflineAccess(storedOfflineAccess !== 'false');
+    setCheckedLoginStatus(true); // Allow immediate rendering
 
-    checkAuthStatus();
+    // Only check auth if cache is expired or doesn't exist
+    const now = Date.now();
+    const shouldCheckAuth = !lastAuthCheck || (now - parseInt(lastAuthCheck)) > authCacheTime;
 
-    // Set up periodic auth check
-    const authInterval = setInterval(checkAuthStatus, 20000);
+    if (shouldCheckAuth) {
+      // Run auth check in background without blocking render
+      checkAuthStatus();
+    }
+
+    // Set up periodic auth check with longer interval
+    const authInterval = setInterval(checkAuthStatus, 60000); // Reduced frequency
 
     return () => {
       clearInterval(authInterval);
@@ -60,21 +69,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
-      setLoading(true);
-      const response = await axios.get(API_ROUTES.auth.checkStatus);
+      // Don't set loading to true for background checks to avoid blocking UI
+      const response = await axios.get(API_ROUTES.auth.checkStatus, {
+        timeout: 5000, // Add timeout to prevent hanging
+      });
       const { isLoggedIn: loggedIn, login_url } = response.data;
 
-      setIsLoggedIn(loggedIn);
-      setLoginUrl(login_url || null);
-      setServiceUnavailable(false);
-
-      if (loggedIn !== isLoggedIn || !checkedLoginStatus) {
+      // Update cache timestamp
+      sessionStorage.setItem('lastAuthCheck', Date.now().toString());
+      
+      // Only update state if there's an actual change
+      if (loggedIn !== isLoggedIn) {
+        setIsLoggedIn(loggedIn);
         sessionStorage.setItem('isLoggedIn', String(loggedIn));
-        setCheckedLoginStatus(true);
       }
+      
+      if (login_url !== loginUrl) {
+        setLoginUrl(login_url || null);
+      }
+      
+      setServiceUnavailable(false);
+      setCheckedLoginStatus(true);
+      // Clear failure count on success
+      sessionStorage.removeItem('authFailureCount');
     } catch (error) {
       console.error('Error checking auth status:', error);
-      setServiceUnavailable(true);
+      // Don't immediately set service unavailable - only after multiple failures
+      const failureCount = parseInt(sessionStorage.getItem('authFailureCount') || '0') + 1;
+      sessionStorage.setItem('authFailureCount', failureCount.toString());
+      
+      if (failureCount >= 3) {
+        setServiceUnavailable(true);
+      }
     } finally {
       setLoading(false);
     }

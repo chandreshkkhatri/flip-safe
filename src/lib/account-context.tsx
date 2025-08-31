@@ -38,53 +38,96 @@ interface AccountProviderProps {
 export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) => {
   const [selectedAccount, setSelectedAccountState] = useState<BinanceAccount | null>(null);
   const [accounts, setAccounts] = useState<BinanceAccount[]>([]);
-  const [loadingAccounts, setLoadingAccounts] = useState(true);
+  const [loadingAccounts, setLoadingAccounts] = useState(false); // Start as false for immediate rendering
   const [error, setError] = useState<string | null>(null);
   const { isLoggedIn, allowOfflineAccess } = useAuth();
 
-  const fetchAccounts = useCallback(async () => {
+  const fetchAccounts = useCallback(async (isBackground = false) => {
     const userId = 'default_user';
+    
+    // Check cache first
+    const cacheKey = 'accountsCache';
+    const cacheTimeKey = 'accountsCacheTime';
+    const cacheTime = 120000; // 2 minutes cache
+    
+    const cachedData = sessionStorage.getItem(cacheKey);
+    const cacheTimestamp = sessionStorage.getItem(cacheTimeKey);
+    
+    if (cachedData && cacheTimestamp && !isBackground) {
+      const now = Date.now();
+      if (now - parseInt(cacheTimestamp) < cacheTime) {
+        // Use cached data for immediate rendering
+        const cachedAccounts = JSON.parse(cachedData) as BinanceAccount[];
+        setAccounts(cachedAccounts);
+        
+        // Restore selected account from cache
+        const savedAccountId = sessionStorage.getItem('selectedAccountId');
+        if (savedAccountId && cachedAccounts.length > 0) {
+          const savedAccount = cachedAccounts.find(acc => acc._id === savedAccountId);
+          if (savedAccount) {
+            setSelectedAccountState(savedAccount);
+          }
+        }
+        
+        // Fetch fresh data in background
+        setTimeout(() => fetchAccounts(true), 100);
+        return;
+      }
+    }
+    
     try {
-      setLoadingAccounts(true);
+      if (!isBackground) {
+        setLoadingAccounts(true);
+      }
       setError(null);
       
-      const response = await axios.get(`${API_ROUTES.accounts.getAccounts}?userId=${userId}`);
+      const response = await axios.get(`${API_ROUTES.accounts.getAccounts}?userId=${userId}`, {
+        timeout: 5000, // Add timeout
+      });
+      
       if (response.data?.success) {
         const binanceAccounts = response.data.accounts.filter(
           (acc: any) => acc.accountType === 'binance'
         ) as BinanceAccount[];
         
+        // Update cache
+        sessionStorage.setItem(cacheKey, JSON.stringify(binanceAccounts));
+        sessionStorage.setItem(cacheTimeKey, Date.now().toString());
+        
         setAccounts(binanceAccounts);
         
-        // Check if there's a saved account ID in sessionStorage
-        const savedAccountId = sessionStorage.getItem('selectedAccountId');
-        
-        if (savedAccountId && binanceAccounts.length > 0) {
-          // Try to find the saved account
-          const savedAccount = binanceAccounts.find(acc => acc._id === savedAccountId);
-          if (savedAccount) {
-            setSelectedAccountState(savedAccount);
-          } else {
-            // If saved account not found, select the first active or first account
+        // Only update selected account if not already set
+        if (!selectedAccount) {
+          const savedAccountId = sessionStorage.getItem('selectedAccountId');
+          
+          if (savedAccountId && binanceAccounts.length > 0) {
+            const savedAccount = binanceAccounts.find(acc => acc._id === savedAccountId);
+            if (savedAccount) {
+              setSelectedAccountState(savedAccount);
+            } else {
+              const defaultAccount = binanceAccounts.find(acc => acc.isActive) || binanceAccounts[0];
+              setSelectedAccountState(defaultAccount);
+              sessionStorage.setItem('selectedAccountId', defaultAccount._id);
+            }
+          } else if (binanceAccounts.length > 0) {
             const defaultAccount = binanceAccounts.find(acc => acc.isActive) || binanceAccounts[0];
             setSelectedAccountState(defaultAccount);
             sessionStorage.setItem('selectedAccountId', defaultAccount._id);
           }
-        } else if (binanceAccounts.length > 0) {
-          // No saved account, select the first active or first account
-          const defaultAccount = binanceAccounts.find(acc => acc.isActive) || binanceAccounts[0];
-          setSelectedAccountState(defaultAccount);
-          sessionStorage.setItem('selectedAccountId', defaultAccount._id);
         }
       }
     } catch (error) {
       console.error('Error fetching Binance accounts:', error);
-      setError('Failed to fetch accounts');
-      setAccounts([]);
+      if (!isBackground) {
+        setError('Failed to fetch accounts');
+        setAccounts([]);
+      }
     } finally {
-      setLoadingAccounts(false);
+      if (!isBackground) {
+        setLoadingAccounts(false);
+      }
     }
-  }, []);
+  }, [selectedAccount]);
 
   // Custom setter that also updates sessionStorage
   const setSelectedAccount = useCallback((account: BinanceAccount | null) => {
@@ -96,23 +139,43 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
     }
   }, []);
 
-  // Fetch accounts on mount and when auth status changes
+  // Initialize from cache immediately, then fetch fresh data in background
   useEffect(() => {
-    if (isLoggedIn || allowOfflineAccess) {
-      fetchAccounts();
-    }
-  }, [isLoggedIn, allowOfflineAccess, fetchAccounts]);
-
-  // Initialize from sessionStorage on mount
-  useEffect(() => {
+    // Load from cache first for immediate rendering
+    const cacheKey = 'accountsCache';
+    const cachedData = sessionStorage.getItem(cacheKey);
     const savedAccountId = sessionStorage.getItem('selectedAccountId');
-    if (savedAccountId && accounts.length > 0) {
-      const savedAccount = accounts.find(acc => acc._id === savedAccountId);
-      if (savedAccount && !selectedAccount) {
-        setSelectedAccountState(savedAccount);
+    
+    if (cachedData) {
+      try {
+        const cachedAccounts = JSON.parse(cachedData) as BinanceAccount[];
+        setAccounts(cachedAccounts);
+        
+        if (savedAccountId && cachedAccounts.length > 0) {
+          const savedAccount = cachedAccounts.find(acc => acc._id === savedAccountId);
+          if (savedAccount) {
+            setSelectedAccountState(savedAccount);
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing cached accounts:', error);
       }
     }
-  }, [accounts]);
+    
+    // Fetch fresh data only if logged in or offline access allowed
+    if (isLoggedIn || allowOfflineAccess) {
+      // Small delay to allow for immediate rendering
+      setTimeout(() => fetchAccounts(), 50);
+    }
+  }, []); // Only run on mount
+
+  // Only refetch when auth status actually changes (not on every auth check)
+  useEffect(() => {
+    if (isLoggedIn || allowOfflineAccess) {
+      // Use background fetch to avoid blocking UI
+      fetchAccounts(true);
+    }
+  }, [isLoggedIn, allowOfflineAccess]);
 
   const value: AccountContextType = {
     selectedAccount,

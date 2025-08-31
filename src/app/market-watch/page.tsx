@@ -3,13 +3,15 @@
 import { Button } from '@/components/ui/button';
 import PageLayout from '@/components/layout/PageLayout';
 import AccountSelector from '@/components/account-selector/AccountSelector';
-import Watchlist from '@/components/watchlist/Watchlist';
 import { useAuth } from '@/lib/auth-context';
 import { useAccount } from '@/lib/account-context';
 import { fundsService, FundsData } from '@/lib/funds-service';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Activity, Users, ShieldCheck, TrendingUp } from 'lucide-react';
+
+// Dynamic import for heavy components
+const Watchlist = lazy(() => import('@/components/watchlist/Watchlist'));
 
 
 const TRADING_TIPS = [
@@ -111,11 +113,18 @@ export default function MarketWatchPage() {
           {/* Watchlist Section or Market Overview */}
           <div className="watchlist-section">
             {selectedAccount ? (
-              <Watchlist 
-                binanceAccounts={binanceAccounts}
-                selectedAccount={selectedAccount}
-                marketType={marketType}
-              />
+              <Suspense fallback={
+                <div className="watchlist-loading">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-center text-gray-600">Loading market data...</p>
+                </div>
+              }>
+                <Watchlist 
+                  binanceAccounts={binanceAccounts}
+                  selectedAccount={selectedAccount}
+                  marketType={marketType}
+                />
+              </Suspense>
             ) : (
               <div className="no-account-view">
                 {binanceAccounts.length === 0 ? (

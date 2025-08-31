@@ -10,15 +10,19 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 export default function DashboardPage() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start as false for immediate rendering
 
   const { isLoggedIn, allowOfflineAccess, checkedLoginStatus, runOfflineMode } = useAuth();
 
+  // Remove the artificial delay - let the page render immediately
   useEffect(() => {
-    // Theme is handled by provider; just hide spinner after short delay
-    const t = setTimeout(() => setLoading(false), 80);
-    return () => clearTimeout(t);
-  }, []);
+    // Only show loading if actually needed
+    if (!checkedLoginStatus) {
+      setLoading(true);
+      const timeout = setTimeout(() => setLoading(false), 2000); // Fallback timeout
+      return () => clearTimeout(timeout);
+    }
+  }, [checkedLoginStatus]);
 
   useEffect(() => {
     // Allow offline access by default for the dashboard
@@ -28,7 +32,7 @@ export default function DashboardPage() {
     }
   }, [isLoggedIn, allowOfflineAccess, checkedLoginStatus, runOfflineMode]);
 
-  if (!checkedLoginStatus || loading) {
+  if (loading) {
     return <LoadingSpinner message="Loading dashboard..." />;
   }
 

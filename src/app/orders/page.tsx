@@ -17,7 +17,7 @@ import { Receipt, Users, ShoppingCart } from 'lucide-react';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<UnifiedOrder[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start as false for immediate rendering
   const [error, setError] = useState<string | null>(null);
 
   const { isLoggedIn, allowOfflineAccess, runOfflineMode } = useAuth();
@@ -27,7 +27,8 @@ export default function OrdersPage() {
     if (!isLoggedIn && !allowOfflineAccess) {
       runOfflineMode();
     }
-    fetchOrders();
+    // Small delay to allow for immediate page rendering
+    setTimeout(() => fetchOrders(), 50);
   }, [isLoggedIn, allowOfflineAccess, runOfflineMode]);
 
   const fetchOrders = async () => {

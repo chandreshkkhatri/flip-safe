@@ -16,7 +16,7 @@ import { TrendingUp, Users, BarChart3 } from 'lucide-react';
 
 export default function PositionsPage() {
   const [positions, setPositions] = useState<UnifiedPosition[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start as false for immediate rendering
   const [error, setError] = useState<string | null>(null);
 
   const { isLoggedIn, allowOfflineAccess, runOfflineMode } = useAuth();
@@ -26,7 +26,8 @@ export default function PositionsPage() {
     if (!isLoggedIn && !allowOfflineAccess) {
       runOfflineMode();
     }
-    fetchPositions();
+    // Small delay to allow for immediate page rendering
+    setTimeout(() => fetchPositions(), 50);
   }, [isLoggedIn, allowOfflineAccess, runOfflineMode]);
 
   const fetchPositions = async () => {
