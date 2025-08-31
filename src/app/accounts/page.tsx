@@ -284,10 +284,18 @@ export default function AccountsPage() {
           color: #333;
         }
 
+        :global(.dark) .header-content h1 {
+          color: #ffffff !important;
+        }
+
         .header-content p {
           font-size: 1.1rem;
           color: #666;
           margin: 0;
+        }
+
+        :global(.dark) .header-content p {
+          color: #a1a1aa !important;
         }
 
         /* Removed legacy .btn-add-account styles (using shared Button) */
@@ -318,6 +326,10 @@ export default function AccountsPage() {
           margin: 0 0 12px 0;
         }
 
+        :global(.dark) .empty-state h3 {
+          color: #ffffff !important;
+        }
+
         .empty-state p {
           font-size: 1rem;
           color: #666;
@@ -325,6 +337,10 @@ export default function AccountsPage() {
           max-width: 400px;
           margin-left: auto;
           margin-right: auto;
+        }
+
+        :global(.dark) .empty-state p {
+          color: #a1a1aa !important;
         }
 
         /* Removed legacy .btn-get-started styles (using shared Button) */

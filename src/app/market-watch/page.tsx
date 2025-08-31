@@ -91,23 +91,11 @@ export default function MarketWatchPage() {
   return (
     <PageLayout>
       <div className="market-watch-container">
-        {/* Header with Account Selection */}
+        {/* Header */}
         <div className="market-header">
           <div className="header-content">
             <h1>Market Watch</h1>
             <p className="subtitle">Real-time market data for your selected account</p>
-          </div>
-          
-          <div className="account-selection">
-            <div className="account-selector-wrapper">
-              <label className="account-label">Selected Account:</label>
-              <AccountSelector
-                accounts={binanceAccounts}
-                selectedAccount={selectedAccount}
-                onAccountSelect={setSelectedAccount}
-                loading={accountsLoading}
-              />
-            </div>
           </div>
         </div>
 
@@ -338,33 +326,6 @@ export default function MarketWatchPage() {
             color: #a1a1aa !important;
           }
 
-          .account-selection {
-            display: flex;
-            justify-content: center;
-          }
-
-          .account-selector-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            background: #f8f9fa;
-            border-radius: 8px;
-          }
-          
-          :global(.dark) .account-selector-wrapper {
-            background: #27272a !important;
-          }
-
-          .account-label {
-            font-weight: 500;
-            color: #333;
-            font-size: 0.9rem;
-          }
-          
-          :global(.dark) .account-label {
-            color: #ffffff !important;
-          }
 
 
           .tip-banner {

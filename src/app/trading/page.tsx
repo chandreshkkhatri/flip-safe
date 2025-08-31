@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/button';
 import PageLayout from '@/components/layout/PageLayout';
 import TradingWindow from '@/components/watchlist/TradingWindow';
-import AccountSelector from '@/components/account-selector/AccountSelector';
 import { useAuth } from '@/lib/auth-context';
 import { useAccount } from '@/lib/account-context';
 import { binanceWebSocket } from '@/lib/binance-websocket';
@@ -30,7 +29,7 @@ export default function TradingPage() {
   const [priceData, setPriceData] = useState<WatchlistItem | null>(null);
   const [loading, setLoading] = useState(true);
   const { isLoggedIn, allowOfflineAccess, runOfflineMode } = useAuth();
-  const { selectedAccount, setSelectedAccount, accounts: binanceAccounts, loadingAccounts: accountsLoading } = useAccount();
+  const { selectedAccount, accounts: binanceAccounts } = useAccount();
 
   // Handle offline mode
   useEffect(() => {
@@ -173,17 +172,6 @@ export default function TradingPage() {
               </div>
             )}
           </div>
-          <div className="account-selection">
-            <div className="account-selector-wrapper">
-              <label className="account-label">Account:</label>
-              <AccountSelector
-                accounts={binanceAccounts}
-                selectedAccount={selectedAccount}
-                onAccountSelect={setSelectedAccount}
-                loading={accountsLoading}
-              />
-            </div>
-          </div>
         </div>
 
         <div className="trading-content">
@@ -293,33 +281,6 @@ export default function TradingPage() {
           background: rgba(220, 38, 38, 0.1);
         }
 
-        .account-selection {
-          margin-left: auto;
-        }
-
-        .account-selector-wrapper {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 12px;
-          background: #f8f9fa;
-          border-radius: 6px;
-        }
-        
-        :global(.dark) .account-selector-wrapper {
-          background: #27272a !important;
-        }
-
-        .account-label {
-          font-weight: 500;
-          color: #333;
-          font-size: 0.85rem;
-          white-space: nowrap;
-        }
-        
-        :global(.dark) .account-label {
-          color: #ffffff !important;
-        }
 
         .trading-content {
           background: #ffffff;
