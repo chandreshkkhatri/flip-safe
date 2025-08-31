@@ -3,31 +3,14 @@
 import { Button } from '@/components/ui/button';
 import PageLayout from '@/components/layout/PageLayout';
 import AccountSelector from '@/components/account-selector/AccountSelector';
-import { binanceWebSocket } from '@/lib/binance-websocket';
+import Watchlist from '@/components/watchlist/Watchlist';
 import { useAuth } from '@/lib/auth-context';
 import { API_ROUTES } from '@/lib/constants';
 import { fundsService, FundsData } from '@/lib/funds-service';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-interface WatchlistItem {
-  symbol: string;
-  lastPrice: number;
-  priceChange: number;
-  priceChangePercent: number;
-  volume: number;
-  high24h: number;
-  low24h: number;
-  marketCap?: number;
-}
-
-interface MarketIndex {
-  name: string;
-  value: number;
-  change: number;
-  changePercent: number;
-}
+import { Activity, Users, ShieldCheck, TrendingUp } from 'lucide-react';
 
 interface BinanceAccount {
   _id: string;
@@ -35,28 +18,6 @@ interface BinanceAccount {
   accountType: 'binance';
   isActive: boolean;
 }
-
-// Account-specific watchlist symbols based on selected account
-const getAccountWatchlistSymbols = (accountId: string | null): string[] => {
-  if (!accountId) {
-    return DEFAULT_SYMBOLS; // Fallback to default symbols
-  }
-  
-  // In a real implementation, you might fetch this from an API
-  // For now, return default crypto symbols for all Binance accounts
-  return DEFAULT_SYMBOLS;
-};
-
-const DEFAULT_SYMBOLS = [
-  'BTCUSDT',
-  'ETHUSDT', 
-  'BNBUSDT',
-  'ADAUSDT',
-  'XRPUSDT',
-  'SOLUSDT',
-  'DOGEUSDT',
-  'AVAXUSDT',
-];
 
 const TRADING_TIPS = [
   "📊 Never risk more than 2% of your portfolio on a single trade",
@@ -69,16 +30,14 @@ const TRADING_TIPS = [
 
 export default function MarketWatchPage() {
   const router = useRouter();
-  const [watchlistItems, setWatchlistItems] = useState<WatchlistItem[]>([]);
   const [selectedTip, setSelectedTip] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
   const [fundsData, setFundsData] = useState<FundsData | null>(null);
   const [fundsLoading, setFundsLoading] = useState(true);
   const [fundsError, setFundsError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [binanceAccounts, setBinanceAccounts] = useState<BinanceAccount[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<BinanceAccount | null>(null);
   const [accountsLoading, setAccountsLoading] = useState(true);
+  const [marketType, setMarketType] = useState('binance-futures');
   const { isLoggedIn, allowOfflineAccess, runOfflineMode } = useAuth();
 
   // Rotate trading tips every 10 seconds
@@ -158,100 +117,7 @@ export default function MarketWatchPage() {
     }
   };
 
-  // Initialize watchlist based on selected account
-  useEffect(() => {
-    const initializeWatchlist = async () => {
-      if (accountsLoading) return; // Wait for accounts to load
-      
-      try {
-        setLoading(true);
-        
-        // Get symbols for the selected account
-        const symbols = getAccountWatchlistSymbols(selectedAccount?._id || null);
-        
-        const initialData: WatchlistItem[] = symbols.map(symbol => ({
-          symbol,
-          lastPrice: 0,
-          priceChange: 0,
-          priceChangePercent: 0,
-          volume: 0,
-          high24h: 0,
-          low24h: 0,
-        }));
 
-        setWatchlistItems(initialData);
-        setLoading(false);
-
-        // Start WebSocket connection
-        binanceWebSocket.connect(symbols, (priceUpdate) => {
-          setWatchlistItems(prev =>
-            prev.map(item => {
-              if (item.symbol === priceUpdate.symbol) {
-                const newPrice = parseFloat(priceUpdate.price);
-                const oldPrice = item.lastPrice || newPrice;
-                const change = newPrice - oldPrice;
-                
-                return {
-                  ...item,
-                  lastPrice: newPrice,
-                  priceChange: change,
-                  priceChangePercent: parseFloat(priceUpdate.priceChangePercent),
-                  volume: parseFloat(priceUpdate.volume),
-                  high24h: parseFloat(priceUpdate.high),
-                  low24h: parseFloat(priceUpdate.low),
-                };
-              }
-              return item;
-            })
-          );
-        });
-      } catch (error) {
-        console.error('Failed to initialize market watch:', error);
-        setLoading(false);
-      }
-    };
-
-    initializeWatchlist();
-
-    return () => {
-      binanceWebSocket.disconnect();
-    };
-  }, [selectedAccount, accountsLoading]);
-
-  const addSymbol = (symbol: string) => {
-    if (!watchlistItems.find(item => item.symbol === symbol)) {
-      const newItem: WatchlistItem = {
-        symbol: symbol.toUpperCase(),
-        lastPrice: 0,
-        priceChange: 0,
-        priceChangePercent: 0,
-        volume: 0,
-        high24h: 0,
-        low24h: 0,
-      };
-      setWatchlistItems(prev => [...prev, newItem]);
-      binanceWebSocket.addSymbol(symbol);
-    }
-  };
-
-  const removeSymbol = (symbol: string) => {
-    setWatchlistItems(prev => prev.filter(item => item.symbol !== symbol));
-    binanceWebSocket.removeSymbol(symbol);
-  };
-
-
-  if (loading) {
-    return (
-      <PageLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p>Loading market data...</p>
-          </div>
-        </div>
-      </PageLayout>
-    );
-  }
 
   return (
     <PageLayout>
@@ -285,93 +151,60 @@ export default function MarketWatchPage() {
         </div>
 
         <div className="main-content">
-          {/* Watchlist Section */}
+          {/* Watchlist Section or Market Overview */}
           <div className="watchlist-section">
-            <div className="section-header">
-              <h2>Your Watchlist</h2>
-              <div className="search-container">
-                <input
-                  type="text"
-                  placeholder="Search symbols (e.g., LINKUSDT)"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="search-input"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && searchQuery.trim()) {
-                      addSymbol(searchQuery.trim().toUpperCase());
-                      setSearchQuery('');
-                    }
-                  }}
-                />
-                <Button 
-                  size="sm" 
-                  onClick={() => {
-                    if (searchQuery.trim()) {
-                      addSymbol(searchQuery.trim().toUpperCase());
-                      setSearchQuery('');
-                    }
-                  }}
-                  disabled={!searchQuery.trim()}
-                >
-                  Add
-                </Button>
-              </div>
-            </div>
-
-            <div className="watchlist-table">
-              <div className="table-header">
-                <div>Symbol</div>
-                <div>Price</div>
-                <div>24h Change</div>
-                <div>Volume</div>
-                <div>High/Low</div>
-                <div>Action</div>
-              </div>
-              
-              {watchlistItems.map((item) => (
-                <div key={item.symbol} className="table-row">
-                  <div className="symbol-cell">
-                    <span className="symbol-name">{item.symbol}</span>
-                  </div>
-                  <div className="price-cell">
-                    ${item.lastPrice.toFixed(4)}
-                  </div>
-                  <div className={`change-cell ${item.priceChangePercent >= 0 ? 'positive' : 'negative'}`}>
-                    {item.priceChangePercent >= 0 ? '+' : ''}{item.priceChangePercent.toFixed(2)}%
-                  </div>
-                  <div className="volume-cell">
-                    {(item.volume / 1000000).toFixed(2)}M
-                  </div>
-                  <div className="high-low-cell">
-                    <div className="high-low">
-                      <span className="high">${item.high24h.toFixed(4)}</span>
-                      <span className="low">${item.low24h.toFixed(4)}</span>
+            {selectedAccount ? (
+              <Watchlist 
+                binanceAccounts={binanceAccounts}
+                selectedAccount={selectedAccount}
+                marketType={marketType}
+              />
+            ) : (
+              <div className="no-account-view">
+                <div className="empty-state">
+                  <Activity className="empty-icon" size={48} />
+                  <h2>Welcome to Market Watch</h2>
+                  <p className="empty-description">
+                    {binanceAccounts.length === 0 
+                      ? "Connect your Binance account to start monitoring your personalized watchlist with real-time market data."
+                      : "Select an account from the dropdown above to view your personalized watchlist and start trading."}
+                  </p>
+                  
+                  <div className="features-grid">
+                    <div className="feature-card">
+                      <TrendingUp className="feature-icon" size={24} />
+                      <h3>Real-time Data</h3>
+                      <p>Live price updates and market movements for your selected symbols</p>
+                    </div>
+                    <div className="feature-card">
+                      <Users className="feature-icon" size={24} />
+                      <h3>Personalized Watchlist</h3>
+                      <p>Create custom watchlists for each of your trading accounts</p>
+                    </div>
+                    <div className="feature-card">
+                      <ShieldCheck className="feature-icon" size={24} />
+                      <h3>Secure Trading</h3>
+                      <p>Your API keys are encrypted and secure</p>
                     </div>
                   </div>
-                  <div className="action-cell">
-                    <Button
-                      size="sm"
+
+                  {binanceAccounts.length === 0 ? (
+                    <Button 
+                      size="lg"
                       variant="default"
-                      onClick={() => {
-                        router.push(`/trading?symbol=${item.symbol}`);
-                      }}
-                      className="trade-btn"
-                      style={{ marginRight: '8px' }}
+                      onClick={() => router.push('/accounts')}
+                      className="cta-button"
                     >
-                      Trade
+                      Add Binance Account
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => removeSymbol(item.symbol)}
-                      className="remove-btn"
-                    >
-                      ✕
-                    </Button>
-                  </div>
+                  ) : (
+                    <div className="select-account-prompt">
+                      <p>👆 Select an account from the dropdown above to get started</p>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Risk Management Panel */}
@@ -569,164 +402,127 @@ export default function MarketWatchPage() {
           }
 
           .watchlist-section {
+            flex: 1;
+          }
+
+          .no-account-view {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 500px;
+            padding: 40px;
             background: #ffffff;
             border-radius: 12px;
-            padding: 24px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           }
-          
-          :global(.dark) .watchlist-section {
+
+          :global(.dark) .no-account-view {
             background: #18181b !important;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
           }
 
-          .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+          .empty-state {
+            text-align: center;
+            max-width: 600px;
           }
 
-          .section-header h2 {
-            font-size: 1.5rem;
+          .empty-icon {
+            color: #3b82f6;
+            margin-bottom: 24px;
+          }
+
+          .empty-state h2 {
+            font-size: 2rem;
             font-weight: 600;
             color: #333;
-            margin: 0;
+            margin: 0 0 16px 0;
           }
-          
-          :global(.dark) .section-header h2 {
+
+          :global(.dark) .empty-state h2 {
             color: #ffffff !important;
           }
 
-          .search-container {
-            display: flex;
-            gap: 8px;
-            align-items: center;
+          .empty-description {
+            font-size: 1.1rem;
+            color: #666;
+            margin: 0 0 40px 0;
+            line-height: 1.6;
           }
 
-          .search-input {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            width: 200px;
+          :global(.dark) .empty-description {
+            color: #a1a1aa !important;
           }
-          
-          :global(.dark) .search-input {
+
+          .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+          }
+
+          .feature-card {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 1px solid #e5e5e5;
+          }
+
+          :global(.dark) .feature-card {
             background: #27272a !important;
             border: 1px solid #3f3f46 !important;
+          }
+
+          .feature-icon {
+            color: #3b82f6;
+            margin-bottom: 12px;
+          }
+
+          .feature-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin: 0 0 8px 0;
+          }
+
+          :global(.dark) .feature-card h3 {
             color: #ffffff !important;
           }
 
-          .watchlist-table {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-          }
-
-          .table-header {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr 1fr 1fr 1.2fr 1fr;
-            padding: 12px 16px;
-            background: #f8f9fa;
-            border-radius: 8px 8px 0 0;
-            font-weight: 600;
+          .feature-card p {
             font-size: 0.9rem;
             color: #666;
+            margin: 0;
+            line-height: 1.4;
           }
-          
-          :global(.dark) .table-header {
-            background: #27272a !important;
+
+          :global(.dark) .feature-card p {
             color: #a1a1aa !important;
           }
 
-          .table-row {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr 1fr 1fr 1.2fr 1fr;
-            padding: 12px 16px;
-            background: #ffffff;
-            border-bottom: 1px solid #f0f0f0;
-            align-items: center;
-          }
-          
-          :global(.dark) .table-row {
-            background: #18181b !important;
-            border-bottom: 1px solid #27272a !important;
+          .cta-button {
+            margin-top: 20px;
           }
 
-          .table-row:hover {
-            background: #f8f9fa;
-          }
-          
-          :global(.dark) .table-row:hover {
-            background: #27272a !important;
-          }
-
-          .symbol-name {
-            font-weight: 600;
-            color: #333;
-          }
-          
-          :global(.dark) .symbol-name {
-            color: #ffffff !important;
+          .select-account-prompt {
+            padding: 16px;
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border-radius: 12px;
+            margin-top: 20px;
           }
 
-          .price-cell {
-            font-weight: 600;
-            color: #333;
-          }
-          
-          :global(.dark) .price-cell {
-            color: #ffffff !important;
+          :global(.dark) .select-account-prompt {
+            background: linear-gradient(135deg, #1e3a8a, #1e40af) !important;
           }
 
-          .change-cell.positive {
-            color: #16a34a;
+          .select-account-prompt p {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #1e40af;
           }
 
-          .change-cell.negative {
-            color: #dc2626;
-          }
-
-          .volume-cell {
-            color: #666;
-            font-size: 0.9rem;
-          }
-          
-          :global(.dark) .volume-cell {
-            color: #a1a1aa !important;
-          }
-
-          .high-low {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-          }
-
-          .high {
-            color: #16a34a;
-            font-size: 0.85rem;
-          }
-
-          .low {
-            color: #dc2626;
-            font-size: 0.85rem;
-          }
-
-          .action-cell {
-            display: flex;
-            gap: 4px;
-            justify-content: flex-end;
-          }
-
-          .trade-btn {
-            font-size: 0.8rem;
-            padding: 4px 12px;
-          }
-
-          .remove-btn {
-            color: #dc2626;
-            padding: 4px 8px;
+          :global(.dark) .select-account-prompt p {
+            color: #93c5fd !important;
           }
 
 
@@ -933,48 +729,13 @@ export default function MarketWatchPage() {
               flex-direction: column;
               gap: 8px;
             }
+
+            .features-grid {
+              grid-template-columns: 1fr;
+            }
           }
 
           @media (max-width: 768px) {
-            .section-header {
-              flex-direction: column;
-              gap: 12px;
-              align-items: stretch;
-            }
-
-            .search-container {
-              justify-content: stretch;
-            }
-
-            .search-input {
-              flex: 1;
-              width: auto;
-            }
-
-            .table-header,
-            .table-row {
-              grid-template-columns: 1fr;
-              gap: 8px;
-            }
-
-            .table-header {
-              display: none;
-            }
-
-            .table-row {
-              display: flex;
-              flex-direction: column;
-              padding: 16px;
-              border-radius: 8px;
-              margin-bottom: 8px;
-            }
-
-            .symbol-cell {
-              font-size: 1.1rem;
-              font-weight: 600;
-              margin-bottom: 8px;
-            }
-
             .market-header {
               padding: 16px;
             }
@@ -986,6 +747,23 @@ export default function MarketWatchPage() {
             .tip-content {
               flex-direction: column;
               gap: 8px;
+            }
+
+            .no-account-view {
+              padding: 24px;
+              min-height: 400px;
+            }
+
+            .empty-state h2 {
+              font-size: 1.5rem;
+            }
+
+            .empty-description {
+              font-size: 1rem;
+            }
+
+            .features-grid {
+              gap: 16px;
             }
           }
         `}</style>

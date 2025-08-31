@@ -21,28 +21,22 @@ interface WatchlistProps {
     accountName: string;
     isActive: boolean;
   }>;
+  selectedAccount?: {
+    _id: string;
+    accountName: string;
+    isActive: boolean;
+  } | null;
+  marketType?: string;
 }
 
-const DEFAULT_SYMBOLS = [
-  'BTCUSDT',
-  'ETHUSDT',
-  'BNBUSDT',
-  'ADAUSDT',
-  'XRPUSDT',
-  'SOLUSDT',
-  'DOTUSDT',
-  'DOGEUSDT',
-  'AVAXUSDT',
-  'MATICUSDT',
-];
-
-export default function Watchlist({ binanceAccounts }: WatchlistProps) {
+export default function Watchlist({ binanceAccounts, selectedAccount, marketType = 'binance-futures' }: WatchlistProps) {
   console.log('Watchlist component rendering, binanceAccounts length:', binanceAccounts?.length);
   
   const [watchlistItems, setWatchlistItems] = useState<WatchlistItem[]>([]);
-  const [selectedSymbol, setSelectedSymbol] = useState<string>('BTCUSDT');
+  const [selectedSymbol, setSelectedSymbol] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [watchlistSymbols, setWatchlistSymbols] = useState<string[]>([]);
 
   // Memoized values that were previously in JSX
   const currentPrice = useMemo(() => 
@@ -55,62 +49,88 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
     console.log('Order placed successfully');
   }, []);
 
-  // Initialize with default symbols and set up WebSocket
+  // Fetch watchlist symbols from database when account changes
   useEffect(() => {
-    const initializeWatchlist = async () => {
-      try {
-        // Initialize with default symbols
-        const initialData: WatchlistItem[] = DEFAULT_SYMBOLS.map(symbol => ({
-          symbol,
-          lastPrice: 0,
-          priceChange: 0,
-          priceChangePercent: 0,
-          volume: 0,
-          high24h: 0,
-          low24h: 0,
-        }));
-
-        setWatchlistItems(initialData);
+    const fetchWatchlistSymbols = async () => {
+      if (!selectedAccount) {
         setLoading(false);
+        return;
+      }
 
-        // Start WebSocket connection for real-time updates
-        binanceWebSocket.connect(DEFAULT_SYMBOLS, priceUpdate => {
-          setWatchlistItems(prev =>
-            prev.map(item => {
-              if (item.symbol === priceUpdate.symbol) {
-                return {
-                  ...item,
-                  lastPrice: parseFloat(priceUpdate.price),
-                  priceChange:
-                    parseFloat(priceUpdate.price) *
-                    (parseFloat(priceUpdate.priceChangePercent) / 100),
-                  priceChangePercent: parseFloat(priceUpdate.priceChangePercent),
-                  volume: parseFloat(priceUpdate.volume),
-                  high24h: parseFloat(priceUpdate.high),
-                  low24h: parseFloat(priceUpdate.low),
-                };
-              }
-              return item;
-            })
-          );
-        });
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch symbols from API based on selected account and market
+        const response = await fetch(
+          `/api/watchlist/symbols?accountId=${selectedAccount._id}&marketType=${marketType}`
+        );
+        const data = await response.json();
+
+        if (data.success && data.symbols && data.symbols.length > 0) {
+          setWatchlistSymbols(data.symbols);
+          
+          // Initialize watchlist items
+          const initialData: WatchlistItem[] = data.symbols.map((symbol: string) => ({
+            symbol,
+            lastPrice: 0,
+            priceChange: 0,
+            priceChangePercent: 0,
+            volume: 0,
+            high24h: 0,
+            low24h: 0,
+          }));
+
+          setWatchlistItems(initialData);
+          if (data.symbols.length > 0 && !selectedSymbol) {
+            setSelectedSymbol(data.symbols[0]);
+          }
+
+          // Start WebSocket connection for real-time updates
+          binanceWebSocket.connect(data.symbols, priceUpdate => {
+            setWatchlistItems(prev =>
+              prev.map(item => {
+                if (item.symbol === priceUpdate.symbol) {
+                  return {
+                    ...item,
+                    lastPrice: parseFloat(priceUpdate.price),
+                    priceChange:
+                      parseFloat(priceUpdate.price) *
+                      (parseFloat(priceUpdate.priceChangePercent) / 100),
+                    priceChangePercent: parseFloat(priceUpdate.priceChangePercent),
+                    volume: parseFloat(priceUpdate.volume),
+                    high24h: parseFloat(priceUpdate.high),
+                    low24h: parseFloat(priceUpdate.low),
+                  };
+                }
+                return item;
+              })
+            );
+          });
+        } else {
+          // No symbols in watchlist
+          setWatchlistItems([]);
+          setWatchlistSymbols([]);
+        }
+        
+        setLoading(false);
       } catch (err) {
-        // eslint-disable-next-line no-console -- surfaced during init for debugging failures
-        console.error('Watchlist init failed', err);
-        setError('Failed to initialize price data');
+        console.error('Failed to fetch watchlist symbols:', err);
+        setError('Failed to load watchlist data');
+        setWatchlistItems([]);
         setLoading(false);
       }
     };
 
-    initializeWatchlist();
+    fetchWatchlistSymbols();
 
-    // Cleanup WebSocket on component unmount
+    // Cleanup WebSocket on component unmount or account change
     return () => {
       binanceWebSocket.disconnect();
     };
-  }, []);
+  }, [selectedAccount, marketType]);
 
-  const addSymbol = (symbol: string) => {
+  const addSymbol = async (symbol: string) => {
     if (!watchlistItems.find(item => item.symbol === symbol)) {
       const newItem: WatchlistItem = {
         symbol,
@@ -122,15 +142,51 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
         low24h: 0,
       };
       setWatchlistItems(prev => [...prev, newItem]);
+      setWatchlistSymbols(prev => [...prev, symbol]);
       binanceWebSocket.addSymbol(symbol);
+      
+      // Save to database
+      if (selectedAccount) {
+        try {
+          await fetch('/api/watchlist/symbols', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              accountId: selectedAccount._id,
+              marketType,
+              symbols: [...watchlistSymbols, symbol],
+            }),
+          });
+        } catch (err) {
+          console.error('Failed to save symbol to watchlist:', err);
+        }
+      }
     }
   };
 
-  const removeSymbol = (symbol: string) => {
+  const removeSymbol = async (symbol: string) => {
     setWatchlistItems(prev => prev.filter(item => item.symbol !== symbol));
+    setWatchlistSymbols(prev => prev.filter(s => s !== symbol));
     binanceWebSocket.removeSymbol(symbol);
     if (selectedSymbol === symbol && watchlistItems.length > 1) {
-      setSelectedSymbol(watchlistItems.find(item => item.symbol !== symbol)?.symbol || 'BTCUSDT');
+      setSelectedSymbol(watchlistItems.find(item => item.symbol !== symbol)?.symbol || '');
+    }
+    
+    // Save to database
+    if (selectedAccount) {
+      try {
+        await fetch('/api/watchlist/symbols', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            accountId: selectedAccount._id,
+            marketType,
+            symbols: watchlistSymbols.filter(s => s !== symbol),
+          }),
+        });
+      } catch (err) {
+        console.error('Failed to remove symbol from watchlist:', err);
+      }
     }
   };
 
@@ -142,15 +198,17 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
     );
   }
 
-  if (binanceAccounts.length === 0) {
+  if (binanceAccounts.length === 0 || !selectedAccount) {
     return (
       <div className="watchlist-container">
         <div className="no-accounts">
-          <h3>Binance Trading</h3>
-          <p>Connect a Binance account to start trading futures</p>
-          <Button variant="trading" size="sm">
-            Add Binance Account
-          </Button>
+          <h3>Market Watch</h3>
+          <p>Select an account to view your watchlist</p>
+          {binanceAccounts.length === 0 && (
+            <Button variant="trading" size="sm">
+              Add Binance Account
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -176,6 +234,13 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
         </div>
 
         {error && <div className="error-message">{error}</div>}
+
+        {watchlistItems.length === 0 && !loading && (
+          <div className="empty-watchlist">
+            <p>No symbols in your watchlist</p>
+            <p className="hint">Click "+ Add" to add symbols</p>
+          </div>
+        )}
 
         <div className="watchlist-items">
           {watchlistItems.map(item => (
@@ -317,6 +382,27 @@ export default function Watchlist({ binanceAccounts }: WatchlistProps) {
           padding: 8px 16px;
           border-bottom: 1px solid #ffeaa7;
           font-size: 0.8rem;
+        }
+
+        .empty-watchlist {
+          padding: 32px 16px;
+          text-align: center;
+          color: #666;
+          font-size: 0.9rem;
+        }
+
+        :global(.dark) .empty-watchlist {
+          color: #a1a1aa;
+        }
+
+        .empty-watchlist .hint {
+          margin-top: 8px;
+          font-size: 0.85rem;
+          color: #999;
+        }
+
+        :global(.dark) .empty-watchlist .hint {
+          color: #71717a;
         }
 
         .watchlist-items {
