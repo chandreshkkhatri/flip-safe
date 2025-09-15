@@ -44,7 +44,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const storedLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
     const storedOfflineAccess = sessionStorage.getItem('allowOfflineAccess');
     const lastAuthCheck = sessionStorage.getItem('lastAuthCheck');
-    const authCacheTime = 60000; // Cache for 1 minute
+    const authCacheTime = 300000; // Cache for 5 minutes (reduced frequency for trading app)
 
     setIsLoggedIn(storedLoggedIn);
     setAllowOfflineAccess(storedOfflineAccess !== 'false');
@@ -57,10 +57,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (shouldCheckAuth) {
       // Run auth check in background without blocking render
       checkAuthStatus();
+
+      // Failsafe: Ensure checkedLoginStatus stays true even if auth check hangs
+      setTimeout(() => {
+        setCheckedLoginStatus(true);
+        setLoading(false);
+      }, 3000);
     }
 
     // Set up periodic auth check with longer interval
-    const authInterval = setInterval(checkAuthStatus, 60000); // Reduced frequency
+    const authInterval = setInterval(checkAuthStatus, 300000); // 5 minutes - minimal for trading app
 
     return () => {
       clearInterval(authInterval);
@@ -71,7 +77,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // Don't set loading to true for background checks to avoid blocking UI
       const response = await axios.get(API_ROUTES.auth.checkStatus, {
-        timeout: 5000, // Add timeout to prevent hanging
+        timeout: 5000, // Increased timeout to prevent frequent errors
       });
       const { isLoggedIn: loggedIn, login_url } = response.data;
 
@@ -93,14 +99,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Clear failure count on success
       sessionStorage.removeItem('authFailureCount');
     } catch (error) {
-      console.error('Error checking auth status:', error);
-      // Don't immediately set service unavailable - only after multiple failures
-      const failureCount = parseInt(sessionStorage.getItem('authFailureCount') || '0') + 1;
-      sessionStorage.setItem('authFailureCount', failureCount.toString());
-      
-      if (failureCount >= 3) {
-        setServiceUnavailable(true);
+      console.warn('Auth status check failed (this is normal in development):',
+        error instanceof Error ? error.message : error);
+
+      // Only count non-timeout errors as failures
+      const isTimeout = error instanceof Error && error.message.includes('timeout');
+      if (!isTimeout) {
+        const failureCount = parseInt(sessionStorage.getItem('authFailureCount') || '0') + 1;
+        sessionStorage.setItem('authFailureCount', failureCount.toString());
+
+        if (failureCount >= 5) { // Increased threshold
+          setServiceUnavailable(true);
+        }
       }
+
+      // Ensure checkedLoginStatus is set even on failure to prevent infinite loading
+      setCheckedLoginStatus(true);
     } finally {
       setLoading(false);
     }

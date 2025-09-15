@@ -34,10 +34,21 @@ const API_ROUTES = {
     update: (id: string) => `/api/accounts/${id}`,
     delete: (id: string) => `/api/accounts/${id}`,
   },
+  // General authentication routes
+  auth: {
+    checkStatus: '/api/auth/status',
+    logout: '/api/auth/logout',
+  },
   // Upstox authentication routes
   upstox: {
     login: '/api/auth/upstox/login',
     callback: '/api/auth/upstox/callback',
+  },
+  // Kite authentication routes
+  kite: {
+    login: '/api/auth/kite/login',
+    callback: '/api/auth/kite/callback',
+    session: '/api/auth/kite/session',
   },
 } as const;
 

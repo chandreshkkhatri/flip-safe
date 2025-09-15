@@ -5,24 +5,48 @@ import PageLayout from '@/components/layout/PageLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import FundsCard from '@/components/funds/FundsCard';
 import { useAuth } from '@/lib/auth-context';
+import { getAccountsByUserId } from '@/models/account';
+import { IAccount } from '@/models/account';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import axios from 'axios';
+import { API_ROUTES } from '@/lib/constants';
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(false); // Start as false for immediate rendering
+  const [accounts, setAccounts] = useState<IAccount[]>([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
 
   const { isLoggedIn, allowOfflineAccess, checkedLoginStatus, runOfflineMode } = useAuth();
 
-  // Remove the artificial delay - let the page render immediately
+  // Simplified loading logic - no artificial delays
   useEffect(() => {
-    // Only show loading if actually needed
+    // Show loading only if auth status is still being checked and we don't have cached data
     if (!checkedLoginStatus) {
       setLoading(true);
-      const timeout = setTimeout(() => setLoading(false), 2000); // Fallback timeout
-      return () => clearTimeout(timeout);
+    } else {
+      setLoading(false);
     }
   }, [checkedLoginStatus]);
+
+  const fetchAccounts = async () => {
+    try {
+      setLoadingAccounts(true);
+      const userId = 'default_user';
+      const response = await axios.get(`${API_ROUTES.accounts.getAccounts}?userId=${userId}`);
+
+      if (response.data?.success) {
+        setAccounts(response.data.accounts || []);
+      }
+    } catch (error) {
+      console.error('Error fetching accounts:', error);
+      setAccounts([]);
+    } finally {
+      setLoadingAccounts(false);
+    }
+  };
 
   useEffect(() => {
     // Allow offline access by default for the dashboard
@@ -31,6 +55,14 @@ export default function DashboardPage() {
       runOfflineMode();
     }
   }, [isLoggedIn, allowOfflineAccess, checkedLoginStatus, runOfflineMode]);
+
+  useEffect(() => {
+    // Fetch accounts immediately when auth status is checked
+    // Don't wait for specific auth states since we support offline mode
+    if (checkedLoginStatus) {
+      fetchAccounts();
+    }
+  }, [checkedLoginStatus]);
 
   if (loading) {
     return <LoadingSpinner message="Loading dashboard..." />;
@@ -43,6 +75,11 @@ export default function DashboardPage() {
           <h1 className="dashboard-title">Trading Dashboard</h1>
           <p className="dashboard-subtitle">Welcome to Flip Safe - Your Unified Trading Platform</p>
         </div>
+
+        {/* Funds Overview */}
+        {accounts.length > 0 && (
+          <FundsCard accounts={accounts} className="funds-overview" />
+        )}
 
         {/* Feature Cards */}
         <div className="feature-grid">
@@ -89,6 +126,7 @@ export default function DashboardPage() {
               </Button>
             }
           />
+
 
           <EnhancedCard
             title="Alerts"
@@ -162,6 +200,11 @@ export default function DashboardPage() {
           font-size: 1.1rem;
           color: #666;
           margin: 0;
+        }
+
+        .funds-overview {
+          margin-top: 24px;
+          margin-bottom: 48px;
         }
 
         .feature-grid {

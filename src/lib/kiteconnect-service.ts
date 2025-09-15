@@ -4,16 +4,6 @@ import limiter from './limiter';
 const KiteConnect = require('kiteconnect').KiteConnect;
 const KiteTicker = require('kiteconnect').KiteTicker;
 
-// Load credentials from environment variables
-const API_KEY = process.env.KITE_API_KEY || '';
-const API_SECRET = process.env.KITE_API_SECRET || '';
-
-if (!API_KEY || !API_SECRET) {
-  console.warn(
-    'Kite API credentials not found. Please set KITE_API_KEY and KITE_API_SECRET environment variables.'
-  );
-}
-
 // Define types for KiteConnect responses
 export interface KiteOrder {
   order_id: string;
@@ -172,10 +162,13 @@ class KiteConnectService {
   private kc: any;
   private ticker: any | null = null;
   private accessToken: string | null = null;
+  private apiKey: string | null = null;
+  private apiSecret: string | null = null;
   private static instance: KiteConnectService;
 
   private constructor() {
-    this.kc = new KiteConnect({ api_key: API_KEY });
+    // Initialize without credentials - will be set later
+    this.kc = null;
   }
 
   /**
@@ -189,9 +182,34 @@ class KiteConnectService {
   }
 
   /**
+   * Initialize with API credentials from account
+   */
+  public initializeWithCredentials(apiKey: string, apiSecret: string): void {
+    console.log('Initializing KiteConnect with credentials');
+    console.log('KiteConnect class available:', !!KiteConnect);
+    console.log('API Key provided:', !!apiKey);
+    console.log('API Secret provided:', !!apiSecret);
+
+    this.apiKey = apiKey;
+    this.apiSecret = apiSecret;
+
+    try {
+      this.kc = new KiteConnect({ api_key: apiKey });
+      console.log('KiteConnect instance created successfully');
+      console.log('Instance methods available:', typeof this.kc.getMargins);
+    } catch (error) {
+      console.error('Error creating KiteConnect instance:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get the KiteConnect instance
    */
   getKiteConnect(): any {
+    if (!this.kc) {
+      throw new Error('KiteConnect not initialized. Call initializeWithCredentials() first.');
+    }
     return this.kc;
   }
 
@@ -199,11 +217,14 @@ class KiteConnectService {
    * Reset the service (logout)
    */
   reset(): void {
-    this.kc = new KiteConnect({ api_key: API_KEY });
     this.accessToken = null;
     if (this.ticker) {
       this.ticker.disconnect();
       this.ticker = null;
+    }
+    // Reset KiteConnect instance if credentials are available
+    if (this.apiKey) {
+      this.kc = new KiteConnect({ api_key: this.apiKey });
     }
   }
 
@@ -211,8 +232,18 @@ class KiteConnectService {
    * Set access token after authentication
    */
   setAccessToken(accessToken: string): void {
-    this.kc.setAccessToken(accessToken);
-    this.accessToken = accessToken;
+    console.log('Setting access token');
+    console.log('Access token provided:', !!accessToken);
+    console.log('KiteConnect instance available:', !!this.kc);
+
+    try {
+      this.kc.setAccessToken(accessToken);
+      this.accessToken = accessToken;
+      console.log('Access token set successfully');
+    } catch (error) {
+      console.error('Error setting access token:', error);
+      throw error;
+    }
   }
 
   /**
@@ -233,6 +264,9 @@ class KiteConnectService {
    * Get login URL for user authentication
    */
   getLoginURL(): string {
+    if (!this.kc) {
+      throw new Error('KiteConnect not initialized. Call initializeWithCredentials() first.');
+    }
     return this.kc.getLoginURL();
   }
 
@@ -240,8 +274,11 @@ class KiteConnectService {
    * Generate session from request token
    */
   async generateSession(requestToken: string): Promise<any> {
+    if (!this.kc || !this.apiSecret) {
+      throw new Error('KiteConnect not initialized. Call initializeWithCredentials() first.');
+    }
     try {
-      const response = await this.kc.generateSession(requestToken, API_SECRET);
+      const response = await this.kc.generateSession(requestToken, this.apiSecret);
       this.setAccessToken(response.access_token);
       return response;
     } catch (error) {
@@ -277,7 +314,30 @@ class KiteConnectService {
    * Get margins (funds)
    */
   async getMargins(segment?: string): Promise<KiteMargins> {
-    return limiter.schedule(() => this.kc.getMargins(segment));
+    console.log('KiteConnect service getMargins called');
+    console.log('Has kc instance:', !!this.kc);
+    console.log('Has access token:', !!this.accessToken);
+
+    if (!this.kc) {
+      throw new Error('KiteConnect not initialized. Call initializeWithCredentials() first.');
+    }
+
+    if (!this.accessToken) {
+      throw new Error('Access token not set. Call setAccessToken() first.');
+    }
+
+    try {
+      console.log('Calling kc.getMargins through limiter...');
+      const result = await limiter.schedule(() => {
+        console.log('Inside limiter - calling this.kc.getMargins()');
+        return this.kc.getMargins(segment);
+      });
+      console.log('getMargins result:', result);
+      return result;
+    } catch (error) {
+      console.error('Error in getMargins:', error);
+      throw error;
+    }
   }
 
   /**
@@ -401,8 +461,8 @@ class KiteConnectService {
    * Initialize WebSocket ticker for live data
    */
   initTicker(): any {
-    if (!this.accessToken) {
-      throw new Error('Access token required for WebSocket connection');
+    if (!this.accessToken || !this.apiKey) {
+      throw new Error('Access token and API key required for WebSocket connection');
     }
 
     if (this.ticker) {
@@ -410,7 +470,7 @@ class KiteConnectService {
     }
 
     this.ticker = new KiteTicker({
-      api_key: API_KEY,
+      api_key: this.apiKey,
       access_token: this.accessToken,
     });
 

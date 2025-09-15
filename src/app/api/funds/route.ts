@@ -2,7 +2,7 @@ import connectDB from '@/lib/mongodb';
 import Account from '@/models/account';
 import { createUpstoxClient } from '@/lib/upstox';
 import { createBinanceClient } from '@/lib/binance';
-import kiteConnectService, { checkAuth } from '@/lib/kiteconnect-service';
+import kiteConnectService from '@/lib/kiteconnect-service';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -40,16 +40,38 @@ const fetchBinanceFunds = async (apiKey: string, secretKey: string, testnet: boo
 };
 
 // Kite Connect funds fetcher
-const fetchKiteFunds = async (): Promise<any> => {
-  if (!checkAuth()) {
-    throw new Error('Not authenticated for Kite Connect');
-  }
-
+const fetchKiteFunds = async (account: any): Promise<any> => {
   try {
+    console.log('Fetching Kite funds for account:', account.accountName);
+    console.log('Account has apiKey:', !!account.apiKey);
+    console.log('Account has apiSecret:', !!account.apiSecret);
+    console.log('Account has accessToken:', !!account.accessToken);
+
+    // Initialize KiteConnect service with account credentials
+    kiteConnectService.initializeWithCredentials(account.apiKey, account.apiSecret);
+    console.log('KiteConnect service initialized');
+
+    // Set access token if available
+    if (account.accessToken) {
+      kiteConnectService.setAccessToken(account.accessToken);
+      console.log('Access token set');
+    } else {
+      console.error('No access token found for account:', account.accountName);
+      throw new Error('Access token not found. Please re-authenticate your Kite Connect account.');
+    }
+
+    // Fetch margins
+    console.log('Calling getMargins()...');
     const margins = await kiteConnectService.getMargins();
+    console.log('Margins fetched successfully:', margins);
     return margins;
   } catch (error) {
     console.error('Error fetching Kite funds:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      accountName: account?.accountName
+    });
     throw error;
   }
 };
@@ -195,12 +217,25 @@ export async function GET(request: NextRequest) {
 
       case 'kite':
       case 'kiteconnect':
+        if (!account) {
+          return NextResponse.json({ error: 'Account not found for Kite Connect' }, { status: 404 });
+        }
+
         try {
-          fundsData = await fetchKiteFunds();
-          normalizedData = normalizeFundsData('kite', fundsData, accountId || 'kite', account?.accountName || 'Kite Connect');
+          fundsData = await fetchKiteFunds(account);
+          normalizedData = normalizeFundsData('kite', fundsData, accountId!, account.accountName);
         } catch (error) {
+          console.error('Kite funds API error:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch Kite funds';
+          console.error('Returning error response:', errorMessage);
+
           return NextResponse.json(
-            { error: error instanceof Error ? error.message : 'Failed to fetch Kite funds' },
+            {
+              error: errorMessage,
+              accountName: account?.accountName,
+              accountId: accountId,
+              details: error instanceof Error ? error.stack : undefined
+            },
             { status: 500 }
           );
         }
@@ -315,7 +350,7 @@ export async function POST(request: NextRequest) {
       case 'kite':
       case 'kiteconnect':
         try {
-          fundsData = await fetchKiteFunds();
+          fundsData = await fetchKiteFunds(account);
           normalizedData = normalizeFundsData('kite', fundsData, accountId, account.accountName);
         } catch (error) {
           return NextResponse.json(
