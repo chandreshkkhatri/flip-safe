@@ -204,7 +204,7 @@ export default function DashboardPage() {
 
         .funds-overview {
           margin-top: 24px;
-          margin-bottom: 48px;
+          margin-bottom: 64px;
         }
 
         .feature-grid {
@@ -212,6 +212,7 @@ export default function DashboardPage() {
           grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
           gap: 24px;
           margin-bottom: 32px;
+          padding-top: 32px;
         }
 
         .status-info {

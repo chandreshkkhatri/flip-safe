@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import axios from 'axios';
 import EnhancedCard from '@/components/enhanced-card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { Badge } from '@/components/ui/badge';
 import { API_ROUTES } from '@/lib/constants';
 import { IAccount } from '@/models/account';
-import { Wallet, RefreshCw, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
+import axios from 'axios';
+import { AlertTriangle, RefreshCw, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface UnifiedFundsResponse {
   totalBalance: string;
@@ -78,9 +78,7 @@ export default function FundsCard({ accounts, selectedAccountId, className }: Fu
 
     try {
       // Fetch funds for all accounts in parallel
-      await Promise.allSettled(
-        accountsToShow.map(account => fetchFundsForAccount(account))
-      );
+      await Promise.allSettled(accountsToShow.map(account => fetchFundsForAccount(account)));
     } finally {
       setLoading(false);
     }
@@ -104,16 +102,29 @@ export default function FundsCard({ accounts, selectedAccountId, className }: Fu
 
   const getVendorColor = (vendor: string) => {
     switch (vendor.toLowerCase()) {
-      case 'kite': return '#ff6600';
-      case 'upstox': return '#387ed1';
-      case 'binance': return '#f3ba2f';
-      default: return '#666';
+      case 'kite':
+        return '#ff6600';
+      case 'upstox':
+        return '#387ed1';
+      case 'binance':
+        return '#f3ba2f';
+      default:
+        return '#666';
     }
   };
 
-  const totalBalance = fundsData.reduce((sum, fund) => sum + parseFloat(fund.totalBalance || '0'), 0);
-  const totalAvailable = fundsData.reduce((sum, fund) => sum + parseFloat(fund.availableBalance || '0'), 0);
-  const totalUnrealized = fundsData.reduce((sum, fund) => sum + parseFloat(fund.unrealizedPnl || '0'), 0);
+  const totalBalance = fundsData.reduce(
+    (sum, fund) => sum + parseFloat(fund.totalBalance || '0'),
+    0
+  );
+  const totalAvailable = fundsData.reduce(
+    (sum, fund) => sum + parseFloat(fund.availableBalance || '0'),
+    0
+  );
+  const totalUnrealized = fundsData.reduce(
+    (sum, fund) => sum + parseFloat(fund.unrealizedPnl || '0'),
+    0
+  );
 
   if (accountsToShow.length === 0) {
     return (
@@ -122,10 +133,7 @@ export default function FundsCard({ accounts, selectedAccountId, className }: Fu
           <Wallet className="empty-icon" size={48} />
           <h3>No Accounts Available</h3>
           <p>Add trading accounts to view your funds and balances.</p>
-          <Button
-            onClick={() => window.location.href = '/accounts'}
-            className="mt-4"
-          >
+          <Button onClick={() => (window.location.href = '/accounts')} className="mt-4">
             Add Account
           </Button>
         </div>
@@ -159,8 +167,8 @@ export default function FundsCard({ accounts, selectedAccountId, className }: Fu
               <div className="summary-item">
                 <div className="summary-label">Unrealized P&L</div>
                 <div className={`summary-value ${totalUnrealized >= 0 ? 'positive' : 'negative'}`}>
-                  {totalUnrealized >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                  ₹{totalUnrealized.toFixed(2)}
+                  {totalUnrealized >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}₹
+                  {totalUnrealized.toFixed(2)}
                 </div>
               </div>
             )}
@@ -186,16 +194,46 @@ export default function FundsCard({ accounts, selectedAccountId, className }: Fu
             <div key={account._id} className="account-funds-card">
               <div className="account-header">
                 <div className="account-info">
-                  <div className="account-name">{account.accountName}</div>
-                  <Badge
-                    variant="outline"
-                    style={{
-                      borderColor: getVendorColor(account.accountType),
-                      color: getVendorColor(account.accountType)
-                    }}
-                  >
-                    {account.accountType.toUpperCase()}
-                  </Badge>
+                  <div className="account-name-row">
+                    <div className="account-name">{account.accountName}</div>
+                    <div className="account-status">
+                      {account.isActive ? (
+                        <span
+                          className="status-dot active"
+                          title="Account is active and connected"
+                        ></span>
+                      ) : (
+                        <span
+                          className="status-dot inactive"
+                          title="Account is inactive or disconnected"
+                        ></span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="account-type-row">
+                    <Badge
+                      variant="default"
+                      style={{
+                        backgroundColor: `${getVendorColor(account.accountType)}15`,
+                        borderColor: getVendorColor(account.accountType),
+                        color: getVendorColor(account.accountType),
+                        fontWeight: '500',
+                        fontSize: '0.75rem',
+                        border: `1px solid ${getVendorColor(account.accountType)}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '6px 12px 6px 8px',
+                      }}
+                    >
+                      <span className="account-type-icon">
+                        {account.accountType === 'kite' ? '🟠' :
+                         account.accountType === 'upstox' ? '🔵' :
+                         account.accountType === 'binance' ? '🟡' : '🔗'}
+                      </span>
+                      {account.accountType.toUpperCase()}
+                    </Badge>
+                  </div>
                 </div>
                 <Button
                   variant="ghost"
@@ -204,10 +242,7 @@ export default function FundsCard({ accounts, selectedAccountId, className }: Fu
                   disabled={isRefreshing}
                   className="refresh-button"
                 >
-                  <RefreshCw
-                    size={16}
-                    className={isRefreshing ? 'spinning' : ''}
-                  />
+                  <RefreshCw size={16} className={isRefreshing ? 'spinning' : ''} />
                 </Button>
               </div>
 
@@ -236,8 +271,14 @@ export default function FundsCard({ accounts, selectedAccountId, className }: Fu
                   {accountFunds.unrealizedPnl && parseFloat(accountFunds.unrealizedPnl) !== 0 && (
                     <div className="funds-row">
                       <span className="label">Unrealized P&L:</span>
-                      <span className={`value ${parseFloat(accountFunds.unrealizedPnl) >= 0 ? 'positive' : 'negative'}`}>
-                        {parseFloat(accountFunds.unrealizedPnl) >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                      <span
+                        className={`value ${parseFloat(accountFunds.unrealizedPnl) >= 0 ? 'positive' : 'negative'}`}
+                      >
+                        {parseFloat(accountFunds.unrealizedPnl) >= 0 ? (
+                          <TrendingUp size={14} />
+                        ) : (
+                          <TrendingDown size={14} />
+                        )}
                         {formatCurrency(accountFunds.unrealizedPnl, account.accountType)}
                       </span>
                     </div>
@@ -338,6 +379,7 @@ export default function FundsCard({ accounts, selectedAccountId, className }: Fu
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
           gap: 16px;
+          margin-bottom: 8px;
         }
 
         .account-funds-card {
@@ -362,17 +404,57 @@ export default function FundsCard({ accounts, selectedAccountId, className }: Fu
         .account-info {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 8px;
+        }
+
+        .account-name-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
         }
 
         .account-name {
           font-weight: 600;
-          font-size: 1rem;
+          font-size: 1.1rem;
           color: #333;
+          letter-spacing: -0.01em;
         }
 
         :global(.dark) .account-name {
           color: #ffffff;
+        }
+
+        .account-status {
+          display: flex;
+          align-items: center;
+        }
+
+        .status-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          display: inline-block;
+        }
+
+        .status-dot.active {
+          background-color: #22c55e;
+          box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+        }
+
+        .status-dot.inactive {
+          background-color: #ef4444;
+          box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+        }
+
+        .account-type-row {
+          display: flex;
+          align-items: center;
+        }
+
+        .account-type-icon {
+          font-size: 0.8rem;
+          line-height: 1;
         }
 
         .refresh-button:hover {
@@ -384,8 +466,12 @@ export default function FundsCard({ accounts, selectedAccountId, className }: Fu
         }
 
         @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
         }
 
         .funds-details {

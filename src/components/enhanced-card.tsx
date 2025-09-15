@@ -152,6 +152,10 @@ export default function EnhancedCard({
           line-height: 1.5;
           margin-bottom: 16px;
           opacity: ${customTextColor ? '0.9' : '1'};
+          min-height: 2.85rem;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
         }
 
         .card-content {
@@ -165,6 +169,7 @@ export default function EnhancedCard({
           background: var(--muted);
           padding: 16px 24px;
           margin-top: auto;
+          margin-bottom: 8px;
         }
 
 
@@ -205,6 +210,7 @@ export default function EnhancedCard({
 
           .card-footer {
             padding: 12px 16px;
+            margin-bottom: 6px;
           }
 
           .card-title {
