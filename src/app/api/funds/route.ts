@@ -1,8 +1,8 @@
 import connectDB from '@/lib/mongodb';
 import Account from '@/models/account';
-import { createUpstoxClient } from '@/lib/upstox';
 import { createBinanceClient } from '@/lib/binance';
 import kiteConnectService from '@/lib/kiteconnect-service';
+import upstoxService from '@/lib/upstox-service';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -79,15 +79,38 @@ const fetchKiteFunds = async (account: any): Promise<any> => {
 // Upstox funds fetcher
 const fetchUpstoxFunds = async (account: any): Promise<any> => {
   try {
-    const upstoxClient = createUpstoxClient(account);
+    console.log('Fetching Upstox funds for account:', account.accountName);
+    console.log('Account has apiKey:', !!account.apiKey);
+    console.log('Account has apiSecret:', !!account.apiSecret);
+    console.log('Account has accessToken:', !!account.accessToken);
+
+    // Initialize Upstox service with account credentials
+    // Check if account is using sandbox environment
+    const isSandbox = account.metadata?.sandbox === true;
+    upstoxService.initializeWithCredentials(account.apiKey, account.apiSecret, isSandbox);
+    console.log('Upstox service initialized in', isSandbox ? 'SANDBOX' : 'PRODUCTION', 'mode');
+
+    // Set access token if available
     if (account.accessToken) {
-      upstoxClient.setAccessToken(account.accessToken);
+      upstoxService.setAccessToken(account.accessToken);
+      console.log('Access token set');
+    } else {
+      console.error('No access token found for account:', account.accountName);
+      throw new Error('Access token not found. Please re-authenticate your Upstox account.');
     }
 
-    const funds = await upstoxClient.getFunds();
+    // Fetch funds
+    console.log('Calling getFunds()...');
+    const funds = await upstoxService.getFunds();
+    console.log('Upstox funds fetched successfully:', funds);
     return funds;
   } catch (error) {
     console.error('Error fetching Upstox funds:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      accountName: account?.accountName
+    });
     throw error;
   }
 };
@@ -123,9 +146,17 @@ const normalizeFundsData = (vendor: string, rawData: any, accountId: string, acc
     case 'upstox':
       // Adapt based on Upstox funds response structure
       if (rawData.equity) {
-        totalBalance = rawData.equity.used_margin + rawData.equity.available_margin || '0';
-        availableBalance = rawData.equity.available_margin?.toString() || '0';
-        usedMargin = rawData.equity.used_margin?.toString() || '0';
+        const usedMarginValue = rawData.equity.used_margin || 0;
+        const availableMarginValue = rawData.equity.available_margin || 0;
+        totalBalance = (usedMarginValue + availableMarginValue).toString();
+        availableBalance = availableMarginValue.toString();
+        usedMargin = usedMarginValue.toString();
+        unrealizedPnl = rawData.equity.unrealized_mtm?.toString() || '0';
+      }
+      // Check if this is a service hours error response
+      if (rawData._serviceHoursError) {
+        totalBalance = 'Service Unavailable';
+        availableBalance = 'Service hours: 5:30 AM - 12:00 AM IST';
       }
       break;
   }
@@ -250,8 +281,17 @@ export async function GET(request: NextRequest) {
           fundsData = await fetchUpstoxFunds(account);
           normalizedData = normalizeFundsData('upstox', fundsData, accountId!, account.accountName);
         } catch (error) {
+          console.error('Upstox funds API error:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch Upstox funds';
+          console.error('Returning error response:', errorMessage);
+
           return NextResponse.json(
-            { error: error instanceof Error ? error.message : 'Failed to fetch Upstox funds' },
+            {
+              error: errorMessage,
+              accountName: account?.accountName,
+              accountId: accountId,
+              details: error instanceof Error ? error.stack : undefined
+            },
             { status: 500 }
           );
         }

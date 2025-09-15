@@ -266,19 +266,24 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
             </div>
           )}
 
-          {/* Redirect URI (for OAuth) */}
+          {/* Sandbox Option (for Upstox) */}
           {selectedBroker === 'upstox' && (
             <div className="form-group">
-              <label htmlFor="redirectUri">Redirect URI (Optional)</label>
-              <input
-                id="redirectUri"
-                type="url"
-                value={formData.redirectUri}
-                onChange={e => handleChange('redirectUri', e.target.value)}
-                placeholder="https://your-domain.com/callback"
-                className="form-input"
-              />
-              <small className="form-help">Leave empty to use default callback URL</small>
+              <div className="checkbox-group">
+                <input
+                  id="sandbox"
+                  type="checkbox"
+                  checked={formData.redirectUri === 'sandbox'}
+                  onChange={e => handleChange('redirectUri', e.target.checked ? 'sandbox' : '')}
+                  className="form-checkbox"
+                />
+                <label htmlFor="sandbox" className="checkbox-label">
+                  Use Sandbox Environment (for testing)
+                </label>
+              </div>
+              <small className="form-help">
+                Enable this if you're using Upstox Sandbox API credentials. Disable for production/live trading.
+              </small>
             </div>
           )}
 

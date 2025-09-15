@@ -44,7 +44,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tailwind-merge": "^3.3.1",
-    "tailwindcss": "^4.1.11"
+    "tailwindcss": "^4.1.11",
+    "upstox-js-sdk": "^2.19.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.5",

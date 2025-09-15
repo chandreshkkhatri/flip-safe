@@ -10,18 +10,18 @@ export async function GET(request: NextRequest) {
 
     if (!accountId) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Account ID is required',
-          symbols: []
-        }, 
+          symbols: [],
+        },
         { status: 400 }
       );
     }
 
     // TODO: Replace this with actual database query
     // Example: const watchlist = await db.collection('watchlists').findOne({ accountId, marketType });
-    
+
     // For now, return empty array to force dynamic loading from actual database
     // In production, this should query the database based on accountId and marketType
     const symbols: string[] = [];
@@ -35,11 +35,11 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching watchlist symbols:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to fetch watchlist symbols',
-        symbols: []
-      }, 
+        symbols: [],
+      },
       { status: 500 }
     );
   }

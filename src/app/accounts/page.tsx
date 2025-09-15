@@ -2,6 +2,7 @@
 
 import AccountCard from '@/components/accounts/AccountCard';
 import RadixAccountModal from '@/components/accounts/RadixAccountModal';
+import EditAccountModal from '@/components/accounts/EditAccountModal';
 import EnhancedCard from '@/components/enhanced-card';
 import PageLayout from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,8 @@ export default function AccountsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<IAccount | null>(null);
 
   // Mock user ID - in a real app, this would come from auth context
   const userId = 'default_user';
@@ -78,9 +81,33 @@ export default function AccountsPage() {
   };
 
   const handleEditAccount = (account: IAccount) => {
-    // TODO: Implement edit functionality
-    // eslint-disable-next-line no-console -- placeholder implementation
-    console.log('Edit account:', account);
+    setEditingAccount(account);
+    setShowEditModal(true);
+  };
+
+  const handleSaveAccount = async (accountId: string, updates: Partial<IAccount>) => {
+    try {
+      const response = await fetch(`/api/accounts/${accountId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        await fetchAccounts(); // Refresh accounts list
+        setShowEditModal(false);
+        setEditingAccount(null);
+      } else {
+        throw new Error(data.error || 'Failed to update account');
+      }
+    } catch (error: any) {
+      console.error('Error updating account:', error);
+      alert(error.message || 'Failed to update account');
+    }
   };
 
   const handleDeleteAccount = async (accountId: string) => {
@@ -118,11 +145,16 @@ export default function AccountsPage() {
       }
 
       let authEndpoint = '';
-      
+
       // Route to correct authentication endpoint based on account type
       switch (account.accountType) {
         case 'upstox':
-          authEndpoint = '/api/auth/upstox/login';
+          // Check if this is a sandbox account
+          if (account.metadata?.sandbox === true) {
+            authEndpoint = '/api/auth/upstox/sandbox-token';
+          } else {
+            authEndpoint = '/api/auth/upstox/login';
+          }
           break;
         case 'binance':
           authEndpoint = '/api/auth/binance/validate';
@@ -134,12 +166,33 @@ export default function AccountsPage() {
           throw new Error(`Unsupported account type: ${account.accountType}`);
       }
 
+      const requestBody: any = { accountId };
+
+      // For sandbox token authentication, include the token
+      if (account.accountType === 'upstox' && account.metadata?.sandbox === true && authEndpoint.includes('sandbox-token')) {
+        const token = prompt(
+          'Upstox Sandbox Authentication:\n\n' +
+          'For sandbox accounts, please generate an access token directly from your Upstox Developer Portal:\n' +
+          '1. Go to your Upstox Developer Apps page\n' +
+          '2. Navigate to your sandbox app\n' +
+          '3. Click "Generate" to create a new access token\n' +
+          '4. Copy the generated token and paste it below:\n\n' +
+          'Enter your sandbox access token:'
+        );
+
+        if (!token || !token.trim()) {
+          throw new Error('Access token is required for sandbox authentication');
+        }
+
+        requestBody.accessToken = token.trim();
+      }
+
       const response = await fetch(authEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ accountId }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
@@ -261,6 +314,16 @@ export default function AccountsPage() {
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
           onSubmit={handleAddAccount}
+        />
+
+        <EditAccountModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingAccount(null);
+          }}
+          account={editingAccount}
+          onSave={handleSaveAccount}
         />
       </div>
 

@@ -59,7 +59,26 @@ export async function POST(request: NextRequest) {
     
     console.log('Creating account with API key length:', apiKey.trim().length);
 
-    const newAccount = await createAccount(accountData);
+    // Handle special fields based on account type
+    let metadata = {};
+
+    // For Binance, check testnet flag
+    if (accountType === 'binance' && redirectUri === 'testnet') {
+      metadata = { testnet: true };
+    }
+
+    // For Upstox, check sandbox flag
+    if (accountType === 'upstox' && redirectUri === 'sandbox') {
+      metadata = { sandbox: true };
+    }
+
+    const finalAccountData = {
+      ...accountData,
+      metadata,
+      redirectUri: undefined, // Don't store redirectUri directly
+    };
+
+    const newAccount = await createAccount(finalAccountData);
 
     // Remove sensitive data before sending response
     const safeAccount = {

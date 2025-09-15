@@ -289,6 +289,21 @@ export default function RadixAccountModal({ isOpen, onClose, onSubmit }: RadixAc
               )}
 
               {selectedBroker === 'upstox' && (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="sandbox"
+                    checked={formData.redirectUri === 'sandbox'}
+                    onChange={e => handleChange('redirectUri', e.target.checked ? 'sandbox' : '')}
+                    className="rounded border-input"
+                  />
+                  <label htmlFor="sandbox" className="text-sm font-medium">
+                    Use Sandbox Environment (for testing)
+                  </label>
+                </div>
+              )}
+
+              {selectedBroker === 'upstox' && formData.redirectUri !== 'sandbox' && (
                 <div>
                   <label className="block text-sm font-medium mb-2">Redirect URI (Optional)</label>
                   <input

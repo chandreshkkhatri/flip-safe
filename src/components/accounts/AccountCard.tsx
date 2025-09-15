@@ -23,12 +23,13 @@ const accountTypeColors = {
   binance: '#FFC107',
 };
 
-const getConnectButtonText = (accountType: string) => {
+const getConnectButtonText = (accountType: string, account?: IAccount) => {
   switch (accountType) {
     case 'binance':
       return 'Validate API';
     case 'upstox':
-      return 'Authorize';
+      // Different text for sandbox vs production Upstox accounts
+      return account?.metadata?.sandbox === true ? 'Add Token' : 'Authorize';
     case 'kite':
       return 'Login';
     default:
@@ -38,6 +39,7 @@ const getConnectButtonText = (accountType: string) => {
 
 export default function AccountCard({ account, onEdit, onDelete, onAuth }: AccountCardProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isDebugging, setIsDebugging] = useState(false);
 
   const handleAuth = async () => {
     setIsLoading(true);
@@ -45,6 +47,37 @@ export default function AccountCard({ account, onEdit, onDelete, onAuth }: Accou
       await onAuth(account._id!);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDebugUpstox = async () => {
+    if (account.accountType !== 'upstox') return;
+
+    setIsDebugging(true);
+    try {
+      const response = await fetch('/api/debug/upstox', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ accountId: account._id }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log('=== Upstox Debug Results ===');
+        console.log('Account:', data.account);
+        console.log('Debug Info:', data.debugInfo);
+        alert(`Debug completed! Check console for detailed results.\n\nEnvironment: ${data.debugInfo.environment}\nAPI Key Valid: ${data.debugInfo.apiKeyValid}\nRedirect URI Valid: ${data.debugInfo.redirectUriValid}`);
+      } else {
+        alert(`Debug failed: ${data.error}`);
+      }
+    } catch (error: any) {
+      console.error('Debug error:', error);
+      alert(`Debug failed: ${error.message}`);
+    } finally {
+      setIsDebugging(false);
     }
   };
 
@@ -90,13 +123,25 @@ export default function AccountCard({ account, onEdit, onDelete, onAuth }: Accou
       <div className="account-actions">
         {!isAuthenticated && (
           <Button variant="trading" size="sm" onClick={handleAuth} disabled={isLoading}>
-            {isLoading ? 'Connecting...' : getConnectButtonText(account.accountType)}
+            {isLoading ? 'Connecting...' : getConnectButtonText(account.accountType, account)}
           </Button>
         )}
-        
+
         {isAuthenticated && account.accountType === 'binance' && (
           <Button variant="secondary" size="sm" onClick={handleAuth} disabled={isLoading}>
             {isLoading ? 'Validating...' : 'Validate API'}
+          </Button>
+        )}
+
+        {isAuthenticated && account.accountType === 'upstox' && !account.metadata?.sandbox && (
+          <Button variant="secondary" size="sm" onClick={handleAuth} disabled={isLoading}>
+            {isLoading ? 'Re-authenticating...' : 'Re-authenticate'}
+          </Button>
+        )}
+
+        {account.accountType === 'upstox' && (
+          <Button variant="outline" size="sm" onClick={handleDebugUpstox} disabled={isDebugging}>
+            {isDebugging ? 'Debugging...' : '🔍 Debug Config'}
           </Button>
         )}
 
@@ -208,6 +253,7 @@ export default function AccountCard({ account, onEdit, onDelete, onAuth }: Accou
           gap: 12px;
           border-top: 1px solid #f0f0f0;
           padding-top: 16px;
+          flex-wrap: wrap;
         }
 
         .action-buttons {

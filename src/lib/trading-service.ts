@@ -1,6 +1,6 @@
 import { IAccount } from '@/models/account';
 import { BinanceAPI, createBinanceClient } from './binance';
-import { createUpstoxClient, UpstoxAPI } from './upstox';
+import upstoxService from './upstox-service';
 import kiteConnectService from './kiteconnect-service';
 
 export interface UnifiedOrder {
@@ -55,7 +55,7 @@ export interface UnifiedHolding {
 
 export class TradingService {
   private kiteClients: Map<string, any> = new Map();
-  private upstoxClients: Map<string, UpstoxAPI> = new Map();
+  private upstoxClients: Map<string, any> = new Map();
   private binanceClients: Map<string, BinanceAPI> = new Map();
 
   // Initialize client for account
@@ -77,11 +77,13 @@ export class TradingService {
 
         case 'upstox':
           if (!this.upstoxClients.has(account._id!)) {
-            const upstoxClient = createUpstoxClient(account);
+            // Initialize upstox service with account credentials
+            const isSandbox = account.metadata?.sandbox === true;
+            upstoxService.initializeWithCredentials(account.apiKey, account.apiSecret, isSandbox);
             if (account.accessToken) {
-              upstoxClient.setAccessToken(account.accessToken);
+              upstoxService.setAccessToken(account.accessToken);
             }
-            this.upstoxClients.set(account._id!, upstoxClient);
+            this.upstoxClients.set(account._id!, upstoxService);
           }
           break;
 
