@@ -27,15 +27,6 @@
     "build/",
     "*.config.js",
     "*.config.ts",
-    "*.config.mjs",
-    "app.js",
-    "bin/**",
-    "handlers/**",
-    "models/**",
-    "routes/**",
-    "utils/**",
-    "views/**",
-    "session.js",
-    "db-connection.js"
+    "*.config.mjs"
   ]
 }
