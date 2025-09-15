@@ -4,17 +4,18 @@ import { Button } from '@/components/ui/button';
 import { ChevronDown, Check } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
-interface BinanceAccount {
+interface TradingAccount {
   _id: string;
   accountName: string;
-  accountType: 'binance';
+  accountType: 'binance' | 'kite' | 'upstox';
   isActive: boolean;
+  accessToken?: string;
 }
 
 interface AccountSelectorProps {
-  accounts: BinanceAccount[];
-  selectedAccount: BinanceAccount | null;
-  onAccountSelect: (account: BinanceAccount) => void;
+  accounts: TradingAccount[];
+  selectedAccount: TradingAccount | null;
+  onAccountSelect: (account: TradingAccount) => void;
   loading?: boolean;
 }
 
@@ -38,7 +39,7 @@ export default function AccountSelector({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleAccountSelect = (account: BinanceAccount) => {
+  const handleAccountSelect = (account: TradingAccount) => {
     onAccountSelect(account);
     setIsOpen(false);
   };
@@ -57,7 +58,7 @@ export default function AccountSelector({
       <div className="no-accounts">
         <span>No accounts found</span>
         <Button size="sm" variant="outline" onClick={() => window.location.href = '/accounts'}>
-          Add Account
+          Select Account
         </Button>
       </div>
     );
@@ -71,7 +72,13 @@ export default function AccountSelector({
         className="selector-button"
       >
         <div className="selected-account">
-          <span className="account-type">🔗</span>
+          <span className="account-type">
+            {selectedAccount ?
+              (selectedAccount.accountType === 'binance' ? '🟡' :
+               selectedAccount.accountType === 'kite' ? '🟠' :
+               selectedAccount.accountType === 'upstox' ? '🔵' : '🔗') :
+              '🔗'}
+          </span>
           <span className="account-name">
             {selectedAccount ? selectedAccount.accountName : 'Select Account'}
           </span>
@@ -88,10 +95,16 @@ export default function AccountSelector({
               onClick={() => handleAccountSelect(account)}
             >
               <div className="account-info">
-                <span className="account-type">🔗</span>
+                <span className="account-type">
+                  {account.accountType === 'binance' ? '🟡' :
+                   account.accountType === 'kite' ? '🟠' :
+                   account.accountType === 'upstox' ? '🔵' : '🔗'}
+                </span>
                 <div className="account-details">
                   <span className="account-name">{account.accountName}</span>
-                  <span className="account-type-text">Binance</span>
+                  <span className="account-type-text">
+                    {account.accountType.charAt(0).toUpperCase() + account.accountType.slice(1)}
+                  </span>
                 </div>
               </div>
               {selectedAccount?._id === account._id && (

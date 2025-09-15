@@ -5,17 +5,18 @@ import axios from 'axios';
 import { API_ROUTES } from './constants';
 import { useAuth } from './auth-context';
 
-interface BinanceAccount {
+interface TradingAccount {
   _id: string;
   accountName: string;
-  accountType: 'binance';
+  accountType: 'binance' | 'kite' | 'upstox';
   isActive: boolean;
+  accessToken?: string;
 }
 
 interface AccountContextType {
-  selectedAccount: BinanceAccount | null;
-  setSelectedAccount: (account: BinanceAccount | null) => void;
-  accounts: BinanceAccount[];
+  selectedAccount: TradingAccount | null;
+  setSelectedAccount: (account: TradingAccount | null) => void;
+  accounts: TradingAccount[];
   loadingAccounts: boolean;
   fetchAccounts: () => Promise<void>;
   error: string | null;
@@ -36,8 +37,8 @@ interface AccountProviderProps {
 }
 
 export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) => {
-  const [selectedAccount, setSelectedAccountState] = useState<BinanceAccount | null>(null);
-  const [accounts, setAccounts] = useState<BinanceAccount[]>([]);
+  const [selectedAccount, setSelectedAccountState] = useState<TradingAccount | null>(null);
+  const [accounts, setAccounts] = useState<TradingAccount[]>([]);
   const [loadingAccounts, setLoadingAccounts] = useState(false); // Start as false for immediate rendering
   const [error, setError] = useState<string | null>(null);
   const { isLoggedIn, allowOfflineAccess } = useAuth();
@@ -86,38 +87,36 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
       });
       
       if (response.data?.success) {
-        const binanceAccounts = response.data.accounts.filter(
-          (acc: any) => acc.accountType === 'binance'
-        ) as BinanceAccount[];
-        
+        const allAccounts = response.data.accounts as TradingAccount[];
+
         // Update cache
-        sessionStorage.setItem(cacheKey, JSON.stringify(binanceAccounts));
+        sessionStorage.setItem(cacheKey, JSON.stringify(allAccounts));
         sessionStorage.setItem(cacheTimeKey, Date.now().toString());
-        
-        setAccounts(binanceAccounts);
+
+        setAccounts(allAccounts);
         
         // Only update selected account if not already set
         if (!selectedAccount) {
           const savedAccountId = sessionStorage.getItem('selectedAccountId');
           
-          if (savedAccountId && binanceAccounts.length > 0) {
-            const savedAccount = binanceAccounts.find(acc => acc._id === savedAccountId);
+          if (savedAccountId && allAccounts.length > 0) {
+            const savedAccount = allAccounts.find(acc => acc._id === savedAccountId);
             if (savedAccount) {
               setSelectedAccountState(savedAccount);
             } else {
-              const defaultAccount = binanceAccounts.find(acc => acc.isActive) || binanceAccounts[0];
+              const defaultAccount = allAccounts.find(acc => acc.isActive) || allAccounts[0];
               setSelectedAccountState(defaultAccount);
               sessionStorage.setItem('selectedAccountId', defaultAccount._id);
             }
-          } else if (binanceAccounts.length > 0) {
-            const defaultAccount = binanceAccounts.find(acc => acc.isActive) || binanceAccounts[0];
+          } else if (allAccounts.length > 0) {
+            const defaultAccount = allAccounts.find(acc => acc.isActive) || allAccounts[0];
             setSelectedAccountState(defaultAccount);
             sessionStorage.setItem('selectedAccountId', defaultAccount._id);
           }
         }
       }
     } catch (error) {
-      console.error('Error fetching Binance accounts:', error);
+      console.error('Error fetching trading accounts:', error);
       if (!isBackground) {
         setError('Failed to fetch accounts');
         setAccounts([]);
@@ -130,7 +129,7 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
   }, [selectedAccount]);
 
   // Custom setter that also updates sessionStorage
-  const setSelectedAccount = useCallback((account: BinanceAccount | null) => {
+  const setSelectedAccount = useCallback((account: TradingAccount | null) => {
     setSelectedAccountState(account);
     if (account) {
       sessionStorage.setItem('selectedAccountId', account._id);
@@ -148,9 +147,9 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
     
     if (cachedData) {
       try {
-        const cachedAccounts = JSON.parse(cachedData) as BinanceAccount[];
+        const cachedAccounts = JSON.parse(cachedData) as TradingAccount[];
         setAccounts(cachedAccounts);
-        
+
         if (savedAccountId && cachedAccounts.length > 0) {
           const savedAccount = cachedAccounts.find(acc => acc._id === savedAccountId);
           if (savedAccount) {
@@ -189,4 +188,4 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
 };
 
-export type { BinanceAccount };
+export type { TradingAccount };

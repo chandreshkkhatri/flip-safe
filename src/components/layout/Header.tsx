@@ -21,7 +21,7 @@ export function Header() {
   const pathname = usePathname();
   const { isDark, toggleTheme } = useTheme();
   const { isLoggedIn, logout } = useAuth();
-  const { selectedAccount, setSelectedAccount, accounts: binanceAccounts, loadingAccounts: accountsLoading } = useAccount();
+  const { selectedAccount, setSelectedAccount, accounts: tradingAccounts, loadingAccounts: accountsLoading } = useAccount();
   const [open, setOpen] = useState(false);
 
   return (
@@ -93,11 +93,11 @@ export function Header() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          {/* Account Selector - Show only on relevant routes */}
-          {(pathname.startsWith('/market-watch') || pathname.startsWith('/holdings') || pathname.startsWith('/trading') || pathname.startsWith('/positions') || pathname.startsWith('/orders')) && (
+          {/* Account Selector - Show on dashboard and trading pages */}
+          {(pathname.startsWith('/dashboard') || pathname.startsWith('/market-watch') || pathname.startsWith('/holdings') || pathname.startsWith('/trading') || pathname.startsWith('/positions') || pathname.startsWith('/orders')) && (
             <div className="hidden md:block mr-2">
               <AccountSelector
-                accounts={binanceAccounts}
+                accounts={tradingAccounts}
                 selectedAccount={selectedAccount}
                 onAccountSelect={setSelectedAccount}
                 loading={accountsLoading}
@@ -148,11 +148,11 @@ export function Header() {
       >
         <div className="flex flex-col gap-0.5 text-sm">
           {/* Mobile Account Selector */}
-          {(pathname.startsWith('/market-watch') || pathname.startsWith('/holdings') || pathname.startsWith('/trading') || pathname.startsWith('/positions') || pathname.startsWith('/orders')) && (
+          {(pathname.startsWith('/dashboard') || pathname.startsWith('/market-watch') || pathname.startsWith('/holdings') || pathname.startsWith('/trading') || pathname.startsWith('/positions') || pathname.startsWith('/orders')) && (
             <div className="mb-3 px-3">
               <div className="text-xs font-medium text-muted-foreground mb-2">Selected Account:</div>
               <AccountSelector
-                accounts={binanceAccounts}
+                accounts={tradingAccounts}
                 selectedAccount={selectedAccount}
                 onAccountSelect={setSelectedAccount}
                 loading={accountsLoading}
