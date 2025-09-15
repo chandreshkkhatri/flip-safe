@@ -5,11 +5,9 @@ const API_ROUTES = {
     login: '/api/auth/login',
     setLoginInfo: '/api/auth/set-login-info',
   },
-  kc: {
-    getHistoricalData: '/api/kc/historical-data',
-    requestSimulationData: '/api/kc/simulation-data',
-    flushSimulationData: '/api/kc/flush-simulation-data',
-  },
+  // Vendor-agnostic APIs
+  historicalData: '/api/historical-data',
+  funds: '/api/funds',
   db: {
     getMWData: '/api/db/get-mw-data',
     getListOfMW: '/api/db/get-list-of-mw',

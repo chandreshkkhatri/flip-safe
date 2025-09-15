@@ -79,7 +79,7 @@ class FundsService {
     }
 
     try {
-      const response = await fetch(`/api/binance/funds?accountId=${accountId}`);
+      const response = await fetch(`/api/funds?vendor=binance&accountId=${accountId}`);
       const result = await response.json();
       
       if (!response.ok || !result.success) {
@@ -90,8 +90,8 @@ class FundsService {
         throw new Error(result.error || result.details || 'Failed to fetch funds');
       }
 
-      const rawData = result.data;
-      
+      const rawData = result.data.details; // Access the raw vendor data
+
       // Get current crypto prices
       const assetSymbols = rawData.assets.map((asset: any) => asset.asset);
       const prices = await this.fetchCryptoPrices(assetSymbols);

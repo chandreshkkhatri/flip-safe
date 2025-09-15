@@ -98,8 +98,10 @@ const TradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
       if (!chartRef.current) return;
 
       try {
+        // Determine vendor based on symbol (USDT = Binance, others = Kite)
+        const vendor = symbol.endsWith('USDT') ? 'binance' : 'kite';
         const response = await fetch(
-          `/api/kc/historical-data?symbol=${symbol}&interval=${timeframe}`
+          `/api/historical-data?vendor=${vendor}&symbol=${symbol}&interval=${timeframe}`
         );
         if (!response.ok) {
           throw new Error('Failed to fetch historical data');

@@ -160,7 +160,9 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
 
   const fetchChartData = async (interval: string): Promise<CandlestickData[]> => {
     try {
-      const response = await fetch(`/api/kc/historical-data?symbol=${symbol}&interval=${interval}`);
+      // Determine vendor based on symbol (USDT = Binance, others = Kite)
+      const vendor = symbol.endsWith('USDT') ? 'binance' : 'kite';
+      const response = await fetch(`/api/historical-data?vendor=${vendor}&symbol=${symbol}&interval=${interval}`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch ${interval} data: ${response.status}`);
