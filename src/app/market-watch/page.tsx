@@ -5,13 +5,30 @@ import PageLayout from '@/components/layout/PageLayout';
 import AccountSelector from '@/components/account-selector/AccountSelector';
 import { useAuth } from '@/lib/auth-context';
 import { useAccount } from '@/lib/account-context';
-import { fundsService, FundsData } from '@/lib/funds-service';
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Activity, Users, ShieldCheck, TrendingUp } from 'lucide-react';
 
 // Dynamic import for heavy components
 const Watchlist = lazy(() => import('@/components/watchlist/Watchlist'));
+
+// Funds data interface (migrated from funds-service)
+interface FundsData {
+  totalWalletBalance: number;
+  totalMarginBalance: number;
+  totalUnrealizedProfit: number;
+  availableBalance: number;
+  maxWithdrawAmount: number;
+  assets: Array<{
+    asset: string;
+    walletBalance: number;
+    unrealizedProfit: number;
+    marginBalance: number;
+    availableBalance: number;
+    usdValue?: number;
+  }>;
+  totalUsdValue: number;
+}
 
 
 const TRADING_TIPS = [
@@ -55,8 +72,54 @@ export default function MarketWatchPage() {
         try {
           setFundsLoading(true);
           setFundsError(null);
-          const funds = await fundsService.fetchBinanceFunds(selectedAccount._id);
-          setFundsData(funds);
+
+          // Use the new unified funds API
+          const response = await fetch(`/api/funds?vendor=binance&accountId=${selectedAccount._id}`);
+          const result = await response.json();
+
+          if (!response.ok || !result.success) {
+            throw new Error(result.error || result.details || 'Failed to fetch funds');
+          }
+
+          // Extract and process the funds data
+          const rawData = result.data.details;
+
+          // Get current crypto prices for USD calculations
+          const assetSymbols = rawData.assets.map((asset: any) => asset.asset).join(',');
+          const priceResponse = await fetch(`/api/binance/prices?symbols=${assetSymbols}`);
+          const priceData = await priceResponse.json();
+          const prices = priceData.success ? priceData.prices : {};
+
+          // Calculate USD values for each asset
+          const assetsWithUsdValue = rawData.assets.map((asset: any) => {
+            const price = prices[asset.asset] || 0;
+            const walletBalance = parseFloat(asset.walletBalance);
+            const usdValue = walletBalance * price;
+
+            return {
+              asset: asset.asset,
+              walletBalance: walletBalance,
+              unrealizedProfit: parseFloat(asset.unrealizedProfit),
+              marginBalance: parseFloat(asset.marginBalance),
+              availableBalance: parseFloat(asset.availableBalance),
+              usdValue,
+            };
+          });
+
+          // Calculate total USD value
+          const totalUsdValue = assetsWithUsdValue.reduce((total: number, asset: any) => total + asset.usdValue, 0);
+
+          const fundsData: FundsData = {
+            totalWalletBalance: parseFloat(rawData.totalWalletBalance),
+            totalMarginBalance: parseFloat(rawData.totalMarginBalance),
+            totalUnrealizedProfit: parseFloat(rawData.totalUnrealizedProfit),
+            availableBalance: parseFloat(rawData.availableBalance),
+            maxWithdrawAmount: parseFloat(rawData.maxWithdrawAmount),
+            assets: assetsWithUsdValue,
+            totalUsdValue,
+          };
+
+          setFundsData(fundsData);
         } catch (error: any) {
           console.error('Error fetching funds:', error);
           // Provide more specific error messages

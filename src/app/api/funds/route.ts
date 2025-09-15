@@ -1,9 +1,8 @@
 import connectDB from '@/lib/mongodb';
 import Account from '@/models/account';
 import { createUpstoxClient } from '@/lib/upstox';
-import { checkAuth } from '@/lib/kiteconnect-handler';
-import kiteConnectService from '@/lib/kiteconnect';
-import crypto from 'crypto';
+import { createBinanceClient } from '@/lib/binance';
+import kiteConnectService, { checkAuth } from '@/lib/kiteconnect-service';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -20,54 +19,20 @@ interface UnifiedFundsResponse {
   timestamp: string;
 }
 
-// Binance funds fetcher
-const fetchBinanceFunds = async (apiKey: string, secretKey: string): Promise<any> => {
+// Binance funds fetcher - uses the existing BinanceAPI class
+const fetchBinanceFunds = async (apiKey: string, secretKey: string, testnet: boolean = false): Promise<any> => {
   try {
-    const timestamp = Date.now();
-    const recvWindow = 5000;
-    const queryString = `recvWindow=${recvWindow}&timestamp=${timestamp}`;
-    const signature = crypto.createHmac('sha256', secretKey).update(queryString).digest('hex');
-
-    const url = `https://fapi.binance.com/fapi/v2/account?${queryString}&signature=${signature}`;
-
-    const response = await fetch(url, {
-      headers: {
-        'X-MBX-APIKEY': apiKey,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      let errorMsg = `Binance API error: ${response.status}`;
-      try {
-        const errorData = JSON.parse(errorText);
-        if (errorData.code === -2014) {
-          errorMsg = 'Invalid API Key format';
-        } else if (errorData.code === -1022) {
-          errorMsg = 'Invalid signature. Please check your API Secret';
-        } else if (errorData.code === -2015) {
-          errorMsg = 'Invalid API Key, IP, or permissions for action';
-        } else if (errorData.msg) {
-          errorMsg = errorData.msg;
-        }
-      } catch (e) {
-        // Ignore JSON parse error
-      }
-      throw new Error(errorMsg);
-    }
-
-    const data = await response.json();
+    const binanceClient = createBinanceClient({ apiKey, apiSecret: secretKey, testnet });
+    const accountInfo = await binanceClient.getAccountInfo();
 
     return {
-      totalWalletBalance: data.totalWalletBalance || '0',
-      totalMarginBalance: data.totalMarginBalance || '0',
-      totalUnrealizedProfit: data.totalUnrealizedProfit || '0',
-      availableBalance: data.availableBalance || '0',
-      maxWithdrawAmount: data.maxWithdrawAmount || '0',
-      assets: data.assets || [],
+      totalWalletBalance: accountInfo.totalWalletBalance || '0',
+      totalMarginBalance: accountInfo.totalMarginBalance || '0',
+      totalUnrealizedProfit: accountInfo.totalUnrealizedProfit || '0',
+      availableBalance: accountInfo.availableBalance || '0',
+      maxWithdrawAmount: accountInfo.maxWithdrawAmount || '0',
+      assets: accountInfo.assets || [],
     };
-
   } catch (error) {
     console.error('Error fetching Binance funds:', error);
     throw error;
@@ -80,10 +45,8 @@ const fetchKiteFunds = async (): Promise<any> => {
     throw new Error('Not authenticated for Kite Connect');
   }
 
-  const kc = kiteConnectService.getKiteConnect();
-
   try {
-    const margins = await kc.getMargins();
+    const margins = await kiteConnectService.getMargins();
     return margins;
   } catch (error) {
     console.error('Error fetching Kite funds:', error);
@@ -211,7 +174,8 @@ export async function GET(request: NextRequest) {
         }
 
         try {
-          fundsData = await fetchBinanceFunds(account.apiKey.trim(), account.apiSecret.trim());
+          const isTestnet = account.metadata?.testnet || false;
+          fundsData = await fetchBinanceFunds(account.apiKey.trim(), account.apiSecret.trim(), isTestnet);
           normalizedData = normalizeFundsData('binance', fundsData, accountId!, account.accountName);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -329,7 +293,8 @@ export async function POST(request: NextRequest) {
         }
 
         try {
-          fundsData = await fetchBinanceFunds(account.apiKey.trim(), account.apiSecret.trim());
+          const isTestnet = account.metadata?.testnet || false;
+          fundsData = await fetchBinanceFunds(account.apiKey.trim(), account.apiSecret.trim(), isTestnet);
           normalizedData = normalizeFundsData('binance', fundsData, accountId, account.accountName);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';

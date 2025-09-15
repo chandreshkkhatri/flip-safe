@@ -1,4 +1,4 @@
-import { checkAuth, getHistoricalData } from '@/lib/kiteconnect-handler';
+import { checkAuth, getHistoricalData } from '@/lib/kiteconnect-service';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';

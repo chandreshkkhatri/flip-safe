@@ -1,8 +1,7 @@
 import { IAccount } from '@/models/account';
 import { BinanceAPI, createBinanceClient } from './binance';
 import { createUpstoxClient, UpstoxAPI } from './upstox';
-// Note: Import KiteConnect based on your existing implementation
-// import KiteConnect from './kiteconnect';
+import kiteConnectService from './kiteconnect-service';
 
 export interface UnifiedOrder {
   id: string;
@@ -65,13 +64,14 @@ export class TradingService {
       switch (account.accountType) {
         case 'kite':
           if (!this.kiteClients.has(account._id!)) {
-            // TODO: Initialize Kite client based on your existing implementation
-            // const kiteClient = new KiteConnect({
-            //   api_key: account.apiKey,
-            //   access_token: account.accessToken,
-            // });
-            // this.kiteClients.set(account._id!, kiteClient);
-            console.log('Kite client initialization placeholder');
+            // For KiteConnect, we use the singleton service
+            // Set the access token if available
+            if (account.accessToken) {
+              kiteConnectService.setAccessToken(account.accessToken);
+              this.kiteClients.set(account._id!, kiteConnectService);
+            } else {
+              throw new Error('KiteConnect requires access token');
+            }
           }
           break;
 
@@ -141,9 +141,29 @@ export class TradingService {
 
   private async getKiteOrders(account: IAccount): Promise<UnifiedOrder[]> {
     try {
-      // TODO: Implement Kite orders fetching
-      console.log('Fetching Kite orders for account:', account.accountName);
-      return [];
+      const client = this.kiteClients.get(account._id!);
+      if (!client) throw new Error('Kite client not initialized');
+
+      const orders = await client.getOrders();
+      return orders.map(
+        (order: any): UnifiedOrder => ({
+          id: `${account._id}_${order.order_id}`,
+          accountId: account._id!,
+          accountType: 'kite',
+          symbol: order.tradingsymbol,
+          exchange: order.exchange,
+          quantity: order.quantity,
+          price: order.price || undefined,
+          averagePrice: order.average_price || undefined,
+          orderType: order.order_type,
+          transactionType: order.transaction_type,
+          status: order.status,
+          product: order.product,
+          validity: order.validity,
+          timestamp: order.order_timestamp || new Date().toISOString(),
+          rawData: order,
+        })
+      );
     } catch (error) {
       console.error('Error fetching Kite orders:', error);
       return [];
@@ -244,9 +264,30 @@ export class TradingService {
 
   private async getKitePositions(account: IAccount): Promise<UnifiedPosition[]> {
     try {
-      // TODO: Implement Kite positions fetching
-      console.log('Fetching Kite positions for account:', account.accountName);
-      return [];
+      const client = this.kiteClients.get(account._id!);
+      if (!client) throw new Error('Kite client not initialized');
+
+      const positionsData = await client.getPositions();
+      const positions = positionsData.net || []; // Use net positions
+
+      return positions.map(
+        (position: any): UnifiedPosition => ({
+          id: `${account._id}_${position.tradingsymbol}_${position.product}`,
+          accountId: account._id!,
+          accountType: 'kite',
+          symbol: position.tradingsymbol,
+          exchange: position.exchange,
+          quantity: position.quantity,
+          averagePrice: position.average_price,
+          lastPrice: position.last_price,
+          pnl: position.pnl,
+          pnlPercentage: position.average_price > 0
+            ? (position.pnl / (position.average_price * Math.abs(position.quantity))) * 100
+            : 0,
+          product: position.product,
+          rawData: position,
+        })
+      );
     } catch (error) {
       console.error('Error fetching Kite positions:', error);
       return [];
@@ -351,9 +392,34 @@ export class TradingService {
 
   private async getKiteHoldings(account: IAccount): Promise<UnifiedHolding[]> {
     try {
-      // TODO: Implement Kite holdings fetching
-      console.log('Fetching Kite holdings for account:', account.accountName);
-      return [];
+      const client = this.kiteClients.get(account._id!);
+      if (!client) throw new Error('Kite client not initialized');
+
+      const holdings = await client.getHoldings();
+
+      return holdings.map((holding: any): UnifiedHolding => {
+        const currentValue = holding.last_price * holding.quantity;
+        const investedValue = holding.average_price * holding.quantity;
+        const pnl = currentValue - investedValue;
+        const pnlPercentage = investedValue > 0 ? (pnl / investedValue) * 100 : 0;
+
+        return {
+          id: `${account._id}_${holding.tradingsymbol}`,
+          accountId: account._id!,
+          accountType: 'kite',
+          symbol: holding.tradingsymbol,
+          exchange: holding.exchange,
+          quantity: holding.quantity,
+          averagePrice: holding.average_price,
+          lastPrice: holding.last_price,
+          currentValue,
+          pnl,
+          pnlPercentage,
+          isin: holding.isin,
+          companyName: holding.tradingsymbol, // Kite doesn't provide company name
+          rawData: holding,
+        };
+      });
     } catch (error) {
       console.error('Error fetching Kite holdings:', error);
       return [];

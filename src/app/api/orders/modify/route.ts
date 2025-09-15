@@ -1,4 +1,4 @@
-import { checkAuth, modifyOrder } from '@/lib/kiteconnect-handler';
+import { checkAuth, modifyOrder } from '@/lib/kiteconnect-service';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
