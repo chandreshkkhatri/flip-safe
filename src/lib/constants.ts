@@ -1,11 +1,4 @@
 const API_ROUTES = {
-  auth: {
-    checkStatus: '/api/auth/check-status',
-    logout: '/api/auth/logout',
-    login: '/api/auth/login',
-    setLoginInfo: '/api/auth/set-login-info',
-  },
-  // Vendor-agnostic APIs
   historicalData: '/api/historical-data',
   funds: '/api/funds',
   db: {
