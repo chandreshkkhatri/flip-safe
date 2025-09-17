@@ -116,7 +116,6 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
         }
       }
     } catch (error) {
-      console.error('Error fetching trading accounts:', error);
       if (!isBackground) {
         setError('Failed to fetch accounts');
         setAccounts([]);
@@ -157,7 +156,6 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
           }
         }
       } catch (error) {
-        console.error('Error parsing cached accounts:', error);
       }
     }
     

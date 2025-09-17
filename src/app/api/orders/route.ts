@@ -3,25 +3,29 @@ import { getAccountById } from '@/models/account';
 import upstoxService from '@/lib/upstox-service';
 import kiteConnectService from '@/lib/kiteconnect-service';
 
-interface UnifiedPositionResponse {
+interface UnifiedOrderResponse {
   id: string;
   symbol: string;
   exchange: string;
   quantity: number;
+  price: number;
   averagePrice: number;
-  lastPrice: number;
-  pnl: number;
-  pnlPercentage: number;
+  orderType: string;
+  transactionType: string;
+  status: string;
   product: string;
+  validity: string;
+  filledQuantity: number;
+  pendingQuantity: number;
+  timestamp: string;
   vendor: string;
   accountId: string;
   accountName: string;
-  timestamp: string;
   details: any;
 }
 
-// Fetch Upstox positions
-const fetchUpstoxPositions = async (account: any): Promise<any> => {
+// Fetch Upstox orders
+const fetchUpstoxOrders = async (account: any): Promise<any> => {
   try {
 
     // Initialize Upstox service with account credentials
@@ -35,16 +39,16 @@ const fetchUpstoxPositions = async (account: any): Promise<any> => {
       throw new Error('Access token not found. Please re-authenticate your Upstox account.');
     }
 
-    // Fetch positions
-    const positions = await upstoxService.getPositions();
-    return positions;
+    // Fetch orders
+    const orders = await upstoxService.getOrders();
+    return orders;
   } catch (error) {
     throw error;
   }
 };
 
-// Fetch Kite positions
-const fetchKitePositions = async (account: any): Promise<any> => {
+// Fetch Kite orders
+const fetchKiteOrders = async (account: any): Promise<any> => {
   try {
 
     if (!account.accessToken) {
@@ -52,58 +56,61 @@ const fetchKitePositions = async (account: any): Promise<any> => {
     }
 
     kiteConnectService.setAccessToken(account.accessToken);
-    const positionsData = await kiteConnectService.getPositions();
+    const ordersData = await kiteConnectService.getOrders();
 
-    // Kite returns { net: [...], day: [...] }
-    return positionsData.net || [];
+    return ordersData || [];
   } catch (error) {
     throw error;
   }
 };
 
-// Normalize positions data to unified format
-const normalizePositionsData = (vendor: string, rawData: any, accountId: string, accountName: string): UnifiedPositionResponse[] => {
+// Normalize orders data to unified format
+const normalizeOrdersData = (vendor: string, rawData: any, accountId: string, accountName: string): UnifiedOrderResponse[] => {
   const timestamp = new Date().toISOString();
 
   switch (vendor.toLowerCase()) {
     case 'upstox':
-      return rawData.map((position: any) => ({
-        id: `${accountId}_${position.trading_symbol || position.tradingsymbol}_${position.product}`,
-        symbol: position.trading_symbol || position.tradingsymbol,
-        exchange: position.exchange,
-        quantity: position.quantity,
-        averagePrice: position.average_price,
-        lastPrice: position.last_price,
-        pnl: position.pnl || position.unrealised || 0,
-        pnlPercentage: position.average_price > 0
-          ? ((position.pnl || position.unrealised || 0) / (position.average_price * Math.abs(position.quantity))) * 100
-          : 0,
-        product: position.product,
+      return rawData.map((order: any) => ({
+        id: order.order_id,
+        symbol: order.trading_symbol || order.tradingsymbol,
+        exchange: order.exchange,
+        quantity: order.quantity,
+        price: order.price,
+        averagePrice: order.average_price || 0,
+        orderType: order.order_type,
+        transactionType: order.transaction_type,
+        status: order.status,
+        product: order.product,
+        validity: order.validity,
+        filledQuantity: order.filled_quantity || 0,
+        pendingQuantity: order.pending_quantity || 0,
+        timestamp: order.order_timestamp || timestamp,
         vendor: 'upstox',
         accountId,
         accountName,
-        timestamp,
-        details: position
+        details: order
       }));
 
     case 'kite':
-      return rawData.map((position: any) => ({
-        id: `${accountId}_${position.tradingsymbol}_${position.product}`,
-        symbol: position.tradingsymbol,
-        exchange: position.exchange,
-        quantity: position.quantity,
-        averagePrice: position.average_price,
-        lastPrice: position.last_price,
-        pnl: position.pnl,
-        pnlPercentage: position.average_price > 0
-          ? (position.pnl / (position.average_price * Math.abs(position.quantity))) * 100
-          : 0,
-        product: position.product,
+      return rawData.map((order: any) => ({
+        id: order.order_id,
+        symbol: order.tradingsymbol,
+        exchange: order.exchange,
+        quantity: order.quantity,
+        price: order.price,
+        averagePrice: order.average_price || 0,
+        orderType: order.order_type,
+        transactionType: order.transaction_type,
+        status: order.status,
+        product: order.product,
+        validity: order.validity,
+        filledQuantity: order.filled_quantity || 0,
+        pendingQuantity: order.pending_quantity || 0,
+        timestamp: order.order_timestamp || timestamp,
         vendor: 'kite',
         accountId,
         accountName,
-        timestamp,
-        details: position
+        details: order
       }));
 
     default:
@@ -131,16 +138,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Account not found' }, { status: 404 });
     }
 
-    let positionsData: any;
-    let normalizedData: UnifiedPositionResponse[];
+    let ordersData: any;
+    let normalizedData: UnifiedOrderResponse[];
 
     switch (vendor.toLowerCase()) {
       case 'upstox':
         try {
-          positionsData = await fetchUpstoxPositions(account);
-          normalizedData = normalizePositionsData('upstox', positionsData, accountId, account.accountName);
+          ordersData = await fetchUpstoxOrders(account);
+          normalizedData = normalizeOrdersData('upstox', ordersData, accountId, account.accountName);
         } catch (error: any) {
-          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch Upstox positions';
+          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch Upstox orders';
 
           // Check if it's a token expiry error
           const statusCode = error.code === 'TOKEN_EXPIRED' || error.statusCode === 401 ? 401 : 500;
@@ -161,10 +168,10 @@ export async function GET(request: NextRequest) {
 
       case 'kite':
         try {
-          positionsData = await fetchKitePositions(account);
-          normalizedData = normalizePositionsData('kite', positionsData, accountId, account.accountName);
+          ordersData = await fetchKiteOrders(account);
+          normalizedData = normalizeOrdersData('kite', ordersData, accountId, account.accountName);
         } catch (error: any) {
-          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch Kite positions';
+          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch Kite orders';
 
           // Check if it's a token expiry error
           const statusCode = error.code === 'TOKEN_EXPIRED' || error.statusCode === 401 || error.statusCode === 403 ? 401 : 500;
@@ -199,7 +206,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch positions data',
+        error: 'Failed to fetch orders data',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }

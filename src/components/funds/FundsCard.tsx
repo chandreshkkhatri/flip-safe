@@ -67,7 +67,6 @@ export default function FundsCard({ accounts, selectedAccountId, className }: Fu
         throw new Error(response.data?.error || 'Failed to fetch funds');
       }
     } catch (err: any) {
-      console.error(`Error fetching funds for ${account.accountName}:`, err);
 
       // Check if it's a 401 error (authentication failure)
       if (err.response?.status === 401) {

@@ -102,7 +102,6 @@ export class TradingService {
           throw new Error(`Unsupported account type: ${account.accountType}`);
       }
     } catch (error) {
-      console.error(`Error initializing client for ${account.accountType}:`, error);
       throw error;
     }
   }
@@ -117,7 +116,6 @@ export class TradingService {
         const orders = await this.getAccountOrders(account);
         allOrders.push(...orders);
       } catch (error) {
-        console.error(`Error fetching orders from ${account.accountName}:`, error);
         // Continue with other accounts even if one fails
       }
     }
@@ -167,7 +165,6 @@ export class TradingService {
         })
       );
     } catch (error) {
-      console.error('Error fetching Kite orders:', error);
       return [];
     }
   }
@@ -198,7 +195,6 @@ export class TradingService {
         })
       );
     } catch (error) {
-      console.error('Error fetching Upstox orders:', error);
       return [];
     }
   }
@@ -229,7 +225,6 @@ export class TradingService {
         })
       );
     } catch (error) {
-      console.error('Error fetching Binance orders:', error);
       return [];
     }
   }
@@ -244,7 +239,6 @@ export class TradingService {
         const positions = await this.getAccountPositions(account);
         allPositions.push(...positions);
       } catch (error) {
-        console.error(`Error fetching positions from ${account.accountName}:`, error);
       }
     }
 
@@ -291,7 +285,6 @@ export class TradingService {
         })
       );
     } catch (error) {
-      console.error('Error fetching Kite positions:', error);
       return [];
     }
   }
@@ -321,7 +314,6 @@ export class TradingService {
         })
       );
     } catch (error) {
-      console.error('Error fetching Upstox positions:', error);
       return [];
     }
   }
@@ -356,7 +348,6 @@ export class TradingService {
         };
       });
     } catch (error) {
-      console.error('Error fetching Binance positions:', error);
       return [];
     }
   }
@@ -371,7 +362,6 @@ export class TradingService {
         const holdings = await this.getAccountHoldings(account);
         allHoldings.push(...holdings);
       } catch (error) {
-        console.error(`Error fetching holdings from ${account.accountName}:`, error);
       }
     }
 
@@ -423,7 +413,6 @@ export class TradingService {
         };
       });
     } catch (error) {
-      console.error('Error fetching Kite holdings:', error);
       return [];
     }
   }
@@ -458,7 +447,6 @@ export class TradingService {
         };
       });
     } catch (error) {
-      console.error('Error fetching Upstox holdings:', error);
       return [];
     }
   }

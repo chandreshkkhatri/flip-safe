@@ -593,3 +593,200 @@ body {
   padding: 40px;
   text-align: center;
 }
+
+/* Holdings Card Styles */
+.holdings-summary {
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.05), rgba(76, 175, 80, 0.02));
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.dark .holdings-summary {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
+}
+
+.holdings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.holding-card {
+  padding: 16px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.holding-card:hover {
+  border-color: rgba(76, 175, 80, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.dark .holding-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.holding-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.holding-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.holding-symbol-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.holding-symbol {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--foreground);
+}
+
+.holding-exchange {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  padding: 2px 6px;
+  background: var(--muted);
+  border-radius: 4px;
+}
+
+.holding-company {
+  font-size: 13px;
+  color: var(--muted-foreground);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.holding-account {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.holding-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.empty-holdings {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+}
+
+/* Orders Card Styles */
+.orders-summary {
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(59, 130, 246, 0.02));
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.dark .orders-summary {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.order-card {
+  padding: 16px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.order-card:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.dark .order-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.order-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.order-symbol-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.order-symbol {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--foreground);
+}
+
+.order-exchange {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  padding: 2px 6px;
+  background: var(--muted);
+  border-radius: 4px;
+}
+
+.order-account {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.order-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.empty-orders {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+}
+
+.buy-text {
+  color: #4caf50;
+  font-weight: 600;
+}
+
+.sell-text {
+  color: #f44336;
+  font-weight: 600;
+}

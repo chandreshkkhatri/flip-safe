@@ -4,9 +4,8 @@ import EnhancedCard from '@/components/enhanced-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { API_ROUTES } from '@/lib/constants';
 import axios from 'axios';
-import { AlertTriangle, RefreshCw, TrendingDown, TrendingUp, Package } from 'lucide-react';
+import { AlertTriangle, RefreshCw, TrendingDown, TrendingUp, Briefcase } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface TradingAccount {
@@ -17,16 +16,18 @@ interface TradingAccount {
   accessToken?: string;
 }
 
-interface UnifiedPositionResponse {
+interface UnifiedHoldingResponse {
   id: string;
   symbol: string;
   exchange: string;
   quantity: number;
   averagePrice: number;
   lastPrice: number;
+  currentValue: number;
   pnl: number;
   pnlPercentage: number;
-  product: string;
+  isin?: string;
+  companyName?: string;
   vendor: string;
   accountId: string;
   accountName: string;
@@ -34,7 +35,7 @@ interface UnifiedPositionResponse {
   details: any;
 }
 
-interface PositionsCardProps {
+interface HoldingsCardProps {
   accounts: TradingAccount[];
   selectedAccountId?: string;
   className?: string;
@@ -47,8 +48,8 @@ interface AccountError {
   message: string;
 }
 
-export default function PositionsCard({ accounts, selectedAccountId, className }: PositionsCardProps) {
-  const [positionsData, setPositionsData] = useState<UnifiedPositionResponse[]>([]);
+export default function HoldingsCard({ accounts, selectedAccountId, className }: HoldingsCardProps) {
+  const [holdingsData, setHoldingsData] = useState<UnifiedHoldingResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [accountErrors, setAccountErrors] = useState<AccountError[]>([]);
@@ -59,19 +60,19 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
     ? accounts.filter(acc => acc._id === selectedAccountId)
     : accounts;
 
-  const fetchPositionsForAccount = async (account: TradingAccount, isRefresh = false) => {
+  const fetchHoldingsForAccount = async (account: TradingAccount, isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(account._id!);
     }
 
     try {
       const response = await axios.get(
-        `/api/positions?vendor=${account.accountType}&accountId=${account._id}`
+        `/api/holdings?vendor=${account.accountType}&accountId=${account._id}`
       );
 
       if (response.data?.success) {
-        setPositionsData(prev => {
-          const filtered = prev.filter(p => p.accountId !== account._id);
+        setHoldingsData(prev => {
+          const filtered = prev.filter(h => h.accountId !== account._id);
           return [...filtered, ...response.data.data];
         });
 
@@ -79,7 +80,7 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
         setAccountErrors(prev => prev.filter(e => e.accountId !== account._id));
         setError(null);
       } else {
-        throw new Error(response.data?.error || 'Failed to fetch positions');
+        throw new Error(response.data?.error || 'Failed to fetch holdings');
       }
     } catch (err: any) {
 
@@ -96,7 +97,7 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
           }];
         });
       } else {
-        const errorMessage = err.response?.data?.error || err.message || 'Failed to fetch positions';
+        const errorMessage = err.response?.data?.error || err.message || 'Failed to fetch holdings';
         setError(`${account.accountName}: ${errorMessage}`);
       }
     } finally {
@@ -106,30 +107,30 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
     }
   };
 
-  const fetchAllPositions = async () => {
+  const fetchAllHoldings = async () => {
     if (accountsToShow.length === 0) return;
 
     setLoading(true);
     setError(null);
     setAccountErrors([]);
-    setPositionsData([]);
+    setHoldingsData([]);
 
     try {
-      // Fetch positions for all accounts in parallel
-      await Promise.allSettled(accountsToShow.map(account => fetchPositionsForAccount(account)));
+      // Fetch holdings for all accounts in parallel
+      await Promise.allSettled(accountsToShow.map(account => fetchHoldingsForAccount(account)));
     } finally {
       setLoading(false);
     }
   };
 
   const handleRefresh = async (account: TradingAccount) => {
-    await fetchPositionsForAccount(account, true);
+    await fetchHoldingsForAccount(account, true);
   };
 
   useEffect(() => {
     // Only fetch if we have accounts to show
     if (accountsToShow.length > 0) {
-      fetchAllPositions();
+      fetchAllHoldings();
     }
   }, [JSON.stringify(accounts.map(a => a._id)), selectedAccountId]); // Use stable stringified IDs
 
@@ -150,23 +151,30 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
     }
   };
 
-  const totalPnl = positionsData.reduce(
-    (sum, position) => sum + position.pnl,
+  const totalValue = holdingsData.reduce(
+    (sum, holding) => sum + holding.currentValue,
     0
   );
 
-  const totalValue = positionsData.reduce(
-    (sum, position) => sum + (position.lastPrice * Math.abs(position.quantity)),
+  const totalInvestment = holdingsData.reduce(
+    (sum, holding) => sum + (holding.averagePrice * holding.quantity),
     0
   );
+
+  const totalPnl = holdingsData.reduce(
+    (sum, holding) => sum + holding.pnl,
+    0
+  );
+
+  const totalPnlPercentage = totalInvestment > 0 ? (totalPnl / totalInvestment) * 100 : 0;
 
   if (accountsToShow.length === 0) {
     return (
-      <EnhancedCard title="Positions" className={className}>
+      <EnhancedCard title="Portfolio Holdings" className={className}>
         <div className="empty-state">
-          <Package className="empty-icon" size={48} />
+          <Briefcase className="empty-icon" size={48} />
           <h3>No Accounts Available</h3>
-          <p>Add trading accounts to view your positions.</p>
+          <p>Add trading accounts to view your holdings.</p>
           <Button onClick={() => (window.location.href = '/accounts')} className="mt-4">
             Add Account
           </Button>
@@ -177,31 +185,37 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
 
   if (loading) {
     return (
-      <EnhancedCard title="Positions" className={className}>
-        <LoadingSpinner message="Loading positions..." />
+      <EnhancedCard title="Portfolio Holdings" className={className}>
+        <LoadingSpinner message="Loading holdings..." />
       </EnhancedCard>
     );
   }
 
   return (
-    <EnhancedCard title="Positions" className={className}>
-      {/* Summary when multiple positions */}
-      {positionsData.length > 0 && (
-        <div className="positions-summary">
+    <EnhancedCard title="Portfolio Holdings" className={className}>
+      {/* Portfolio Summary */}
+      {holdingsData.length > 0 && (
+        <div className="holdings-summary">
           <div className="summary-grid">
             <div className="summary-item">
-              <div className="summary-label">Total Positions</div>
-              <div className="summary-value">{positionsData.length}</div>
+              <div className="summary-label">Current Value</div>
+              <div className="summary-value">{formatCurrency(totalValue)}</div>
             </div>
             <div className="summary-item">
-              <div className="summary-label">Total Value</div>
-              <div className="summary-value">{formatCurrency(totalValue)}</div>
+              <div className="summary-label">Total Investment</div>
+              <div className="summary-value">{formatCurrency(totalInvestment)}</div>
             </div>
             <div className="summary-item">
               <div className="summary-label">Total P&L</div>
               <div className={`summary-value ${totalPnl >= 0 ? 'positive' : 'negative'}`}>
                 {totalPnl >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
                 {formatCurrency(totalPnl)}
+              </div>
+            </div>
+            <div className="summary-item">
+              <div className="summary-label">Returns</div>
+              <div className={`summary-value ${totalPnlPercentage >= 0 ? 'positive' : 'negative'}`}>
+                {totalPnlPercentage.toFixed(2)}%
               </div>
             </div>
           </div>
@@ -254,42 +268,44 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
         </div>
       )}
 
-      {/* Positions List */}
-      {positionsData.length === 0 && accountErrors.length === 0 && !error ? (
-        <div className="empty-positions">
-          <Package size={32} className="text-muted-foreground mb-2" />
-          <p className="text-muted-foreground">No open positions</p>
+      {/* Holdings List */}
+      {holdingsData.length === 0 && accountErrors.length === 0 && !error ? (
+        <div className="empty-holdings">
+          <Briefcase size={32} className="text-muted-foreground mb-2" />
+          <p className="text-muted-foreground">No holdings in your portfolio</p>
         </div>
       ) : (
-        <div className="positions-list">
-          {positionsData.map(position => {
-            const isRefreshing = refreshing === position.accountId;
+        <div className="holdings-list">
+          {holdingsData.map(holding => {
+            const isRefreshing = refreshing === holding.accountId;
 
             return (
-              <div key={position.id} className="position-card">
-                <div className="position-header">
-                  <div className="position-info">
-                    <div className="position-symbol-row">
-                      <span className="position-symbol">{position.symbol}</span>
+              <div key={holding.id} className="holding-card">
+                <div className="holding-header">
+                  <div className="holding-info">
+                    <div className="holding-symbol-row">
+                      <span className="holding-symbol">{holding.symbol}</span>
                       <Badge
                         variant="default"
                         style={{
-                          borderColor: getVendorColor(position.vendor),
-                          color: getVendorColor(position.vendor)
+                          borderColor: getVendorColor(holding.vendor),
+                          color: getVendorColor(holding.vendor)
                         }}
                       >
-                        {position.vendor.toUpperCase()}
+                        {holding.vendor.toUpperCase()}
                       </Badge>
-                      <span className="position-exchange">{position.exchange}</span>
-                      <span className="position-product">{position.product}</span>
+                      <span className="holding-exchange">{holding.exchange}</span>
                     </div>
-                    <div className="position-account">{position.accountName}</div>
+                    {holding.companyName && (
+                      <div className="holding-company">{holding.companyName}</div>
+                    )}
+                    <div className="holding-account">{holding.accountName}</div>
                   </div>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => {
-                      const account = accountsToShow.find(a => a._id === position.accountId);
+                      const account = accountsToShow.find(a => a._id === holding.accountId);
                       if (account) handleRefresh(account);
                     }}
                     disabled={isRefreshing}
@@ -302,25 +318,29 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
                   </Button>
                 </div>
 
-                <div className="position-details">
+                <div className="holding-details">
                   <div className="detail-row">
                     <span className="detail-label">Qty:</span>
-                    <span className="detail-value">{position.quantity}</span>
+                    <span className="detail-value">{holding.quantity}</span>
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">Avg:</span>
-                    <span className="detail-value">{formatCurrency(position.averagePrice)}</span>
+                    <span className="detail-value">{formatCurrency(holding.averagePrice)}</span>
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">LTP:</span>
-                    <span className="detail-value">{formatCurrency(position.lastPrice)}</span>
+                    <span className="detail-value">{formatCurrency(holding.lastPrice)}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Value:</span>
+                    <span className="detail-value">{formatCurrency(holding.currentValue)}</span>
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">P&L:</span>
-                    <span className={`detail-value pnl ${position.pnl >= 0 ? 'positive' : 'negative'}`}>
-                      {formatCurrency(position.pnl)}
+                    <span className={`detail-value pnl ${holding.pnl >= 0 ? 'positive' : 'negative'}`}>
+                      {formatCurrency(holding.pnl)}
                       <span className="pnl-percentage">
-                        ({position.pnlPercentage.toFixed(2)}%)
+                        ({holding.pnlPercentage.toFixed(2)}%)
                       </span>
                     </span>
                   </div>

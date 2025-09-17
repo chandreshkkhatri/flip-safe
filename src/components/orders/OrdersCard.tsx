@@ -4,9 +4,8 @@ import EnhancedCard from '@/components/enhanced-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { API_ROUTES } from '@/lib/constants';
 import axios from 'axios';
-import { AlertTriangle, RefreshCw, TrendingDown, TrendingUp, Package } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Receipt, ShoppingCart } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface TradingAccount {
@@ -17,24 +16,28 @@ interface TradingAccount {
   accessToken?: string;
 }
 
-interface UnifiedPositionResponse {
+interface UnifiedOrderResponse {
   id: string;
   symbol: string;
   exchange: string;
   quantity: number;
+  price: number;
   averagePrice: number;
-  lastPrice: number;
-  pnl: number;
-  pnlPercentage: number;
+  orderType: string;
+  transactionType: string;
+  status: string;
   product: string;
+  validity: string;
+  filledQuantity: number;
+  pendingQuantity: number;
+  timestamp: string;
   vendor: string;
   accountId: string;
   accountName: string;
-  timestamp: string;
   details: any;
 }
 
-interface PositionsCardProps {
+interface OrdersCardProps {
   accounts: TradingAccount[];
   selectedAccountId?: string;
   className?: string;
@@ -47,8 +50,8 @@ interface AccountError {
   message: string;
 }
 
-export default function PositionsCard({ accounts, selectedAccountId, className }: PositionsCardProps) {
-  const [positionsData, setPositionsData] = useState<UnifiedPositionResponse[]>([]);
+export default function OrdersCard({ accounts, selectedAccountId, className }: OrdersCardProps) {
+  const [ordersData, setOrdersData] = useState<UnifiedOrderResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [accountErrors, setAccountErrors] = useState<AccountError[]>([]);
@@ -59,19 +62,19 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
     ? accounts.filter(acc => acc._id === selectedAccountId)
     : accounts;
 
-  const fetchPositionsForAccount = async (account: TradingAccount, isRefresh = false) => {
+  const fetchOrdersForAccount = async (account: TradingAccount, isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(account._id!);
     }
 
     try {
       const response = await axios.get(
-        `/api/positions?vendor=${account.accountType}&accountId=${account._id}`
+        `/api/orders?vendor=${account.accountType}&accountId=${account._id}`
       );
 
       if (response.data?.success) {
-        setPositionsData(prev => {
-          const filtered = prev.filter(p => p.accountId !== account._id);
+        setOrdersData(prev => {
+          const filtered = prev.filter(o => o.accountId !== account._id);
           return [...filtered, ...response.data.data];
         });
 
@@ -79,7 +82,7 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
         setAccountErrors(prev => prev.filter(e => e.accountId !== account._id));
         setError(null);
       } else {
-        throw new Error(response.data?.error || 'Failed to fetch positions');
+        throw new Error(response.data?.error || 'Failed to fetch orders');
       }
     } catch (err: any) {
 
@@ -96,7 +99,7 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
           }];
         });
       } else {
-        const errorMessage = err.response?.data?.error || err.message || 'Failed to fetch positions';
+        const errorMessage = err.response?.data?.error || err.message || 'Failed to fetch orders';
         setError(`${account.accountName}: ${errorMessage}`);
       }
     } finally {
@@ -106,30 +109,30 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
     }
   };
 
-  const fetchAllPositions = async () => {
+  const fetchAllOrders = async () => {
     if (accountsToShow.length === 0) return;
 
     setLoading(true);
     setError(null);
     setAccountErrors([]);
-    setPositionsData([]);
+    setOrdersData([]);
 
     try {
-      // Fetch positions for all accounts in parallel
-      await Promise.allSettled(accountsToShow.map(account => fetchPositionsForAccount(account)));
+      // Fetch orders for all accounts in parallel
+      await Promise.allSettled(accountsToShow.map(account => fetchOrdersForAccount(account)));
     } finally {
       setLoading(false);
     }
   };
 
   const handleRefresh = async (account: TradingAccount) => {
-    await fetchPositionsForAccount(account, true);
+    await fetchOrdersForAccount(account, true);
   };
 
   useEffect(() => {
     // Only fetch if we have accounts to show
     if (accountsToShow.length > 0) {
-      fetchAllPositions();
+      fetchAllOrders();
     }
   }, [JSON.stringify(accounts.map(a => a._id)), selectedAccountId]); // Use stable stringified IDs
 
@@ -150,23 +153,45 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
     }
   };
 
-  const totalPnl = positionsData.reduce(
-    (sum, position) => sum + position.pnl,
-    0
-  );
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'complete':
+      case 'executed':
+      case 'filled':
+        return 'success';
+      case 'open':
+      case 'pending':
+      case 'placed':
+      case 'trigger_pending':
+        return 'info';
+      case 'cancelled':
+      case 'rejected':
+      case 'canceled': // Alternative spelling
+        return 'danger';
+      case 'partial':
+        return 'warning';
+      default:
+        return 'neutral';
+    }
+  };
 
-  const totalValue = positionsData.reduce(
-    (sum, position) => sum + (position.lastPrice * Math.abs(position.quantity)),
-    0
-  );
+  const totalOrders = ordersData.length;
+  const completedOrders = ordersData.filter(order => {
+    const status = order.status.toLowerCase();
+    return status === 'complete' || status === 'executed' || status === 'filled';
+  }).length;
+  const openOrders = ordersData.filter(order => {
+    const status = order.status.toLowerCase();
+    return status === 'open' || status === 'pending' || status === 'placed' || status === 'trigger_pending';
+  }).length;
 
   if (accountsToShow.length === 0) {
     return (
-      <EnhancedCard title="Positions" className={className}>
+      <EnhancedCard title="Orders" className={className}>
         <div className="empty-state">
-          <Package className="empty-icon" size={48} />
+          <ShoppingCart className="empty-icon" size={48} />
           <h3>No Accounts Available</h3>
-          <p>Add trading accounts to view your positions.</p>
+          <p>Add trading accounts to view your orders.</p>
           <Button onClick={() => (window.location.href = '/accounts')} className="mt-4">
             Add Account
           </Button>
@@ -177,32 +202,29 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
 
   if (loading) {
     return (
-      <EnhancedCard title="Positions" className={className}>
-        <LoadingSpinner message="Loading positions..." />
+      <EnhancedCard title="Orders" className={className}>
+        <LoadingSpinner message="Loading orders..." />
       </EnhancedCard>
     );
   }
 
   return (
-    <EnhancedCard title="Positions" className={className}>
-      {/* Summary when multiple positions */}
-      {positionsData.length > 0 && (
-        <div className="positions-summary">
+    <EnhancedCard title="Orders" className={className}>
+      {/* Summary when orders exist */}
+      {ordersData.length > 0 && (
+        <div className="orders-summary">
           <div className="summary-grid">
             <div className="summary-item">
-              <div className="summary-label">Total Positions</div>
-              <div className="summary-value">{positionsData.length}</div>
+              <div className="summary-label">Total Orders</div>
+              <div className="summary-value">{totalOrders}</div>
             </div>
             <div className="summary-item">
-              <div className="summary-label">Total Value</div>
-              <div className="summary-value">{formatCurrency(totalValue)}</div>
+              <div className="summary-label">Completed</div>
+              <div className="summary-value">{completedOrders}</div>
             </div>
             <div className="summary-item">
-              <div className="summary-label">Total P&L</div>
-              <div className={`summary-value ${totalPnl >= 0 ? 'positive' : 'negative'}`}>
-                {totalPnl >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                {formatCurrency(totalPnl)}
-              </div>
+              <div className="summary-label">Open</div>
+              <div className="summary-value">{openOrders}</div>
             </div>
           </div>
         </div>
@@ -254,42 +276,48 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
         </div>
       )}
 
-      {/* Positions List */}
-      {positionsData.length === 0 && accountErrors.length === 0 && !error ? (
-        <div className="empty-positions">
-          <Package size={32} className="text-muted-foreground mb-2" />
-          <p className="text-muted-foreground">No open positions</p>
+      {/* Orders List */}
+      {ordersData.length === 0 && accountErrors.length === 0 && !error ? (
+        <div className="empty-orders">
+          <Receipt size={32} className="text-muted-foreground mb-2" />
+          <p className="text-muted-foreground">No orders placed yet</p>
         </div>
       ) : (
-        <div className="positions-list">
-          {positionsData.map(position => {
-            const isRefreshing = refreshing === position.accountId;
+        <div className="orders-list">
+          {ordersData.map(order => {
+            const isRefreshing = refreshing === order.accountId;
 
             return (
-              <div key={position.id} className="position-card">
-                <div className="position-header">
-                  <div className="position-info">
-                    <div className="position-symbol-row">
-                      <span className="position-symbol">{position.symbol}</span>
+              <div key={order.id} className="order-card">
+                <div className="order-header">
+                  <div className="order-info">
+                    <div className="order-symbol-row">
+                      <span className="order-symbol">{order.symbol}</span>
                       <Badge
                         variant="default"
                         style={{
-                          borderColor: getVendorColor(position.vendor),
-                          color: getVendorColor(position.vendor)
+                          borderColor: getVendorColor(order.vendor),
+                          color: getVendorColor(order.vendor)
                         }}
                       >
-                        {position.vendor.toUpperCase()}
+                        {order.vendor.toUpperCase()}
                       </Badge>
-                      <span className="position-exchange">{position.exchange}</span>
-                      <span className="position-product">{position.product}</span>
+                      <span className="order-exchange">{order.exchange}</span>
+                      <Badge
+                        variant={getStatusColor(order.status)}
+                        tone="soft"
+                        className="uppercase"
+                      >
+                        {order.status}
+                      </Badge>
                     </div>
-                    <div className="position-account">{position.accountName}</div>
+                    <div className="order-account">{order.accountName}</div>
                   </div>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => {
-                      const account = accountsToShow.find(a => a._id === position.accountId);
+                      const account = accountsToShow.find(a => a._id === order.accountId);
                       if (account) handleRefresh(account);
                     }}
                     disabled={isRefreshing}
@@ -302,26 +330,43 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
                   </Button>
                 </div>
 
-                <div className="position-details">
+                <div className="order-details">
+                  <div className="detail-row">
+                    <span className="detail-label">Type:</span>
+                    <span className={`detail-value ${order.transactionType.toLowerCase() === 'buy' ? 'buy-text' : 'sell-text'}`}>
+                      {order.transactionType} {order.orderType}
+                    </span>
+                  </div>
                   <div className="detail-row">
                     <span className="detail-label">Qty:</span>
-                    <span className="detail-value">{position.quantity}</span>
+                    <span className="detail-value">{order.quantity}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Avg:</span>
-                    <span className="detail-value">{formatCurrency(position.averagePrice)}</span>
+                    <span className="detail-label">Price:</span>
+                    <span className="detail-value">
+                      {order.price > 0 ? formatCurrency(order.price) : 'Market'}
+                    </span>
+                  </div>
+                  {order.averagePrice > 0 && (
+                    <div className="detail-row">
+                      <span className="detail-label">Avg:</span>
+                      <span className="detail-value">{formatCurrency(order.averagePrice)}</span>
+                    </div>
+                  )}
+                  <div className="detail-row">
+                    <span className="detail-label">Filled:</span>
+                    <span className="detail-value">{order.filledQuantity}/{order.quantity}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">LTP:</span>
-                    <span className="detail-value">{formatCurrency(position.lastPrice)}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">P&L:</span>
-                    <span className={`detail-value pnl ${position.pnl >= 0 ? 'positive' : 'negative'}`}>
-                      {formatCurrency(position.pnl)}
-                      <span className="pnl-percentage">
-                        ({position.pnlPercentage.toFixed(2)}%)
-                      </span>
+                    <span className="detail-label">Status:</span>
+                    <span className="detail-value">
+                      <Badge
+                        variant={getStatusColor(order.status)}
+                        tone="soft"
+                        className="uppercase"
+                      >
+                        {order.status}
+                      </Badge>
                     </span>
                   </div>
                 </div>

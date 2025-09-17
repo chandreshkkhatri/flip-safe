@@ -157,11 +157,6 @@ class UpstoxService {
    * Initialize with API credentials from account
    */
   public initializeWithCredentials(apiKey: string, apiSecret: string, isSandbox: boolean = false): void {
-    console.log('Initializing Upstox with credentials');
-    console.log('UpstoxClient available:', !!UpstoxClient);
-    console.log('API Key provided:', !!apiKey);
-    console.log('API Secret provided:', !!apiSecret);
-    console.log('Is Sandbox:', isSandbox);
 
     this.apiKey = apiKey;
     this.apiSecret = apiSecret;
@@ -173,14 +168,12 @@ class UpstoxService {
       this.client = new UpstoxClient.ApiClient(isSandbox);
 
       if (isSandbox) {
-        console.log('Using Upstox SANDBOX environment');
+        // Using sandbox environment
       } else {
-        console.log('Using Upstox PRODUCTION environment');
+        // Using production environment
       }
 
-      console.log('Upstox client initialized successfully');
     } catch (error) {
-      console.error('Error creating Upstox client:', error);
       throw error;
     }
   }
@@ -211,9 +204,6 @@ class UpstoxService {
    * Set access token after authentication
    */
   setAccessToken(accessToken: string): void {
-    console.log('Setting Upstox access token');
-    console.log('Access token provided:', !!accessToken);
-    console.log('Upstox client available:', !!this.client);
 
     try {
       this.accessToken = accessToken;
@@ -221,9 +211,7 @@ class UpstoxService {
       const oauth = this.client.authentications['OAUTH2'];
       oauth.accessToken = accessToken;
 
-      console.log('Upstox access token set successfully');
     } catch (error) {
-      console.error('Error setting Upstox access token:', error);
       throw error;
     }
   }
@@ -276,14 +264,12 @@ class UpstoxService {
     // Try to validate redirect URI format
     try {
       const uri = new URL(redirectUri);
-      console.log('Redirect URI is valid URL:', uri.href);
+      // Valid redirect URI format
     } catch (e) {
-      console.error('Invalid redirect URI format:', redirectUri);
+      // Invalid redirect URI format
     }
 
     const fullUrl = `${authDomain}/v2/login/authorization/dialog?response_type=code&client_id=${this.apiKey}&redirect_uri=${encodeURIComponent(redirectUri)}&state=upstox_auth&scope=${encodeURIComponent(scope)}`;
-    console.log('Generated URL:', fullUrl);
-    console.log('=== End Debug ===');
 
     return fullUrl;
   }
@@ -319,11 +305,6 @@ class UpstoxService {
         grant_type: 'authorization_code'
       };
 
-      console.log('Token endpoint:', tokenEndpoint);
-      console.log('Token request data:', {
-        ...requestData,
-        client_secret: requestData.client_secret?.substring(0, 10) + '...'
-      });
 
       const response = await fetch(tokenEndpoint, {
         method: 'POST',
@@ -336,29 +317,18 @@ class UpstoxService {
 
       const responseData = await response.json();
 
-      console.log('Token response status:', response.status);
-      console.log('Token response received:', !!responseData);
 
       if (!response.ok) {
-        console.error('Token exchange failed:', responseData);
         throw new Error(responseData.message || responseData.error || 'Failed to exchange authorization code for token');
       }
 
       if (responseData && responseData.access_token) {
         this.setAccessToken(responseData.access_token);
-        console.log('=== Session generation successful ===');
         return responseData;
       } else {
-        console.error('Invalid token response structure:', responseData);
         throw new Error('Invalid response from token endpoint');
       }
     } catch (error: any) {
-      console.error('=== Upstox Session Generation Error ===');
-      console.error('Error type:', error.constructor.name);
-      console.error('Error message:', error.message);
-      console.error('Error response:', error.response?.data || error.response);
-      console.error('Full error:', error);
-      console.error('=== End Error Debug ===');
       throw error;
     }
   }
@@ -386,9 +356,6 @@ class UpstoxService {
       recommendations: this.getConfigurationRecommendations()
     };
 
-    console.log('=== Upstox App Configuration Debug ===');
-    console.table(debugInfo);
-    console.log('=== End Configuration Debug ===');
 
     return debugInfo;
   }
@@ -456,7 +423,6 @@ class UpstoxService {
       this.reset();
       return response;
     } catch (error) {
-      console.error('Error revoking Upstox access token:', error);
       throw error;
     }
   }
@@ -475,10 +441,6 @@ class UpstoxService {
    * Get funds and margins
    */
   async getFunds(): Promise<UpstoxFunds> {
-    console.log('Upstox service getFunds called');
-    console.log('Has client:', !!this.client);
-    console.log('Has access token:', !!this.accessToken);
-    console.log('Is sandbox mode:', this.isSandbox);
 
     if (!this.client) {
       throw new Error('Upstox client not initialized. Call initializeWithCredentials() first.');
@@ -490,7 +452,6 @@ class UpstoxService {
 
     // For sandbox mode, return mock data since many APIs are not available
     if (this.isSandbox) {
-      console.log('Returning sandbox mock funds data');
       return {
         equity: {
           used_margin: 2500,
@@ -526,7 +487,6 @@ class UpstoxService {
         ? `https://api-sandbox.upstox.com/v2/user/get-funds-and-margin`
         : `https://api.upstox.com/v2/user/get-funds-and-margin`;
 
-      console.log('Calling Upstox funds API directly via fetch...');
 
       const response = await fetch(fundEndpoint, {
         method: 'GET',
@@ -539,10 +499,8 @@ class UpstoxService {
 
       const responseData = await response.json();
 
-      console.log('Upstox funds response status:', response.status);
 
       if (!response.ok) {
-        console.error('Funds API failed:', responseData);
 
         // Check for token expiry or invalid token error (401 Unauthorized)
         if (response.status === 401 && responseData.errors) {
@@ -598,10 +556,8 @@ class UpstoxService {
         throw new Error(responseData.message || responseData.error || 'Failed to fetch funds');
       }
 
-      console.log('Upstox getFunds result:', responseData);
       return responseData.data || responseData;
     } catch (error) {
-      console.error('Error in Upstox getFunds:', error);
       throw error;
     }
   }
@@ -610,10 +566,6 @@ class UpstoxService {
    * Get positions
    */
   async getPositions(): Promise<UpstoxPosition[]> {
-    console.log('Upstox service getPositions called');
-    console.log('Has client:', !!this.client);
-    console.log('Has access token:', !!this.accessToken);
-    console.log('Is sandbox mode:', this.isSandbox);
 
     if (!this.client) {
       throw new Error('Upstox client not initialized. Call initializeWithCredentials() first.');
@@ -625,7 +577,6 @@ class UpstoxService {
 
     // For sandbox mode, return mock data
     if (this.isSandbox) {
-      console.log('Returning sandbox mock positions data');
       return [
         {
           exchange: 'NSE',
@@ -665,7 +616,6 @@ class UpstoxService {
       // Direct API call for better error handling
       const positionsEndpoint = `https://api.upstox.com/v2/portfolio/short-term-positions`;
 
-      console.log('Calling Upstox positions API...');
       const response = await fetch(positionsEndpoint, {
         method: 'GET',
         headers: {
@@ -676,10 +626,8 @@ class UpstoxService {
       });
 
       const responseData = await response.json();
-      console.log('Upstox positions response status:', response.status);
 
       if (!response.ok) {
-        console.error('Positions API failed:', responseData);
 
         // Check for token expiry or invalid token error
         if (response.status === 401 && responseData.errors) {
@@ -699,7 +647,6 @@ class UpstoxService {
         throw new Error(responseData.message || responseData.error || 'Failed to fetch positions');
       }
 
-      console.log('Upstox getPositions result:', responseData);
 
       // Return the positions array from the response
       if (responseData.data) {
@@ -708,7 +655,6 @@ class UpstoxService {
 
       return [];
     } catch (error) {
-      console.error('Error in Upstox getPositions:', error);
       throw error;
     }
   }
@@ -717,22 +663,268 @@ class UpstoxService {
    * Get holdings
    */
   async getHoldings(): Promise<UpstoxHolding[]> {
-    const portfolioApi = new UpstoxClient.PortfolioApi(this.client);
-    const apiVersion = '2.0';
 
-    const response = await limiter.schedule(() => portfolioApi.getHoldings(apiVersion));
-    return response.data;
+    if (!this.client) {
+      throw new Error('Upstox client not initialized. Call initializeWithCredentials() first.');
+    }
+
+    if (!this.accessToken) {
+      throw new Error('Access token not set. Call setAccessToken() first.');
+    }
+
+    // For sandbox mode, return mock data
+    if (this.isSandbox) {
+      return [
+        {
+          isin: 'INE002A01018',
+          cnc_used_quantity: 0,
+          collateral_type: null,
+          company_name: 'Reliance Industries Limited',
+          haircut: 0.1,
+          product: 'D',
+          quantity: 100,
+          tradingsymbol: 'RELIANCE',
+          trading_symbol: 'RELIANCE',
+          last_price: 2500,
+          close_price: 2480,
+          average_price: 2300,
+          collateral_quantity: 0,
+          collateral_update_quantity: 0,
+          t1_quantity: 0,
+          exchange: 'NSE',
+          instrument_token: 'NSE_EQ|INE002A01018',
+          pnl: 20000
+        },
+        {
+          isin: 'INE467B01029',
+          cnc_used_quantity: 0,
+          collateral_type: null,
+          company_name: 'Tata Consultancy Services Ltd',
+          haircut: 0.1,
+          product: 'D',
+          quantity: 50,
+          tradingsymbol: 'TCS',
+          trading_symbol: 'TCS',
+          last_price: 3800,
+          close_price: 3750,
+          average_price: 3500,
+          collateral_quantity: 0,
+          collateral_update_quantity: 0,
+          t1_quantity: 0,
+          exchange: 'NSE',
+          instrument_token: 'NSE_EQ|INE467B01029',
+          pnl: 15000
+        }
+      ];
+    }
+
+    try {
+      // Direct API call for better error handling
+      const holdingsEndpoint = `https://api.upstox.com/v2/portfolio/long-term-holdings`;
+
+      const response = await fetch(holdingsEndpoint, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Api-Version': '2.0'
+        }
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+
+        // Check for token expiry or invalid token error
+        if (response.status === 401 && responseData.errors) {
+          const tokenError = responseData.errors.find((e: any) =>
+            e.errorCode === 'UDAPI100050' || // Invalid token
+            e.errorCode === 'UDAPI100051' || // Token expired
+            e.errorCode === 'UDAPI100052'    // Token not found
+          );
+          if (tokenError) {
+            const error = new Error(`Authentication failed: ${tokenError.message}. Please re-authenticate your Upstox account.`);
+            (error as any).code = 'TOKEN_EXPIRED';
+            (error as any).statusCode = 401;
+            throw error;
+          }
+        }
+
+        throw new Error(responseData.message || responseData.error || 'Failed to fetch holdings');
+      }
+
+
+      // Return the holdings array from the response
+      if (responseData.data) {
+        return Array.isArray(responseData.data) ? responseData.data : [];
+      }
+
+      return [];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Get sandbox orders for testing
+   */
+  private getSandboxOrders(): UpstoxOrder[] {
+    return [
+      {
+        order_id: 'MOCK_ORDER_001',
+        exchange_order_id: '1000000012345678',
+        placed_by: 'demo_user',
+        variety: 'regular',
+        status: 'COMPLETE',
+        tag: '',
+        exchange: 'NSE',
+        instrument_token: 'NSE_EQ|INE002A01018',
+        trading_symbol: 'RELIANCE',
+        order_type: 'LIMIT',
+        transaction_type: 'BUY',
+        validity: 'DAY',
+        product: 'D',
+        quantity: 10,
+        disclosed_quantity: 0,
+        price: 2450.0,
+        trigger_price: 0,
+        average_price: 2448.5,
+        filled_quantity: 10,
+        pending_quantity: 0,
+        order_timestamp: new Date().toISOString(),
+        exchange_timestamp: new Date().toISOString(),
+        status_message: 'Order completed successfully'
+      },
+      {
+        order_id: 'MOCK_ORDER_002',
+        exchange_order_id: '1000000012345679',
+        placed_by: 'demo_user',
+        variety: 'regular',
+        status: 'OPEN',
+        tag: '',
+        exchange: 'NSE',
+        instrument_token: 'NSE_EQ|INE467B01029',
+        trading_symbol: 'TCS',
+        order_type: 'LIMIT',
+        transaction_type: 'SELL',
+        validity: 'DAY',
+        product: 'D',
+        quantity: 5,
+        disclosed_quantity: 0,
+        price: 3850.0,
+        trigger_price: 0,
+        average_price: 0,
+        filled_quantity: 0,
+        pending_quantity: 5,
+        order_timestamp: new Date().toISOString(),
+        exchange_timestamp: new Date().toISOString(),
+        status_message: 'Order is open'
+      },
+      {
+        order_id: 'MOCK_ORDER_003',
+        exchange_order_id: '1000000012345680',
+        placed_by: 'demo_user',
+        variety: 'regular',
+        status: 'CANCELLED',
+        tag: '',
+        exchange: 'NSE',
+        instrument_token: 'NSE_EQ|INE040A01034',
+        trading_symbol: 'HDFC',
+        order_type: 'MARKET',
+        transaction_type: 'BUY',
+        validity: 'DAY',
+        product: 'D',
+        quantity: 20,
+        disclosed_quantity: 0,
+        price: 0,
+        trigger_price: 0,
+        average_price: 0,
+        filled_quantity: 0,
+        pending_quantity: 0,
+        order_timestamp: new Date().toISOString(),
+        exchange_timestamp: new Date().toISOString(),
+        status_message: 'Order cancelled by user'
+      }
+    ];
   }
 
   /**
    * Get orders
    */
   async getOrders(): Promise<UpstoxOrder[]> {
-    const orderApi = new UpstoxClient.OrderApi(this.client);
-    const apiVersion = '2.0';
+    if (!this.client) {
+      throw new Error('Upstox client not initialized. Call initializeWithCredentials() first.');
+    }
 
-    const response = await limiter.schedule(() => orderApi.getOrderBook(apiVersion));
-    return response.data;
+    if (!this.accessToken) {
+      throw new Error('Access token not set. Call setAccessToken() first.');
+    }
+
+    if (this.isSandbox) {
+      return this.getSandboxOrders();
+    }
+
+    try {
+      // Direct API call for better error handling
+      const ordersEndpoint = `https://api.upstox.com/v2/order/retrieve-all`;
+
+      const response = await fetch(ordersEndpoint, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Api-Version': '2.0'
+        }
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+
+        // Check for authentication errors
+        if (response.status === 401 || response.status === 403) {
+          if (responseData.errors) {
+            const tokenError = responseData.errors.find((e: any) =>
+              e.errorCode === 'UDAPI100050' || // Invalid token
+              e.errorCode === 'UDAPI100051' || // Token expired
+              e.errorCode === 'UDAPI100052'    // Token not found
+            );
+            if (tokenError) {
+              const error = new Error(`Authentication failed: ${tokenError.message}. Please re-authenticate your Upstox account.`);
+              (error as any).code = 'TOKEN_EXPIRED';
+              (error as any).statusCode = 401;
+              throw error;
+            }
+          }
+
+          // Generic auth error
+          const error = new Error('Authentication failed. Access token may be invalid or expired. Please re-authenticate your Upstox account.');
+          (error as any).code = 'TOKEN_EXPIRED';
+          (error as any).statusCode = 401;
+          throw error;
+        }
+
+        // 404 could also indicate invalid credentials in some cases
+        if (response.status === 404) {
+          const error = new Error('API endpoint not found. This may indicate invalid credentials or account configuration. Please re-authenticate your Upstox account.');
+          (error as any).code = 'TOKEN_EXPIRED';
+          (error as any).statusCode = 401;
+          throw error;
+        }
+
+        throw new Error(responseData.message || responseData.error || `API request failed with status ${response.status}`);
+      }
+
+
+      // Return the orders array from the response
+      if (responseData.data) {
+        return Array.isArray(responseData.data) ? responseData.data : [];
+      }
+
+      return [];
+    } catch (error) {
+      throw error;
+    }
   }
 
   /**
