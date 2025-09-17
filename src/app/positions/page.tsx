@@ -1,121 +1,46 @@
 'use client';
 
 import PageLayout from '@/components/layout/PageLayout';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import Table from '@/components/ui/Table';
-import { Button } from '@/components/ui/button';
+import PositionsCard from '@/components/positions/PositionsCard';
 import { useAuth } from '@/lib/auth-context';
 import { useAccount } from '@/lib/account-context';
-import { API_ROUTES } from '@/lib/constants';
-import { UnifiedPosition } from '@/lib/trading-service';
-import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { TrendingUp, Users, BarChart3 } from 'lucide-react';
-
-// Using UnifiedPosition interface from trading-service
+import { useEffect } from 'react';
 
 export default function PositionsPage() {
-  const [positions, setPositions] = useState<UnifiedPosition[]>([]);
-  const [loading, setLoading] = useState(false); // Start as false for immediate rendering
-  const [error, setError] = useState<string | null>(null);
-
   const { isLoggedIn, allowOfflineAccess, runOfflineMode } = useAuth();
-  const { selectedAccount, accounts: binanceAccounts } = useAccount();
+  const { accounts, selectedAccount, loadingAccounts, fetchAccounts } = useAccount();
 
   useEffect(() => {
     if (!isLoggedIn && !allowOfflineAccess) {
       runOfflineMode();
     }
-    // Small delay to allow for immediate page rendering
-    setTimeout(() => fetchPositions(), 50);
-  }, [isLoggedIn, allowOfflineAccess, runOfflineMode]);
-
-  const fetchPositions = async () => {
-    // Mock user ID - in real app, get from auth context
-    const userId = 'default_user';
-
-    try {
-      const response = await axios.get(`${API_ROUTES.trading.getPositions}?userId=${userId}`);
-      if (response.data?.success) {
-        setPositions(response.data.positions || []);
-      } else {
-        throw new Error(response.data?.error || 'Failed to fetch positions');
-      }
-    } catch (error) {
-      console.error('Error fetching positions:', error);
-      setError('Failed to fetch positions');
-      // Fallback to mock data for demo
-      setPositions([
-        {
-          id: 'mock_position_1',
-          accountId: 'demo_account',
-          accountType: 'kite',
-          symbol: 'RELIANCE',
-          exchange: 'NSE',
-          quantity: 100,
-          averagePrice: 2450,
-          lastPrice: 2500,
-          pnl: 5000,
-          pnlPercentage: 2.04,
-          product: 'CNC',
-        } as UnifiedPosition,
-      ]);
-    } finally {
-      setLoading(false);
+    // Fetch accounts if not already loaded
+    if (accounts.length === 0 && !loadingAccounts) {
+      fetchAccounts();
     }
-  };
+  }, [isLoggedIn, allowOfflineAccess, runOfflineMode, accounts, loadingAccounts, fetchAccounts]);
 
-  if (loading) {
-    return <LoadingSpinner message="Loading positions..." />;
-  }
+  // Filter only Upstox and Kite accounts
+  const tradingAccounts = accounts.filter(acc =>
+    acc.isActive && (acc.accountType === 'upstox' || acc.accountType === 'kite')
+  );
 
-  const columns = [
-    {
-      key: 'symbol',
-      header: 'Symbol',
-      render: (value: string, row: UnifiedPosition) => (
-        <div className="symbol-info">
-          <div className="symbol-name">{value}</div>
-          <div className="account-badge">{row.accountType.toUpperCase()}</div>
-          <div className="exchange">{row.exchange}</div>
+  if (loadingAccounts) {
+    return (
+      <PageLayout title="Positions">
+        <div className="page-header">
+          <h1>Positions</h1>
+          <p>Track your current trading positions</p>
         </div>
-      ),
-    },
-    { key: 'quantity', header: 'Quantity' },
-    {
-      key: 'averagePrice',
-      header: 'Avg Price',
-      render: (value: number) => `₹${value?.toFixed(2)}`,
-    },
-    {
-      key: 'lastPrice',
-      header: 'Last Price',
-      render: (value: number) => `₹${value?.toFixed(2)}`,
-    },
-    {
-      key: 'pnl',
-      header: 'P&L',
-      render: (value: number) => (
-        <span className={`pnl-value ${value >= 0 ? 'positive' : 'negative'}`}>
-          ₹{value?.toFixed(2)}
-        </span>
-      ),
-    },
-    {
-      key: 'pnlPercentage',
-      header: 'P&L %',
-      render: (value: number) => (
-        <span className={`pnl-value ${value >= 0 ? 'positive' : 'negative'}`}>
-          {value?.toFixed(2)}%
-        </span>
-      ),
-    },
-    {
-      key: 'product',
-      header: 'Product',
-      render: (value: string) => <span className="product-badge">{value}</span>,
-    },
-  ];
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading accounts...</p>
+          </div>
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <>
@@ -125,76 +50,12 @@ export default function PositionsPage() {
           <p>Track your current trading positions</p>
         </div>
 
-        {!selectedAccount ? (
-          /* No Account Selected State */
-          <div className="empty-state-container">
-            <div className="empty-state">
-              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Users className="w-10 h-10 text-gray-600" />
-              </div>
-              <h2>Select Your Account</h2>
-              <p className="empty-description">
-                Choose a trading account from the header dropdown to view your current positions and track your trades.
-              </p>
-              <div className="mt-4 text-sm text-gray-500">
-                {binanceAccounts.length > 0 
-                  ? `Found ${binanceAccounts.length} connected account${binanceAccounts.length > 1 ? 's' : ''}`
-                  : 'No accounts found. Add an account to get started.'
-                }
-              </div>
-            </div>
-          </div>
-        ) : positions.length === 0 && !loading && !error ? (
-          /* No Positions State */
-          <div className="empty-state-container">
-            <div className="empty-state">
-              <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <BarChart3 className="w-10 h-10 text-orange-600" />
-              </div>
-              <h2>No Open Positions</h2>
-              <p className="empty-description">
-                You don't have any open positions right now. Start trading to see your positions here.
-              </p>
-              
-              <div className="empty-state-features">
-                <div className="feature-item">
-                  <TrendingUp className="feature-icon" size={20} />
-                  <span>Track live P&L</span>
-                </div>
-                <div className="feature-item">
-                  <BarChart3 className="feature-icon" size={20} />
-                  <span>Monitor position performance</span>
-                </div>
-              </div>
-
-              <Button 
-                className="mt-6"
-                onClick={() => window.location.href = '/market-watch'}
-              >
-                Start Trading
-              </Button>
-              
-              <div className="text-xs text-gray-500 mt-4">
-                Your positions will appear here once you execute trades
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* Positions Exist - Show Table */
-          <>
-            {error && (
-              <div className="error-message">
-                <p>⚠️ {error}</p>
-              </div>
-            )}
-
-            <Table
-              columns={columns}
-              data={positions}
-              emptyMessage="You don't have any open positions today."
-            />
-          </>
-        )}
+        {/* Show positions card with the selected account from context */}
+        <PositionsCard
+          accounts={selectedAccount ? [selectedAccount] : tradingAccounts}
+          selectedAccountId={selectedAccount?._id}
+          className="mt-6"
+        />
       </PageLayout>
 
       <style jsx>{`

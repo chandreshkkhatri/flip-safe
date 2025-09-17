@@ -28,10 +28,18 @@ interface FundsCardProps {
   className?: string;
 }
 
+interface AccountError {
+  accountId: string;
+  accountName: string;
+  requiresReauth: boolean;
+  message: string;
+}
+
 export default function FundsCard({ accounts, selectedAccountId, className }: FundsCardProps) {
   const [fundsData, setFundsData] = useState<UnifiedFundsResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [accountErrors, setAccountErrors] = useState<AccountError[]>([]);
   const [refreshing, setRefreshing] = useState<string | null>(null);
 
   // Filter accounts to show - if selectedAccountId is provided, show only that account
@@ -58,10 +66,25 @@ export default function FundsCard({ accounts, selectedAccountId, className }: Fu
       } else {
         throw new Error(response.data?.error || 'Failed to fetch funds');
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch funds';
-      setError(`${account.accountName}: ${errorMessage}`);
+    } catch (err: any) {
       console.error(`Error fetching funds for ${account.accountName}:`, err);
+
+      // Check if it's a 401 error (authentication failure)
+      if (err.response?.status === 401) {
+        const errorData = err.response?.data;
+        setAccountErrors(prev => {
+          const filtered = prev.filter(e => e.accountId !== account._id);
+          return [...filtered, {
+            accountId: account._id!,
+            accountName: account.accountName,
+            requiresReauth: errorData?.requiresReauth || true,
+            message: errorData?.error || 'Authentication failed. Please re-authenticate your account.'
+          }];
+        });
+      } else {
+        const errorMessage = err.response?.data?.error || err.message || 'Failed to fetch funds';
+        setError(`${account.accountName}: ${errorMessage}`);
+      }
     } finally {
       if (isRefresh) {
         setRefreshing(null);
@@ -74,6 +97,7 @@ export default function FundsCard({ accounts, selectedAccountId, className }: Fu
 
     setLoading(true);
     setError(null);
+    setAccountErrors([]);
     setFundsData([]);
 
     try {
@@ -184,11 +208,53 @@ export default function FundsCard({ accounts, selectedAccountId, className }: Fu
         </div>
       )}
 
+      {/* Authentication Errors */}
+      {accountErrors.length > 0 && (
+        <div className="auth-errors-container">
+          {accountErrors.map(error => {
+            const account = accountsToShow.find(a => a._id === error.accountId);
+            if (!account) return null;
+
+            return (
+              <div key={error.accountId} className="auth-error-alert">
+                <div className="auth-error-content">
+                  <AlertTriangle className="auth-error-icon" size={20} />
+                  <div className="auth-error-details">
+                    <div className="auth-error-title">
+                      {error.accountName} - Authentication Required
+                    </div>
+                    <div className="auth-error-message">{error.message}</div>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    // Handle re-authentication based on account type
+                    if (account.accountType === 'upstox') {
+                      window.location.href = `/api/auth/upstox?accountId=${account._id}`;
+                    } else if (account.accountType === 'kite') {
+                      window.location.href = `/api/auth/kite?accountId=${account._id}`;
+                    }
+                  }}
+                >
+                  Re-authenticate
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Individual Account Cards */}
       <div className="accounts-grid">
         {accountsToShow.map(account => {
           const accountFunds = fundsData.find(f => f.accountId === account._id);
           const isRefreshing = refreshing === account._id;
+          const hasAuthError = accountErrors.some(e => e.accountId === account._id);
+
+          // Skip rendering if account has auth error
+          if (hasAuthError) return null;
 
           return (
             <div key={account._id} className="account-funds-card">

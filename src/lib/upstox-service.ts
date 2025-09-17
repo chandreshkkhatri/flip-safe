@@ -544,6 +544,21 @@ class UpstoxService {
       if (!response.ok) {
         console.error('Funds API failed:', responseData);
 
+        // Check for token expiry or invalid token error (401 Unauthorized)
+        if (response.status === 401 && responseData.errors) {
+          const tokenError = responseData.errors.find((e: any) =>
+            e.errorCode === 'UDAPI100050' || // Invalid token
+            e.errorCode === 'UDAPI100051' || // Token expired
+            e.errorCode === 'UDAPI100052'    // Token not found
+          );
+          if (tokenError) {
+            const error = new Error(`Authentication failed: ${tokenError.message}. Please re-authenticate your Upstox account.`);
+            (error as any).code = 'TOKEN_EXPIRED';
+            (error as any).statusCode = 401;
+            throw error;
+          }
+        }
+
         // Check for time restriction error
         if (response.status === 423 && responseData.errors) {
           const timeError = responseData.errors.find((e: any) => e.errorCode === 'UDAPI100072');
@@ -595,11 +610,107 @@ class UpstoxService {
    * Get positions
    */
   async getPositions(): Promise<UpstoxPosition[]> {
-    const portfolioApi = new UpstoxClient.PortfolioApi(this.client);
-    const apiVersion = '2.0';
+    console.log('Upstox service getPositions called');
+    console.log('Has client:', !!this.client);
+    console.log('Has access token:', !!this.accessToken);
+    console.log('Is sandbox mode:', this.isSandbox);
 
-    const response = await limiter.schedule(() => portfolioApi.getPositions(apiVersion));
-    return response.data;
+    if (!this.client) {
+      throw new Error('Upstox client not initialized. Call initializeWithCredentials() first.');
+    }
+
+    if (!this.accessToken) {
+      throw new Error('Access token not set. Call setAccessToken() first.');
+    }
+
+    // For sandbox mode, return mock data
+    if (this.isSandbox) {
+      console.log('Returning sandbox mock positions data');
+      return [
+        {
+          exchange: 'NSE',
+          multiplier: 1,
+          value: 250000,
+          pnl: 5000,
+          product: 'I',
+          instrument_token: 'NSE_EQ|INE002A01018',
+          average_price: 2450,
+          buy_value: 245000,
+          overnight_quantity: 0,
+          day_buy_value: 245000,
+          day_buy_price: 2450,
+          overnight_buy_amount: 0,
+          overnight_buy_quantity: 0,
+          day_buy_quantity: 100,
+          day_sell_value: 0,
+          day_sell_price: 0,
+          overnight_sell_amount: 0,
+          overnight_sell_quantity: 0,
+          day_sell_quantity: 0,
+          quantity: 100,
+          last_price: 2500,
+          unrealised: 5000,
+          realised: 0,
+          sell_value: 0,
+          tradingsymbol: 'RELIANCE',
+          trading_symbol: 'RELIANCE',
+          close_price: 2460,
+          buy_price: 2450,
+          sell_price: 0
+        }
+      ];
+    }
+
+    try {
+      // Direct API call for better error handling
+      const positionsEndpoint = `https://api.upstox.com/v2/portfolio/short-term-positions`;
+
+      console.log('Calling Upstox positions API...');
+      const response = await fetch(positionsEndpoint, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Api-Version': '2.0'
+        }
+      });
+
+      const responseData = await response.json();
+      console.log('Upstox positions response status:', response.status);
+
+      if (!response.ok) {
+        console.error('Positions API failed:', responseData);
+
+        // Check for token expiry or invalid token error
+        if (response.status === 401 && responseData.errors) {
+          const tokenError = responseData.errors.find((e: any) =>
+            e.errorCode === 'UDAPI100050' || // Invalid token
+            e.errorCode === 'UDAPI100051' || // Token expired
+            e.errorCode === 'UDAPI100052'    // Token not found
+          );
+          if (tokenError) {
+            const error = new Error(`Authentication failed: ${tokenError.message}. Please re-authenticate your Upstox account.`);
+            (error as any).code = 'TOKEN_EXPIRED';
+            (error as any).statusCode = 401;
+            throw error;
+          }
+        }
+
+        throw new Error(responseData.message || responseData.error || 'Failed to fetch positions');
+      }
+
+      console.log('Upstox getPositions result:', responseData);
+
+      // Return the positions array from the response
+      if (responseData.data) {
+        return Array.isArray(responseData.data) ? responseData.data : [];
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Error in Upstox getPositions:', error);
+      throw error;
+    }
   }
 
   /**

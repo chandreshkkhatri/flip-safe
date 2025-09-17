@@ -255,19 +255,24 @@ export async function GET(request: NextRequest) {
         try {
           fundsData = await fetchKiteFunds(account);
           normalizedData = normalizeFundsData('kite', fundsData, accountId!, account.accountName);
-        } catch (error) {
+        } catch (error: any) {
           console.error('Kite funds API error:', error);
           const errorMessage = error instanceof Error ? error.message : 'Failed to fetch Kite funds';
           console.error('Returning error response:', errorMessage);
 
+          // Check if it's a token expiry error (Kite returns 403 for invalid sessions)
+          const statusCode = error.code === 'TOKEN_EXPIRED' || error.statusCode === 401 || error.statusCode === 403 ? 401 : 500;
+
           return NextResponse.json(
             {
               error: errorMessage,
+              code: error.code || undefined,
               accountName: account?.accountName,
               accountId: accountId,
+              requiresReauth: statusCode === 401,
               details: error instanceof Error ? error.stack : undefined
             },
-            { status: 500 }
+            { status: statusCode }
           );
         }
         break;
@@ -280,19 +285,24 @@ export async function GET(request: NextRequest) {
         try {
           fundsData = await fetchUpstoxFunds(account);
           normalizedData = normalizeFundsData('upstox', fundsData, accountId!, account.accountName);
-        } catch (error) {
+        } catch (error: any) {
           console.error('Upstox funds API error:', error);
           const errorMessage = error instanceof Error ? error.message : 'Failed to fetch Upstox funds';
           console.error('Returning error response:', errorMessage);
 
+          // Check if it's a token expiry error
+          const statusCode = error.code === 'TOKEN_EXPIRED' || error.statusCode === 401 ? 401 : 500;
+
           return NextResponse.json(
             {
               error: errorMessage,
+              code: error.code || undefined,
               accountName: account?.accountName,
               accountId: accountId,
+              requiresReauth: statusCode === 401,
               details: error instanceof Error ? error.stack : undefined
             },
-            { status: 500 }
+            { status: statusCode }
           );
         }
         break;
