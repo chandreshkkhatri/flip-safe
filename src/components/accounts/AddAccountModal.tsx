@@ -282,7 +282,8 @@ export default function AddAccountModal({ isOpen, onClose, onSubmit }: AddAccoun
                 </label>
               </div>
               <small className="form-help">
-                Enable this if you're using Upstox Sandbox API credentials. Disable for production/live trading.
+                Enable this if you're using Upstox Sandbox API credentials. Disable for
+                production/live trading.
               </small>
             </div>
           )}

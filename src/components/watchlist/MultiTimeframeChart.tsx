@@ -1,7 +1,14 @@
 'use client';
 
-import { ColorType, createChart, UTCTimestamp, IChartApi, CandlestickData, CandlestickSeries } from 'lightweight-charts';
-import React, { useEffect, useRef, useState, useCallback, memo } from 'react';
+import {
+  CandlestickData,
+  CandlestickSeries,
+  ColorType,
+  createChart,
+  IChartApi,
+  UTCTimestamp,
+} from 'lightweight-charts';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 interface MultiTimeframeChartProps {
   symbol: string;
@@ -34,18 +41,26 @@ const AVAILABLE_TIMEFRAMES = [
 const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
   const [selectedTimeframes, setSelectedTimeframes] = useState(DEFAULT_TIMEFRAMES);
   const [showTimeframeSelector, setShowTimeframeSelector] = useState(false);
-  const containerRefs = useRef<(HTMLDivElement | null)[]>(new Array(selectedTimeframes.length).fill(null));
+  const containerRefs = useRef<(HTMLDivElement | null)[]>(
+    new Array(selectedTimeframes.length).fill(null)
+  );
   const chartRefs = useRef<{ chart: IChartApi; series: any | null }[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [chartTimeframes, setChartTimeframes] = useState<{[index: number]: string}>({});
+  const [chartTimeframes, setChartTimeframes] = useState<{ [index: number]: string }>({});
   const [autoScale, setAutoScale] = useState(false);
   const [isLogScale, setIsLogScale] = useState(false);
-  
-  const setContainerRef = useCallback((index: number) => (el: HTMLDivElement | null) => {
-    console.log(`Setting container ref for index ${index}:`, el ? 'element found' : 'element is null');
-    containerRefs.current[index] = el;
-  }, []);
+
+  const setContainerRef = useCallback(
+    (index: number) => (el: HTMLDivElement | null) => {
+      console.log(
+        `Setting container ref for index ${index}:`,
+        el ? 'element found' : 'element is null'
+      );
+      containerRefs.current[index] = el;
+    },
+    []
+  );
 
   // Update container refs when timeframes change
   useEffect(() => {
@@ -57,7 +72,7 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
     if (timeframe && !selectedTimeframes.find(tf => tf.interval === interval)) {
       const newTimeframe = {
         ...timeframe,
-        index: selectedTimeframes.length
+        index: selectedTimeframes.length,
       };
       setSelectedTimeframes(prev => [...prev, newTimeframe]);
     }
@@ -65,7 +80,7 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
 
   const removeTimeframe = (index: number) => {
     if (selectedTimeframes.length > 1) {
-      setSelectedTimeframes(prev => 
+      setSelectedTimeframes(prev =>
         prev.filter((_, i) => i !== index).map((tf, i) => ({ ...tf, index: i }))
       );
       // Clean up chart timeframe override for removed chart
@@ -73,7 +88,7 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
         const newTimeframes = { ...prev };
         delete newTimeframes[index];
         // Reindex remaining timeframes
-        const reindexed: {[index: number]: string} = {};
+        const reindexed: { [index: number]: string } = {};
         Object.entries(newTimeframes).forEach(([oldIndex, timeframe]) => {
           const newIndex = parseInt(oldIndex) > index ? parseInt(oldIndex) - 1 : parseInt(oldIndex);
           reindexed[newIndex] = timeframe;
@@ -86,14 +101,14 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
   const changeChartTimeframe = (chartIndex: number, newTimeframe: string) => {
     setChartTimeframes(prev => ({
       ...prev,
-      [chartIndex]: newTimeframe
+      [chartIndex]: newTimeframe,
     }));
   };
 
   const createSingleChart = (container: HTMLDivElement) => {
     const isDarkMode = document.documentElement.classList.contains('dark');
     const isMobile = window.innerWidth <= 768;
-    
+
     // Calculate chart height based on auto-scale setting
     let chartHeight;
     if (autoScale) {
@@ -102,11 +117,13 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
     } else {
       chartHeight = isMobile ? 225 : 300;
     }
-    
+
     const containerWidth = Math.max(container.clientWidth || 300, 300);
 
-    console.log(`Creating chart with dimensions: ${containerWidth}x${chartHeight} (autoScale: ${autoScale})`);
-    
+    console.log(
+      `Creating chart with dimensions: ${containerWidth}x${chartHeight} (autoScale: ${autoScale})`
+    );
+
     const chart = createChart(container, {
       width: containerWidth,
       height: chartHeight,
@@ -150,9 +167,9 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
       wickDownColor: '#ef5350',
       wickUpColor: '#26a69a',
     };
-    
+
     const series = chart.addSeries(CandlestickSeries, candlestickOptions);
-    
+
     console.log('Candlestick series created:', series, typeof series);
 
     return { chart, series };
@@ -162,18 +179,20 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
     try {
       // Determine vendor based on symbol (USDT = Binance, others = Kite)
       const vendor = symbol.endsWith('USDT') ? 'binance' : 'kite';
-      const response = await fetch(`/api/historical-data?vendor=${vendor}&symbol=${symbol}&interval=${interval}`);
-      
+      const response = await fetch(
+        `/api/historical-data?vendor=${vendor}&symbol=${symbol}&interval=${interval}`
+      );
+
       if (!response.ok) {
         throw new Error(`Failed to fetch ${interval} data: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       if (!Array.isArray(data) || data.length === 0) {
         return [];
       }
-      
+
       return data.map((d: any) => ({
         time: (new Date(d.date).getTime() / 1000) as UTCTimestamp,
         open: d.open,
@@ -189,7 +208,7 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
 
   useEffect(() => {
     console.log('Initializing charts for symbol:', symbol);
-    
+
     const initializeCharts = async () => {
       try {
         setLoading(true);
@@ -207,9 +226,9 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
         });
         chartRefs.current = [];
 
-        // Wait for container refs to be available 
+        // Wait for container refs to be available
         await new Promise(resolve => setTimeout(resolve, 300));
-        
+
         // Create charts for all selected timeframes
         const promises = selectedTimeframes.map(async (timeframe, index) => {
           const container = containerRefs.current[index];
@@ -218,7 +237,12 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
             return null;
           }
 
-          console.log(`Container found for ${timeframe.label}, dimensions:`, container.clientWidth, 'x', container.clientHeight);
+          console.log(
+            `Container found for ${timeframe.label}, dimensions:`,
+            container.clientWidth,
+            'x',
+            container.clientHeight
+          );
 
           try {
             const { chart, series } = createSingleChart(container);
@@ -227,16 +251,20 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
             // Use individual chart timeframe if set, otherwise use default
             const actualTimeframe = chartTimeframes[index] || timeframe.interval;
             const data = await fetchChartData(actualTimeframe);
-            
+
             console.log(`Series object for ${timeframe.label}:`, series);
             console.log(`Data points:`, data.length);
-            
+
             if (data.length > 0 && series && typeof series.setData === 'function') {
               series.setData(data);
               chart.timeScale().fitContent();
-              console.log(`Chart ${timeframe.label} loaded successfully with ${data.length} data points`);
+              console.log(
+                `Chart ${timeframe.label} loaded successfully with ${data.length} data points`
+              );
             } else {
-              console.warn(`Cannot set data for ${timeframe.label}: series=${!!series}, setData=${typeof series?.setData}, dataLength=${data.length}`);
+              console.warn(
+                `Cannot set data for ${timeframe.label}: series=${!!series}, setData=${typeof series?.setData}, dataLength=${data.length}`
+              );
             }
 
             return { chart, series };
@@ -280,7 +308,7 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
       for (const [indexStr, timeframe] of Object.entries(chartTimeframes)) {
         const index = parseInt(indexStr);
         const chartRef = chartRefs.current[index];
-        
+
         if (chartRef && chartRef.series) {
           try {
             const data = await fetchChartData(timeframe);
@@ -328,8 +356,10 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
             }
 
             chart.resize(Math.max(container.clientWidth || 300, 300), chartHeight);
-            
-            console.log(`Updated chart ${index}: autoScale=${autoScale}, logScale=${isLogScale}, height=${chartHeight}`);
+
+            console.log(
+              `Updated chart ${index}: autoScale=${autoScale}, logScale=${isLogScale}, height=${chartHeight}`
+            );
           } catch (error) {
             console.error(`Error updating chart ${index} settings:`, error);
           }
@@ -363,7 +393,7 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
             >
               L
             </button>
-            <button 
+            <button
               className="add-timeframe-btn"
               onClick={() => setShowTimeframeSelector(!showTimeframeSelector)}
             >
@@ -371,12 +401,12 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
             </button>
           </div>
         </div>
-        
+
         {showTimeframeSelector && (
           <div className="timeframe-selector">
             <div className="available-timeframes">
-              {AVAILABLE_TIMEFRAMES.filter(tf => 
-                !selectedTimeframes.find(selected => selected.interval === tf.interval)
+              {AVAILABLE_TIMEFRAMES.filter(
+                tf => !selectedTimeframes.find(selected => selected.interval === tf.interval)
               ).map(timeframe => (
                 <button
                   key={timeframe.interval}
@@ -395,7 +425,7 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
       </div>
 
       {/* Charts */}
-      {selectedTimeframes.map((timeframe) => {
+      {selectedTimeframes.map(timeframe => {
         return (
           <div key={timeframe.interval} className="chart-section">
             <div className="chart-header">
@@ -404,7 +434,7 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
                 <span className="symbol-name">{symbol}</span>
                 <select
                   value={chartTimeframes[timeframe.index] || timeframe.interval}
-                  onChange={(e) => changeChartTimeframe(timeframe.index, e.target.value)}
+                  onChange={e => changeChartTimeframe(timeframe.index, e.target.value)}
                   className="timeframe-select"
                 >
                   {AVAILABLE_TIMEFRAMES.map(tf => (
@@ -703,8 +733,12 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
         }
 
         @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
         }
 
         @media (max-width: 768px) {

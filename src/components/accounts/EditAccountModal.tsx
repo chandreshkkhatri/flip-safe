@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
 import { IAccount } from '@/models/account';
+import { useEffect, useState } from 'react';
 
 interface EditAccountModalProps {
   isOpen: boolean;
@@ -12,7 +12,12 @@ interface EditAccountModalProps {
   onSave: (accountId: string, updates: Partial<IAccount>) => Promise<void>;
 }
 
-export default function EditAccountModal({ isOpen, onClose, account, onSave }: EditAccountModalProps) {
+export default function EditAccountModal({
+  isOpen,
+  onClose,
+  account,
+  onSave,
+}: EditAccountModalProps) {
   const [formData, setFormData] = useState({
     accountName: '',
     apiKey: '',
@@ -100,12 +105,7 @@ export default function EditAccountModal({ isOpen, onClose, account, onSave }: E
   if (!account) return null;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={`Edit ${account.accountName}`}
-      size="medium"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title={`Edit ${account.accountName}`} size="medium">
       <form onSubmit={handleSubmit} className="edit-account-form">
         {/* Account Name */}
         <div className="form-group">
@@ -149,7 +149,8 @@ export default function EditAccountModal({ isOpen, onClose, account, onSave }: E
             className="form-input"
           />
           <small className="form-help">
-            For security, the current API Secret is not shown. Enter a new one only if you want to update it.
+            For security, the current API Secret is not shown. Enter a new one only if you want to
+            update it.
           </small>
         </div>
 
@@ -188,9 +189,7 @@ export default function EditAccountModal({ isOpen, onClose, account, onSave }: E
                 Use Testnet
               </label>
             </div>
-            <small className="form-help">
-              Enable this for testing with Binance Testnet.
-            </small>
+            <small className="form-help">Enable this for testing with Binance Testnet.</small>
           </div>
         )}
 

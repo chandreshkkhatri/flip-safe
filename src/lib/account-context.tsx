@@ -1,9 +1,16 @@
 'use client';
 
-import React, { createContext, ReactNode, useContext, useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import { API_ROUTES } from './constants';
+import React, {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import { useAuth } from './auth-context';
+import { API_ROUTES } from './constants';
 
 interface TradingAccount {
   _id: string;
@@ -43,89 +50,92 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
   const [error, setError] = useState<string | null>(null);
   const { isLoggedIn, allowOfflineAccess } = useAuth();
 
-  const fetchAccounts = useCallback(async (isBackground = false) => {
-    const userId = 'default_user';
-    
-    // Check cache first
-    const cacheKey = 'accountsCache';
-    const cacheTimeKey = 'accountsCacheTime';
-    const cacheTime = 120000; // 2 minutes cache
-    
-    const cachedData = sessionStorage.getItem(cacheKey);
-    const cacheTimestamp = sessionStorage.getItem(cacheTimeKey);
-    
-    if (cachedData && cacheTimestamp && !isBackground) {
-      const now = Date.now();
-      if (now - parseInt(cacheTimestamp) < cacheTime) {
-        // Use cached data for immediate rendering
-        const cachedAccounts = JSON.parse(cachedData) as BinanceAccount[];
-        setAccounts(cachedAccounts);
-        
-        // Restore selected account from cache
-        const savedAccountId = sessionStorage.getItem('selectedAccountId');
-        if (savedAccountId && cachedAccounts.length > 0) {
-          const savedAccount = cachedAccounts.find(acc => acc._id === savedAccountId);
-          if (savedAccount) {
-            setSelectedAccountState(savedAccount);
-          }
-        }
-        
-        // Fetch fresh data in background
-        setTimeout(() => fetchAccounts(true), 100);
-        return;
-      }
-    }
-    
-    try {
-      if (!isBackground) {
-        setLoadingAccounts(true);
-      }
-      setError(null);
-      
-      const response = await axios.get(`${API_ROUTES.accounts.getAccounts}?userId=${userId}`, {
-        timeout: 5000, // Add timeout
-      });
-      
-      if (response.data?.success) {
-        const allAccounts = response.data.accounts as TradingAccount[];
+  const fetchAccounts = useCallback(
+    async (isBackground = false) => {
+      const userId = 'default_user';
 
-        // Update cache
-        sessionStorage.setItem(cacheKey, JSON.stringify(allAccounts));
-        sessionStorage.setItem(cacheTimeKey, Date.now().toString());
+      // Check cache first
+      const cacheKey = 'accountsCache';
+      const cacheTimeKey = 'accountsCacheTime';
+      const cacheTime = 120000; // 2 minutes cache
 
-        setAccounts(allAccounts);
-        
-        // Only update selected account if not already set
-        if (!selectedAccount) {
+      const cachedData = sessionStorage.getItem(cacheKey);
+      const cacheTimestamp = sessionStorage.getItem(cacheTimeKey);
+
+      if (cachedData && cacheTimestamp && !isBackground) {
+        const now = Date.now();
+        if (now - parseInt(cacheTimestamp) < cacheTime) {
+          // Use cached data for immediate rendering
+          const cachedAccounts = JSON.parse(cachedData) as BinanceAccount[];
+          setAccounts(cachedAccounts);
+
+          // Restore selected account from cache
           const savedAccountId = sessionStorage.getItem('selectedAccountId');
-          
-          if (savedAccountId && allAccounts.length > 0) {
-            const savedAccount = allAccounts.find(acc => acc._id === savedAccountId);
+          if (savedAccountId && cachedAccounts.length > 0) {
+            const savedAccount = cachedAccounts.find(acc => acc._id === savedAccountId);
             if (savedAccount) {
               setSelectedAccountState(savedAccount);
-            } else {
+            }
+          }
+
+          // Fetch fresh data in background
+          setTimeout(() => fetchAccounts(true), 100);
+          return;
+        }
+      }
+
+      try {
+        if (!isBackground) {
+          setLoadingAccounts(true);
+        }
+        setError(null);
+
+        const response = await axios.get(`${API_ROUTES.accounts.getAccounts}?userId=${userId}`, {
+          timeout: 5000, // Add timeout
+        });
+
+        if (response.data?.success) {
+          const allAccounts = response.data.accounts as TradingAccount[];
+
+          // Update cache
+          sessionStorage.setItem(cacheKey, JSON.stringify(allAccounts));
+          sessionStorage.setItem(cacheTimeKey, Date.now().toString());
+
+          setAccounts(allAccounts);
+
+          // Only update selected account if not already set
+          if (!selectedAccount) {
+            const savedAccountId = sessionStorage.getItem('selectedAccountId');
+
+            if (savedAccountId && allAccounts.length > 0) {
+              const savedAccount = allAccounts.find(acc => acc._id === savedAccountId);
+              if (savedAccount) {
+                setSelectedAccountState(savedAccount);
+              } else {
+                const defaultAccount = allAccounts.find(acc => acc.isActive) || allAccounts[0];
+                setSelectedAccountState(defaultAccount);
+                sessionStorage.setItem('selectedAccountId', defaultAccount._id);
+              }
+            } else if (allAccounts.length > 0) {
               const defaultAccount = allAccounts.find(acc => acc.isActive) || allAccounts[0];
               setSelectedAccountState(defaultAccount);
               sessionStorage.setItem('selectedAccountId', defaultAccount._id);
             }
-          } else if (allAccounts.length > 0) {
-            const defaultAccount = allAccounts.find(acc => acc.isActive) || allAccounts[0];
-            setSelectedAccountState(defaultAccount);
-            sessionStorage.setItem('selectedAccountId', defaultAccount._id);
           }
         }
+      } catch (error) {
+        if (!isBackground) {
+          setError('Failed to fetch accounts');
+          setAccounts([]);
+        }
+      } finally {
+        if (!isBackground) {
+          setLoadingAccounts(false);
+        }
       }
-    } catch (error) {
-      if (!isBackground) {
-        setError('Failed to fetch accounts');
-        setAccounts([]);
-      }
-    } finally {
-      if (!isBackground) {
-        setLoadingAccounts(false);
-      }
-    }
-  }, [selectedAccount]);
+    },
+    [selectedAccount]
+  );
 
   // Custom setter that also updates sessionStorage
   const setSelectedAccount = useCallback((account: TradingAccount | null) => {
@@ -143,7 +153,7 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
     const cacheKey = 'accountsCache';
     const cachedData = sessionStorage.getItem(cacheKey);
     const savedAccountId = sessionStorage.getItem('selectedAccountId');
-    
+
     if (cachedData) {
       try {
         const cachedAccounts = JSON.parse(cachedData) as TradingAccount[];
@@ -155,10 +165,9 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
             setSelectedAccountState(savedAccount);
           }
         }
-      } catch (error) {
-      }
+      } catch (error) {}
     }
-    
+
     // Fetch fresh data only if logged in or offline access allowed
     if (isLoggedIn || allowOfflineAccess) {
       // Small delay to allow for immediate rendering

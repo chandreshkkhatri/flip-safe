@@ -1,13 +1,12 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import PageLayout from '@/components/layout/PageLayout';
-import AccountSelector from '@/components/account-selector/AccountSelector';
-import { useAuth } from '@/lib/auth-context';
+import { Button } from '@/components/ui/button';
 import { useAccount } from '@/lib/account-context';
-import { useEffect, useState, lazy, Suspense } from 'react';
+import { useAuth } from '@/lib/auth-context';
+import { Activity, ShieldCheck, TrendingUp, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { Activity, Users, ShieldCheck, TrendingUp } from 'lucide-react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 
 // Dynamic import for heavy components
 const Watchlist = lazy(() => import('@/components/watchlist/Watchlist'));
@@ -30,14 +29,13 @@ interface FundsData {
   totalUsdValue: number;
 }
 
-
 const TRADING_TIPS = [
-  "📊 Never risk more than 2% of your portfolio on a single trade",
-  "🎯 Set stop-loss orders for every position to limit downside risk",
-  "📈 Diversify across different sectors to reduce concentration risk",
-  "⏰ Avoid emotional trading during high volatility periods",
-  "📝 Keep a trading journal to learn from wins and losses",
-  "💰 Take partial profits when targets are reached",
+  '📊 Never risk more than 2% of your portfolio on a single trade',
+  '🎯 Set stop-loss orders for every position to limit downside risk',
+  '📈 Diversify across different sectors to reduce concentration risk',
+  '⏰ Avoid emotional trading during high volatility periods',
+  '📝 Keep a trading journal to learn from wins and losses',
+  '💰 Take partial profits when targets are reached',
 ];
 
 export default function MarketWatchPage() {
@@ -48,12 +46,17 @@ export default function MarketWatchPage() {
   const [fundsError, setFundsError] = useState<string | null>(null);
   const [marketType] = useState('binance-futures');
   const { isLoggedIn, allowOfflineAccess, runOfflineMode } = useAuth();
-  const { selectedAccount, setSelectedAccount, accounts: binanceAccounts, loadingAccounts: accountsLoading } = useAccount();
+  const {
+    selectedAccount,
+    setSelectedAccount,
+    accounts: binanceAccounts,
+    loadingAccounts: accountsLoading,
+  } = useAccount();
 
   // Rotate trading tips every 10 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setSelectedTip((prev) => (prev + 1) % TRADING_TIPS.length);
+      setSelectedTip(prev => (prev + 1) % TRADING_TIPS.length);
     }, 10000);
     return () => clearInterval(interval);
   }, []);
@@ -74,7 +77,9 @@ export default function MarketWatchPage() {
           setFundsError(null);
 
           // Use the new unified funds API
-          const response = await fetch(`/api/funds?vendor=binance&accountId=${selectedAccount._id}`);
+          const response = await fetch(
+            `/api/funds?vendor=binance&accountId=${selectedAccount._id}`
+          );
           const result = await response.json();
 
           if (!response.ok || !result.success) {
@@ -107,7 +112,10 @@ export default function MarketWatchPage() {
           });
 
           // Calculate total USD value
-          const totalUsdValue = assetsWithUsdValue.reduce((total: number, asset: any) => total + asset.usdValue, 0);
+          const totalUsdValue = assetsWithUsdValue.reduce(
+            (total: number, asset: any) => total + asset.usdValue,
+            0
+          );
 
           const fundsData: FundsData = {
             totalWalletBalance: parseFloat(rawData.totalWalletBalance),
@@ -124,11 +132,17 @@ export default function MarketWatchPage() {
           console.error('Error fetching funds:', error);
           // Provide more specific error messages
           if (error.message?.includes('Invalid API')) {
-            setFundsError('Invalid API credentials. Please check your Binance API keys in the Accounts page.');
+            setFundsError(
+              'Invalid API credentials. Please check your Binance API keys in the Accounts page.'
+            );
           } else if (error.message?.includes('IP not whitelisted')) {
-            setFundsError('IP not whitelisted. Please add your IP to the API key whitelist in Binance.');
+            setFundsError(
+              'IP not whitelisted. Please add your IP to the API key whitelist in Binance.'
+            );
           } else if (error.message?.includes('permissions')) {
-            setFundsError('Insufficient API permissions. Please enable Futures trading for your API key.');
+            setFundsError(
+              'Insufficient API permissions. Please enable Futures trading for your API key.'
+            );
           } else {
             setFundsError(error.message || 'Failed to fetch account balance');
           }
@@ -149,9 +163,6 @@ export default function MarketWatchPage() {
 
     fetchFunds();
   }, [selectedAccount, binanceAccounts]);
-
-
-
 
   return (
     <PageLayout>
@@ -176,13 +187,15 @@ export default function MarketWatchPage() {
           {/* Watchlist Section or Market Overview */}
           <div className="watchlist-section">
             {selectedAccount ? (
-              <Suspense fallback={
-                <div className="watchlist-loading">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-center text-gray-600">Loading market data...</p>
-                </div>
-              }>
-                <Watchlist 
+              <Suspense
+                fallback={
+                  <div className="watchlist-loading">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-center text-gray-600">Loading market data...</p>
+                  </div>
+                }
+              >
+                <Watchlist
                   binanceAccounts={binanceAccounts}
                   selectedAccount={selectedAccount}
                   marketType={marketType}
@@ -198,9 +211,10 @@ export default function MarketWatchPage() {
                     </div>
                     <h2>Welcome to Market Watch</h2>
                     <p className="empty-description">
-                      Connect your Binance account to start monitoring your personalized watchlist with real-time market data.
+                      Connect your Binance account to start monitoring your personalized watchlist
+                      with real-time market data.
                     </p>
-                    
+
                     <div className="features-grid">
                       <div className="feature-card">
                         <TrendingUp className="feature-icon" size={24} />
@@ -219,7 +233,7 @@ export default function MarketWatchPage() {
                       </div>
                     </div>
 
-                    <Button 
+                    <Button
                       size="lg"
                       variant="default"
                       onClick={() => router.push('/accounts')}
@@ -236,15 +250,17 @@ export default function MarketWatchPage() {
                     </div>
                     <h2>Select Your Account</h2>
                     <p className="empty-description">
-                      Choose an account from the dropdown above to view your personalized watchlist and start trading.
+                      Choose an account from the dropdown above to view your personalized watchlist
+                      and start trading.
                     </p>
-                    
+
                     <div className="select-account-prompt">
                       <p>👆 Select an account from the dropdown above to get started</p>
                     </div>
-                    
+
                     <div className="mt-6 text-sm text-gray-500">
-                      Found {binanceAccounts.length} connected account{binanceAccounts.length > 1 ? 's' : ''}
+                      Found {binanceAccounts.length} connected account
+                      {binanceAccounts.length > 1 ? 's' : ''}
                     </div>
                   </div>
                 )}
@@ -255,7 +271,7 @@ export default function MarketWatchPage() {
           {/* Risk Management Panel */}
           <div className="risk-panel">
             <h3>Risk Management Tools</h3>
-            
+
             <div className="portfolio-summary">
               {!selectedAccount ? (
                 <div className="no-account-selected">
@@ -264,7 +280,9 @@ export default function MarketWatchPage() {
                       <div className="w-12 h-12 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-3">
                         <Users className="w-6 h-6 text-muted-foreground" />
                       </div>
-                      <p className="text-sm text-muted-foreground">Select an account to view balance</p>
+                      <p className="text-sm text-muted-foreground">
+                        Select an account to view balance
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -278,7 +296,16 @@ export default function MarketWatchPage() {
                   <span>⚠️ {fundsError}</span>
                   {fundsError.includes('API') && (
                     <div className="error-action">
-                      <a href="/accounts" style={{ color: 'inherit', textDecoration: 'underline', fontSize: '0.85rem', marginTop: '8px', display: 'inline-block' }}>
+                      <a
+                        href="/accounts"
+                        style={{
+                          color: 'inherit',
+                          textDecoration: 'underline',
+                          fontSize: '0.85rem',
+                          marginTop: '8px',
+                          display: 'inline-block',
+                        }}
+                      >
                         Go to Accounts →
                       </a>
                     </div>
@@ -288,16 +315,31 @@ export default function MarketWatchPage() {
                 <>
                   <div className="portfolio-item">
                     <span className="label">Total Balance:</span>
-                    <span className="value">${fundsData.totalUsdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span className="value">
+                      $
+                      {fundsData.totalUsdValue.toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
                   </div>
                   <div className="portfolio-item">
                     <span className="label">Available Balance:</span>
-                    <span className="value">${fundsData.availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span className="value">
+                      $
+                      {fundsData.availableBalance.toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
                   </div>
                   <div className="portfolio-item">
                     <span className="label">Unrealized P&L:</span>
-                    <span className={`value ${fundsData.totalUnrealizedProfit >= 0 ? 'positive' : 'negative'}`}>
-                      ${fundsData.totalUnrealizedProfit >= 0 ? '+' : ''}${fundsData.totalUnrealizedProfit.toFixed(2)}
+                    <span
+                      className={`value ${fundsData.totalUnrealizedProfit >= 0 ? 'positive' : 'negative'}`}
+                    >
+                      ${fundsData.totalUnrealizedProfit >= 0 ? '+' : ''}$
+                      {fundsData.totalUnrealizedProfit.toFixed(2)}
                     </span>
                   </div>
                   <div className="portfolio-item">
@@ -315,20 +357,28 @@ export default function MarketWatchPage() {
 
             <div className="risk-calculator">
               <h4>Position Size Calculator</h4>
-              <p className="calculator-desc">Calculate safe position sizes based on your risk tolerance</p>
-              
+              <p className="calculator-desc">
+                Calculate safe position sizes based on your risk tolerance
+              </p>
+
               <div className="risk-examples">
                 <div className="risk-example">
                   <span className="risk-label">1% Risk:</span>
-                  <span className="risk-amount">${fundsData ? (fundsData.totalUsdValue * 0.01).toFixed(2) : '0.00'}</span>
+                  <span className="risk-amount">
+                    ${fundsData ? (fundsData.totalUsdValue * 0.01).toFixed(2) : '0.00'}
+                  </span>
                 </div>
                 <div className="risk-example">
                   <span className="risk-label">2% Risk:</span>
-                  <span className="risk-amount">${fundsData ? (fundsData.totalUsdValue * 0.02).toFixed(2) : '0.00'}</span>
+                  <span className="risk-amount">
+                    ${fundsData ? (fundsData.totalUsdValue * 0.02).toFixed(2) : '0.00'}
+                  </span>
                 </div>
                 <div className="risk-example">
                   <span className="risk-label">3% Risk:</span>
-                  <span className="risk-amount">${fundsData ? (fundsData.totalUsdValue * 0.03).toFixed(2) : '0.00'}</span>
+                  <span className="risk-amount">
+                    ${fundsData ? (fundsData.totalUsdValue * 0.03).toFixed(2) : '0.00'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -351,7 +401,6 @@ export default function MarketWatchPage() {
           </div>
         </div>
 
-
         <style jsx>{`
           .market-watch-container {
             display: flex;
@@ -367,7 +416,7 @@ export default function MarketWatchPage() {
             padding: 24px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           }
-          
+
           :global(.dark) .market-header {
             background: #18181b !important;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -384,7 +433,7 @@ export default function MarketWatchPage() {
             color: #333;
             margin-bottom: 8px;
           }
-          
+
           :global(.dark) .header-content h1 {
             color: #ffffff !important;
           }
@@ -393,12 +442,10 @@ export default function MarketWatchPage() {
             color: #666;
             font-size: 1rem;
           }
-          
+
           :global(.dark) .subtitle {
             color: #a1a1aa !important;
           }
-
-
 
           .tip-banner {
             background: linear-gradient(135deg, #3b82f6, #1e40af);
@@ -554,7 +601,6 @@ export default function MarketWatchPage() {
             color: #93c5fd !important;
           }
 
-
           .funds-loading {
             display: flex;
             align-items: center;
@@ -581,8 +627,12 @@ export default function MarketWatchPage() {
           }
 
           @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(360deg);
+            }
           }
 
           .risk-panel {
@@ -592,7 +642,7 @@ export default function MarketWatchPage() {
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             height: fit-content;
           }
-          
+
           :global(.dark) .risk-panel {
             background: #18181b !important;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -604,7 +654,7 @@ export default function MarketWatchPage() {
             color: #333;
             margin-bottom: 20px;
           }
-          
+
           :global(.dark) .risk-panel h3 {
             color: #ffffff !important;
           }
@@ -618,7 +668,7 @@ export default function MarketWatchPage() {
             background: #f8f9fa;
             border-radius: 8px;
           }
-          
+
           :global(.dark) .portfolio-summary {
             background: #27272a !important;
           }
@@ -633,7 +683,7 @@ export default function MarketWatchPage() {
             color: #666;
             font-size: 0.9rem;
           }
-          
+
           :global(.dark) .portfolio-item .label {
             color: #a1a1aa !important;
           }
@@ -642,7 +692,7 @@ export default function MarketWatchPage() {
             font-weight: 600;
             color: #333;
           }
-          
+
           :global(.dark) .portfolio-item .value {
             color: #ffffff !important;
           }
@@ -665,7 +715,7 @@ export default function MarketWatchPage() {
             color: #333;
             margin-bottom: 8px;
           }
-          
+
           :global(.dark) .risk-calculator h4 {
             color: #ffffff !important;
           }
@@ -675,7 +725,7 @@ export default function MarketWatchPage() {
             font-size: 0.9rem;
             margin-bottom: 16px;
           }
-          
+
           :global(.dark) .calculator-desc {
             color: #a1a1aa !important;
           }
@@ -693,7 +743,7 @@ export default function MarketWatchPage() {
             background: #f0f9ff;
             border-radius: 6px;
           }
-          
+
           :global(.dark) .risk-example {
             background: #1e3a8a !important;
           }
@@ -702,7 +752,7 @@ export default function MarketWatchPage() {
             color: #1e40af;
             font-weight: 500;
           }
-          
+
           :global(.dark) .risk-label {
             color: #60a5fa !important;
           }
@@ -711,7 +761,7 @@ export default function MarketWatchPage() {
             color: #1e40af;
             font-weight: 600;
           }
-          
+
           :global(.dark) .risk-amount {
             color: #93c5fd !important;
           }
@@ -722,7 +772,7 @@ export default function MarketWatchPage() {
             color: #333;
             margin-bottom: 12px;
           }
-          
+
           :global(.dark) .trading-rules h4 {
             color: #ffffff !important;
           }
@@ -739,12 +789,12 @@ export default function MarketWatchPage() {
             font-size: 0.9rem;
             cursor: pointer;
           }
-          
+
           :global(.dark) .rule-item label {
             color: #ffffff !important;
           }
 
-          .rule-item input[type="checkbox"] {
+          .rule-item input[type='checkbox'] {
             cursor: pointer;
           }
 
@@ -753,7 +803,7 @@ export default function MarketWatchPage() {
             .main-content {
               grid-template-columns: 1fr;
             }
-            
+
             .account-selector-wrapper {
               flex-direction: column;
               gap: 8px;

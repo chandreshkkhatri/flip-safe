@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface RadixAccountModalProps {
   isOpen: boolean;
@@ -41,15 +41,15 @@ export default function RadixAccountModal({ isOpen, onClose, onSubmit }: RadixAc
     const checkDarkMode = () => {
       setIsDark(document.documentElement.classList.contains('dark'));
     };
-    
+
     checkDarkMode();
-    
+
     const observer = new MutationObserver(checkDarkMode);
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
+      attributeFilter: ['class'],
     });
-    
+
     return () => observer.disconnect();
   }, []);
 
@@ -151,11 +151,11 @@ export default function RadixAccountModal({ isOpen, onClose, onSubmit }: RadixAc
 
   return (
     <Dialog open={isOpen} onOpenChange={handleModalClose}>
-      <DialogContent 
-        className="max-w-2xl max-h-[90vh] overflow-y-auto" 
-        style={{ 
+      <DialogContent
+        className="max-w-2xl max-h-[90vh] overflow-y-auto"
+        style={{
           backgroundColor: isDark ? '#1e1e1e' : 'white',
-          background: isDark ? '#1e1e1e' : 'white'
+          background: isDark ? '#1e1e1e' : 'white',
         }}
       >
         <DialogHeader>

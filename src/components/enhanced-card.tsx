@@ -95,7 +95,6 @@ export default function EnhancedCard({
           border-color: ${customBackground ? 'rgba(255,255,255,0.4)' : 'var(--primary)'};
         }
 
-
         .card-overlay-link {
           position: absolute;
           top: 0;
@@ -171,7 +170,6 @@ export default function EnhancedCard({
           margin-top: auto;
           margin-bottom: 8px;
         }
-
 
         .card-action-container {
           display: flex;

@@ -102,10 +102,10 @@ export class BinanceAPI {
     if (!config.apiKey || !config.apiSecret) {
       throw new Error('API key and secret are required');
     }
-    
+
     this.apiKey = config.apiKey.trim();
     this.apiSecret = config.apiSecret.trim();
-    
+
     // Basic validation of API key format (Binance API keys are typically 64 characters)
     if (this.apiKey.length < 20 || this.apiKey.length > 100) {
       console.warn(`Unusual API key length: ${this.apiKey.length} characters`);
@@ -197,7 +197,7 @@ export class BinanceAPI {
         console.error('Binance API error details:', {
           code: error.response.data.code,
           msg: error.response.data.msg,
-          status: error.response.status
+          status: error.response.status,
         });
       }
       throw error;

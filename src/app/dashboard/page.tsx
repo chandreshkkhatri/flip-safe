@@ -1,18 +1,17 @@
 'use client';
 
 import EnhancedCard from '@/components/enhanced-card';
+import FundsCard from '@/components/funds/FundsCard';
 import PageLayout from '@/components/layout/PageLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import FundsCard from '@/components/funds/FundsCard';
 import { useAuth } from '@/lib/auth-context';
-import { getAccountsByUserId } from '@/models/account';
+import { API_ROUTES } from '@/lib/constants';
 import { IAccount } from '@/models/account';
+import axios from 'axios';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
-import { API_ROUTES } from '@/lib/constants';
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(false); // Start as false for immediate rendering
@@ -77,9 +76,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Funds Overview */}
-        {accounts.length > 0 && (
-          <FundsCard accounts={accounts} className="funds-overview" />
-        )}
+        {accounts.length > 0 && <FundsCard accounts={accounts} className="funds-overview" />}
 
         {/* Feature Cards */}
         <div className="feature-grid">
@@ -126,7 +123,6 @@ export default function DashboardPage() {
               </Button>
             }
           />
-
 
           <EnhancedCard
             title="Alerts"

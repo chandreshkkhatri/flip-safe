@@ -2,8 +2,8 @@
 
 import PageLayout from '@/components/layout/PageLayout';
 import PositionsCard from '@/components/positions/PositionsCard';
-import { useAuth } from '@/lib/auth-context';
 import { useAccount } from '@/lib/account-context';
+import { useAuth } from '@/lib/auth-context';
 import { useEffect } from 'react';
 
 export default function PositionsPage() {
@@ -21,8 +21,8 @@ export default function PositionsPage() {
   }, [isLoggedIn, allowOfflineAccess, runOfflineMode, accounts, loadingAccounts, fetchAccounts]);
 
   // Filter only Upstox and Kite accounts
-  const tradingAccounts = accounts.filter(acc =>
-    acc.isActive && (acc.accountType === 'upstox' || acc.accountType === 'kite')
+  const tradingAccounts = accounts.filter(
+    acc => acc.isActive && (acc.accountType === 'upstox' || acc.accountType === 'kite')
   );
 
   if (loadingAccounts) {

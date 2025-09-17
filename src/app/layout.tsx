@@ -1,5 +1,5 @@
-import { AuthProvider } from '@/lib/auth-context';
 import { AccountProvider } from '@/lib/account-context';
+import { AuthProvider } from '@/lib/auth-context';
 import { ThemeProvider } from '@/lib/theme-context';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';

@@ -7,13 +7,22 @@ export const dynamic = 'force-dynamic';
 const fetchBinanceKlines = async (symbol: string, interval: string) => {
   try {
     const limit = 100;
-    const binanceInterval = interval === '1m' ? '1m' :
-                           interval === '5m' ? '5m' :
-                           interval === '15m' ? '15m' :
-                           interval === '1h' ? '1h' :
-                           interval === '4h' ? '4h' :
-                           interval === '1d' ? '1d' :
-                           interval === '1w' ? '1w' : '1h';
+    const binanceInterval =
+      interval === '1m'
+        ? '1m'
+        : interval === '5m'
+          ? '5m'
+          : interval === '15m'
+            ? '15m'
+            : interval === '1h'
+              ? '1h'
+              : interval === '4h'
+                ? '4h'
+                : interval === '1d'
+                  ? '1d'
+                  : interval === '1w'
+                    ? '1w'
+                    : '1h';
 
     const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${binanceInterval}&limit=${limit}`;
 
@@ -74,28 +83,30 @@ const fetchUpstoxHistoricalData = async (params: {
 const generateMockHistoricalData = (symbol: string, interval: string) => {
   const now = Date.now();
   const dataPoints = 100;
-  const intervalMs = {
-    '1m': 60000,
-    '5m': 300000,
-    '15m': 900000,
-    '1h': 3600000,
-    '4h': 14400000,
-    '1d': 86400000,
-    '1w': 604800000,
-  }[interval] || 3600000;
+  const intervalMs =
+    {
+      '1m': 60000,
+      '5m': 300000,
+      '15m': 900000,
+      '1h': 3600000,
+      '4h': 14400000,
+      '1d': 86400000,
+      '1w': 604800000,
+    }[interval] || 3600000;
 
-  const basePrice = {
-    BTCUSDT: 45000,
-    ETHUSDT: 2500,
-    BNBUSDT: 300,
-    ADAUSDT: 0.5,
-    XRPUSDT: 0.6,
-    SOLUSDT: 100,
-    DOTUSDT: 7,
-    DOGEUSDT: 0.08,
-    AVAXUSDT: 35,
-    MATICUSDT: 0.9,
-  }[symbol] || 100;
+  const basePrice =
+    {
+      BTCUSDT: 45000,
+      ETHUSDT: 2500,
+      BNBUSDT: 300,
+      ADAUSDT: 0.5,
+      XRPUSDT: 0.6,
+      SOLUSDT: 100,
+      DOTUSDT: 7,
+      DOGEUSDT: 0.08,
+      AVAXUSDT: 35,
+      MATICUSDT: 0.9,
+    }[symbol] || 100;
 
   const data = [];
   let lastClose = basePrice;
@@ -160,7 +171,10 @@ export async function GET(request: NextRequest) {
 
           if (!instrument_token || !from_date || !to_date) {
             return NextResponse.json(
-              { error: 'Missing required parameters for Kite Connect: instrument_token, from_date, to_date' },
+              {
+                error:
+                  'Missing required parameters for Kite Connect: instrument_token, from_date, to_date',
+              },
               { status: 400 }
             );
           }
@@ -174,7 +188,10 @@ export async function GET(request: NextRequest) {
           });
         } catch (error) {
           return NextResponse.json(
-            { error: error instanceof Error ? error.message : 'Failed to fetch Kite historical data' },
+            {
+              error:
+                error instanceof Error ? error.message : 'Failed to fetch Kite historical data',
+            },
             { status: 500 }
           );
         }
@@ -198,7 +215,10 @@ export async function GET(request: NextRequest) {
           });
         } catch (error) {
           return NextResponse.json(
-            { error: error instanceof Error ? error.message : 'Failed to fetch Upstox historical data' },
+            {
+              error:
+                error instanceof Error ? error.message : 'Failed to fetch Upstox historical data',
+            },
             { status: 500 }
           );
         }
@@ -219,13 +239,9 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
       data: historicalData,
     });
-
   } catch (error) {
     console.error('Error fetching historical data:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch historical data' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch historical data' }, { status: 500 });
   }
 }
 
@@ -257,7 +273,10 @@ export async function POST(request: NextRequest) {
 
           if (!instrument_token || !from_date || !to_date) {
             return NextResponse.json(
-              { error: 'Missing required parameters for Kite Connect: instrument_token, from_date, to_date' },
+              {
+                error:
+                  'Missing required parameters for Kite Connect: instrument_token, from_date, to_date',
+              },
               { status: 400 }
             );
           }
@@ -271,7 +290,10 @@ export async function POST(request: NextRequest) {
           });
         } catch (error) {
           return NextResponse.json(
-            { error: error instanceof Error ? error.message : 'Failed to fetch Kite historical data' },
+            {
+              error:
+                error instanceof Error ? error.message : 'Failed to fetch Kite historical data',
+            },
             { status: 500 }
           );
         }
@@ -294,7 +316,10 @@ export async function POST(request: NextRequest) {
           });
         } catch (error) {
           return NextResponse.json(
-            { error: error instanceof Error ? error.message : 'Failed to fetch Upstox historical data' },
+            {
+              error:
+                error instanceof Error ? error.message : 'Failed to fetch Upstox historical data',
+            },
             { status: 500 }
           );
         }
@@ -315,12 +340,8 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
       data: historicalData,
     });
-
   } catch (error) {
     console.error('Error fetching historical data:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch historical data' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch historical data' }, { status: 500 });
   }
 }

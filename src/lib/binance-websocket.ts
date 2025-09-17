@@ -28,7 +28,7 @@ export class BinanceWebSocket implements WebSocketManager {
     if (this.isConnecting) {
       return;
     }
-    
+
     // If already connected, just update the callback and symbols
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.onMessageCallback = onMessage;
@@ -86,7 +86,7 @@ export class BinanceWebSocket implements WebSocketManager {
       this.ws.onclose = () => {
         console.log('Binance WebSocket disconnected');
         this.isConnecting = false;
-        
+
         // Only schedule reconnect if it wasn't an intentional disconnect
         if (!this.intentionalDisconnect) {
           this.scheduleReconnect();
@@ -120,7 +120,7 @@ export class BinanceWebSocket implements WebSocketManager {
   disconnect(): void {
     // Mark as intentional disconnect to prevent auto-reconnect
     this.intentionalDisconnect = true;
-    
+
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
@@ -132,7 +132,7 @@ export class BinanceWebSocket implements WebSocketManager {
       this.ws.onerror = null;
       this.ws.onmessage = null;
       this.ws.onopen = null;
-      
+
       // Only close if the WebSocket is fully open
       // Avoid closing CONNECTING sockets to prevent the warning
       if (this.ws.readyState === WebSocket.OPEN) {
@@ -142,7 +142,7 @@ export class BinanceWebSocket implements WebSocketManager {
         // The connection will fail naturally without error messages
         console.log('WebSocket still connecting, canceling...');
       }
-      
+
       this.ws = null;
     }
 

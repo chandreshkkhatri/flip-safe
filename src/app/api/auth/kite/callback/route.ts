@@ -1,6 +1,6 @@
+import kiteConnectService from '@/lib/kiteconnect-service';
 import connectDB from '@/lib/mongodb';
 import Account from '@/models/account';
-import kiteConnectService from '@/lib/kiteconnect-service';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -19,23 +19,17 @@ export async function GET(request: NextRequest) {
 
     // Check if authentication was successful
     if (status !== 'success' || action !== 'login') {
-      return NextResponse.redirect(
-        new URL('/accounts?error=kite_auth_failed', request.url)
-      );
+      return NextResponse.redirect(new URL('/accounts?error=kite_auth_failed', request.url));
     }
 
     if (!requestToken) {
-      return NextResponse.redirect(
-        new URL('/accounts?error=no_request_token', request.url)
-      );
+      return NextResponse.redirect(new URL('/accounts?error=no_request_token', request.url));
     }
 
     // Get account ID from cookie
     const accountId = request.cookies.get('kite_account_id')?.value;
     if (!accountId) {
-      return NextResponse.redirect(
-        new URL('/accounts?error=session_expired', request.url)
-      );
+      return NextResponse.redirect(new URL('/accounts?error=session_expired', request.url));
     }
 
     // Connect to database and fetch account
@@ -43,9 +37,7 @@ export async function GET(request: NextRequest) {
     const account = await Account.findById(accountId);
 
     if (!account) {
-      return NextResponse.redirect(
-        new URL('/accounts?error=account_not_found', request.url)
-      );
+      return NextResponse.redirect(new URL('/accounts?error=account_not_found', request.url));
     }
 
     // Initialize KiteConnect service with account credentials

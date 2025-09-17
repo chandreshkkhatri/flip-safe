@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, TrendingUp } from 'lucide-react';
+import { TrendingUp, Users } from 'lucide-react';
 
 interface TradingTabsProps {
   className?: string;
@@ -25,7 +25,11 @@ interface TradingTabsProps {
   hasAccount?: boolean;
 }
 
-export default function TradingTabs({ className = '', hasHoldings = false, hasAccount = true }: TradingTabsProps) {
+export default function TradingTabs({
+  className = '',
+  hasHoldings = false,
+  hasAccount = true,
+}: TradingTabsProps) {
   return (
     <div className={`trading-tabs-container ${className}`}>
       <Tabs defaultValue="orders" className="w-full">
@@ -123,14 +127,16 @@ export default function TradingTabs({ className = '', hasHoldings = false, hasAc
             </DropdownMenu>
           </div>
 
-{!hasAccount ? (
+          {!hasAccount ? (
             /* No Account Selected State */
             <div className="text-center py-12 px-6">
               <div className="max-w-sm mx-auto">
                 <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Users className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold text-muted-foreground mb-2">No Account Selected</h3>
+                <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+                  No Account Selected
+                </h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   Please select a trading account to view your portfolio holdings
                 </p>
@@ -146,7 +152,9 @@ export default function TradingTabs({ className = '', hasHoldings = false, hasAc
                 <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-4">
                   <TrendingUp className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold text-muted-foreground mb-2">No Holdings Yet</h3>
+                <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+                  No Holdings Yet
+                </h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   You don't have any stocks or securities in your portfolio yet
                 </p>
@@ -196,7 +204,9 @@ export default function TradingTabs({ className = '', hasHoldings = false, hasAc
                   <div className="grid grid-cols-8 gap-4 p-3 hover:bg-muted/50 rounded-lg border border-transparent hover:border-border/50 transition-all">
                     <div className="flex flex-col">
                       <div className="font-semibold">RELIANCE</div>
-                      <div className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full w-fit">NSE</div>
+                      <div className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full w-fit">
+                        NSE
+                      </div>
                     </div>
                     <div className="font-medium">50</div>
                     <div className="text-sm">₹2,200.00</div>
@@ -213,7 +223,9 @@ export default function TradingTabs({ className = '', hasHoldings = false, hasAc
                   <div className="grid grid-cols-8 gap-4 p-3 hover:bg-muted/50 rounded-lg border border-transparent hover:border-border/50 transition-all">
                     <div className="flex flex-col">
                       <div className="font-semibold">TCS</div>
-                      <div className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full w-fit">NSE</div>
+                      <div className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full w-fit">
+                        NSE
+                      </div>
                     </div>
                     <div className="font-medium">25</div>
                     <div className="text-sm">₹3,100.00</div>
@@ -230,7 +242,9 @@ export default function TradingTabs({ className = '', hasHoldings = false, hasAc
                   <div className="grid grid-cols-8 gap-4 p-3 hover:bg-muted/50 rounded-lg border border-transparent hover:border-border/50 transition-all">
                     <div className="flex flex-col">
                       <div className="font-semibold">INFY</div>
-                      <div className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full w-fit">NSE</div>
+                      <div className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full w-fit">
+                        NSE
+                      </div>
                     </div>
                     <div className="font-medium">10</div>
                     <div className="text-sm">₹1,850.00</div>

@@ -156,8 +156,11 @@ class UpstoxService {
   /**
    * Initialize with API credentials from account
    */
-  public initializeWithCredentials(apiKey: string, apiSecret: string, isSandbox: boolean = false): void {
-
+  public initializeWithCredentials(
+    apiKey: string,
+    apiSecret: string,
+    isSandbox: boolean = false
+  ): void {
     this.apiKey = apiKey;
     this.apiSecret = apiSecret;
     this.isSandbox = isSandbox;
@@ -172,7 +175,6 @@ class UpstoxService {
       } else {
         // Using production environment
       }
-
     } catch (error) {
       throw error;
     }
@@ -204,13 +206,11 @@ class UpstoxService {
    * Set access token after authentication
    */
   setAccessToken(accessToken: string): void {
-
     try {
       this.accessToken = accessToken;
       // Configure OAuth2 authentication
       const oauth = this.client.authentications['OAUTH2'];
       oauth.accessToken = accessToken;
-
     } catch (error) {
       throw error;
     }
@@ -257,7 +257,10 @@ class UpstoxService {
     console.log('Redirect URI (encoded):', encodeURIComponent(redirectUri));
     console.log('Client ID:', this.apiKey);
     console.log('Client ID length:', this.apiKey?.length);
-    console.log('Client ID format check (UUID-like):', /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(this.apiKey));
+    console.log(
+      'Client ID format check (UUID-like):',
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(this.apiKey)
+    );
     console.log('Scope (raw):', scope);
     console.log('Scope (encoded):', encodeURIComponent(scope));
 
@@ -302,24 +305,26 @@ class UpstoxService {
         client_id: this.apiKey,
         client_secret: this.apiSecret,
         redirect_uri: redirectUri,
-        grant_type: 'authorization_code'
+        grant_type: 'authorization_code',
       };
-
 
       const response = await fetch(tokenEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
         body: new URLSearchParams(requestData).toString(),
       });
 
       const responseData = await response.json();
 
-
       if (!response.ok) {
-        throw new Error(responseData.message || responseData.error || 'Failed to exchange authorization code for token');
+        throw new Error(
+          responseData.message ||
+            responseData.error ||
+            'Failed to exchange authorization code for token'
+        );
       }
 
       if (responseData && responseData.access_token) {
@@ -346,16 +351,18 @@ class UpstoxService {
       clientInitialized: !!this.client,
       clientBasePath: this.client?.basePath,
       apiKey: this.apiKey,
-      apiKeyValid: !!(this.apiKey && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(this.apiKey)),
+      apiKeyValid: !!(
+        this.apiKey &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(this.apiKey)
+      ),
       apiKeyLength: this.apiKey?.length,
       apiSecretProvided: !!this.apiSecret,
       redirectUri,
       redirectUriValid: this.isValidUrl(redirectUri),
       scope: this.isSandbox ? 'NSE|BSE' : 'NSE|BSE|NFO|CDS|MCX|BFO',
       loginUrl: this.getLoginURL(),
-      recommendations: this.getConfigurationRecommendations()
+      recommendations: this.getConfigurationRecommendations(),
     };
-
 
     return debugInfo;
   }
@@ -380,7 +387,9 @@ class UpstoxService {
 
     if (!this.apiKey) {
       recommendations.push('API Key is missing');
-    } else if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(this.apiKey)) {
+    } else if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(this.apiKey)
+    ) {
       recommendations.push('API Key format appears invalid (should be UUID format)');
     }
 
@@ -389,11 +398,19 @@ class UpstoxService {
     }
 
     if (this.isSandbox) {
-      recommendations.push('Using SANDBOX environment - ensure your app is configured as a sandbox app in Upstox Developer Portal');
-      recommendations.push('Verify that the redirect URI is exactly: http://localhost:3000/api/auth/upstox/callback');
-      recommendations.push('Sandbox apps might have limited scope access - using minimal scope NSE|BSE');
+      recommendations.push(
+        'Using SANDBOX environment - ensure your app is configured as a sandbox app in Upstox Developer Portal'
+      );
+      recommendations.push(
+        'Verify that the redirect URI is exactly: http://localhost:3000/api/auth/upstox/callback'
+      );
+      recommendations.push(
+        'Sandbox apps might have limited scope access - using minimal scope NSE|BSE'
+      );
     } else {
-      recommendations.push('Using PRODUCTION environment - ensure your app is live in Upstox Developer Portal');
+      recommendations.push(
+        'Using PRODUCTION environment - ensure your app is live in Upstox Developer Portal'
+      );
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
@@ -416,9 +433,7 @@ class UpstoxService {
       const tokenApi = new UpstoxClient.LoginApi(this.client);
       const apiVersion = '2.0';
 
-      const response = await limiter.schedule(() =>
-        tokenApi.logout(apiVersion, this.accessToken)
-      );
+      const response = await limiter.schedule(() => tokenApi.logout(apiVersion, this.accessToken));
 
       this.reset();
       return response;
@@ -441,7 +456,6 @@ class UpstoxService {
    * Get funds and margins
    */
   async getFunds(): Promise<UpstoxFunds> {
-
     if (!this.client) {
       throw new Error('Upstox client not initialized. Call initializeWithCredentials() first.');
     }
@@ -475,8 +489,8 @@ class UpstoxService {
           payin_amount_t0: 0,
           additional_leverage_amount: 0,
           utilized_amount: 2500,
-          available_credits: 0
-        }
+          available_credits: 0,
+        },
       };
     }
 
@@ -487,30 +501,30 @@ class UpstoxService {
         ? `https://api-sandbox.upstox.com/v2/user/get-funds-and-margin`
         : `https://api.upstox.com/v2/user/get-funds-and-margin`;
 
-
       const response = await fetch(fundEndpoint, {
         method: 'GET',
         headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${this.accessToken}`,
-          'Api-Version': apiVersion
-        }
+          Accept: 'application/json',
+          Authorization: `Bearer ${this.accessToken}`,
+          'Api-Version': apiVersion,
+        },
       });
 
       const responseData = await response.json();
 
-
       if (!response.ok) {
-
         // Check for token expiry or invalid token error (401 Unauthorized)
         if (response.status === 401 && responseData.errors) {
-          const tokenError = responseData.errors.find((e: any) =>
-            e.errorCode === 'UDAPI100050' || // Invalid token
-            e.errorCode === 'UDAPI100051' || // Token expired
-            e.errorCode === 'UDAPI100052'    // Token not found
+          const tokenError = responseData.errors.find(
+            (e: any) =>
+              e.errorCode === 'UDAPI100050' || // Invalid token
+              e.errorCode === 'UDAPI100051' || // Token expired
+              e.errorCode === 'UDAPI100052' // Token not found
           );
           if (tokenError) {
-            const error = new Error(`Authentication failed: ${tokenError.message}. Please re-authenticate your Upstox account.`);
+            const error = new Error(
+              `Authentication failed: ${tokenError.message}. Please re-authenticate your Upstox account.`
+            );
             (error as any).code = 'TOKEN_EXPIRED';
             (error as any).statusCode = 401;
             throw error;
@@ -545,10 +559,10 @@ class UpstoxService {
                 payin_amount_t0: 0,
                 additional_leverage_amount: 0,
                 utilized_amount: 0,
-                available_credits: 0
+                available_credits: 0,
               },
               _serviceHoursError: true,
-              _errorMessage: timeError.message
+              _errorMessage: timeError.message,
             };
           }
         }
@@ -566,7 +580,6 @@ class UpstoxService {
    * Get positions
    */
   async getPositions(): Promise<UpstoxPosition[]> {
-
     if (!this.client) {
       throw new Error('Upstox client not initialized. Call initializeWithCredentials() first.');
     }
@@ -607,8 +620,8 @@ class UpstoxService {
           trading_symbol: 'RELIANCE',
           close_price: 2460,
           buy_price: 2450,
-          sell_price: 0
-        }
+          sell_price: 0,
+        },
       ];
     }
 
@@ -619,25 +632,27 @@ class UpstoxService {
       const response = await fetch(positionsEndpoint, {
         method: 'GET',
         headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${this.accessToken}`,
-          'Api-Version': '2.0'
-        }
+          Accept: 'application/json',
+          Authorization: `Bearer ${this.accessToken}`,
+          'Api-Version': '2.0',
+        },
       });
 
       const responseData = await response.json();
 
       if (!response.ok) {
-
         // Check for token expiry or invalid token error
         if (response.status === 401 && responseData.errors) {
-          const tokenError = responseData.errors.find((e: any) =>
-            e.errorCode === 'UDAPI100050' || // Invalid token
-            e.errorCode === 'UDAPI100051' || // Token expired
-            e.errorCode === 'UDAPI100052'    // Token not found
+          const tokenError = responseData.errors.find(
+            (e: any) =>
+              e.errorCode === 'UDAPI100050' || // Invalid token
+              e.errorCode === 'UDAPI100051' || // Token expired
+              e.errorCode === 'UDAPI100052' // Token not found
           );
           if (tokenError) {
-            const error = new Error(`Authentication failed: ${tokenError.message}. Please re-authenticate your Upstox account.`);
+            const error = new Error(
+              `Authentication failed: ${tokenError.message}. Please re-authenticate your Upstox account.`
+            );
             (error as any).code = 'TOKEN_EXPIRED';
             (error as any).statusCode = 401;
             throw error;
@@ -646,7 +661,6 @@ class UpstoxService {
 
         throw new Error(responseData.message || responseData.error || 'Failed to fetch positions');
       }
-
 
       // Return the positions array from the response
       if (responseData.data) {
@@ -663,7 +677,6 @@ class UpstoxService {
    * Get holdings
    */
   async getHoldings(): Promise<UpstoxHolding[]> {
-
     if (!this.client) {
       throw new Error('Upstox client not initialized. Call initializeWithCredentials() first.');
     }
@@ -693,7 +706,7 @@ class UpstoxService {
           t1_quantity: 0,
           exchange: 'NSE',
           instrument_token: 'NSE_EQ|INE002A01018',
-          pnl: 20000
+          pnl: 20000,
         },
         {
           isin: 'INE467B01029',
@@ -713,8 +726,8 @@ class UpstoxService {
           t1_quantity: 0,
           exchange: 'NSE',
           instrument_token: 'NSE_EQ|INE467B01029',
-          pnl: 15000
-        }
+          pnl: 15000,
+        },
       ];
     }
 
@@ -725,25 +738,27 @@ class UpstoxService {
       const response = await fetch(holdingsEndpoint, {
         method: 'GET',
         headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${this.accessToken}`,
-          'Api-Version': '2.0'
-        }
+          Accept: 'application/json',
+          Authorization: `Bearer ${this.accessToken}`,
+          'Api-Version': '2.0',
+        },
       });
 
       const responseData = await response.json();
 
       if (!response.ok) {
-
         // Check for token expiry or invalid token error
         if (response.status === 401 && responseData.errors) {
-          const tokenError = responseData.errors.find((e: any) =>
-            e.errorCode === 'UDAPI100050' || // Invalid token
-            e.errorCode === 'UDAPI100051' || // Token expired
-            e.errorCode === 'UDAPI100052'    // Token not found
+          const tokenError = responseData.errors.find(
+            (e: any) =>
+              e.errorCode === 'UDAPI100050' || // Invalid token
+              e.errorCode === 'UDAPI100051' || // Token expired
+              e.errorCode === 'UDAPI100052' // Token not found
           );
           if (tokenError) {
-            const error = new Error(`Authentication failed: ${tokenError.message}. Please re-authenticate your Upstox account.`);
+            const error = new Error(
+              `Authentication failed: ${tokenError.message}. Please re-authenticate your Upstox account.`
+            );
             (error as any).code = 'TOKEN_EXPIRED';
             (error as any).statusCode = 401;
             throw error;
@@ -752,7 +767,6 @@ class UpstoxService {
 
         throw new Error(responseData.message || responseData.error || 'Failed to fetch holdings');
       }
-
 
       // Return the holdings array from the response
       if (responseData.data) {
@@ -793,7 +807,7 @@ class UpstoxService {
         pending_quantity: 0,
         order_timestamp: new Date().toISOString(),
         exchange_timestamp: new Date().toISOString(),
-        status_message: 'Order completed successfully'
+        status_message: 'Order completed successfully',
       },
       {
         order_id: 'MOCK_ORDER_002',
@@ -818,7 +832,7 @@ class UpstoxService {
         pending_quantity: 5,
         order_timestamp: new Date().toISOString(),
         exchange_timestamp: new Date().toISOString(),
-        status_message: 'Order is open'
+        status_message: 'Order is open',
       },
       {
         order_id: 'MOCK_ORDER_003',
@@ -843,8 +857,8 @@ class UpstoxService {
         pending_quantity: 0,
         order_timestamp: new Date().toISOString(),
         exchange_timestamp: new Date().toISOString(),
-        status_message: 'Order cancelled by user'
-      }
+        status_message: 'Order cancelled by user',
+      },
     ];
   }
 
@@ -871,26 +885,28 @@ class UpstoxService {
       const response = await fetch(ordersEndpoint, {
         method: 'GET',
         headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${this.accessToken}`,
-          'Api-Version': '2.0'
-        }
+          Accept: 'application/json',
+          Authorization: `Bearer ${this.accessToken}`,
+          'Api-Version': '2.0',
+        },
       });
 
       const responseData = await response.json();
 
       if (!response.ok) {
-
         // Check for authentication errors
         if (response.status === 401 || response.status === 403) {
           if (responseData.errors) {
-            const tokenError = responseData.errors.find((e: any) =>
-              e.errorCode === 'UDAPI100050' || // Invalid token
-              e.errorCode === 'UDAPI100051' || // Token expired
-              e.errorCode === 'UDAPI100052'    // Token not found
+            const tokenError = responseData.errors.find(
+              (e: any) =>
+                e.errorCode === 'UDAPI100050' || // Invalid token
+                e.errorCode === 'UDAPI100051' || // Token expired
+                e.errorCode === 'UDAPI100052' // Token not found
             );
             if (tokenError) {
-              const error = new Error(`Authentication failed: ${tokenError.message}. Please re-authenticate your Upstox account.`);
+              const error = new Error(
+                `Authentication failed: ${tokenError.message}. Please re-authenticate your Upstox account.`
+              );
               (error as any).code = 'TOKEN_EXPIRED';
               (error as any).statusCode = 401;
               throw error;
@@ -898,7 +914,9 @@ class UpstoxService {
           }
 
           // Generic auth error
-          const error = new Error('Authentication failed. Access token may be invalid or expired. Please re-authenticate your Upstox account.');
+          const error = new Error(
+            'Authentication failed. Access token may be invalid or expired. Please re-authenticate your Upstox account.'
+          );
           (error as any).code = 'TOKEN_EXPIRED';
           (error as any).statusCode = 401;
           throw error;
@@ -906,15 +924,20 @@ class UpstoxService {
 
         // 404 could also indicate invalid credentials in some cases
         if (response.status === 404) {
-          const error = new Error('API endpoint not found. This may indicate invalid credentials or account configuration. Please re-authenticate your Upstox account.');
+          const error = new Error(
+            'API endpoint not found. This may indicate invalid credentials or account configuration. Please re-authenticate your Upstox account.'
+          );
           (error as any).code = 'TOKEN_EXPIRED';
           (error as any).statusCode = 401;
           throw error;
         }
 
-        throw new Error(responseData.message || responseData.error || `API request failed with status ${response.status}`);
+        throw new Error(
+          responseData.message ||
+            responseData.error ||
+            `API request failed with status ${response.status}`
+        );
       }
-
 
       // Return the orders array from the response
       if (responseData.data) {
@@ -963,11 +986,16 @@ class UpstoxService {
   /**
    * Modify an order
    */
-  async modifyOrder(orderId: string, params: Partial<UpstoxOrderParams>): Promise<{ order_id: string }> {
+  async modifyOrder(
+    orderId: string,
+    params: Partial<UpstoxOrderParams>
+  ): Promise<{ order_id: string }> {
     const orderApi = new UpstoxClient.OrderApi(this.client);
     const apiVersion = '2.0';
 
-    const response = await limiter.schedule(() => orderApi.modifyOrder(apiVersion, orderId, params));
+    const response = await limiter.schedule(() =>
+      orderApi.modifyOrder(apiVersion, orderId, params)
+    );
     return response.data;
   }
 
@@ -990,7 +1018,9 @@ class UpstoxService {
     const apiVersion = '2.0';
     const instrumentKey = instruments.join(',');
 
-    const response = await limiter.schedule(() => marketQuoteApi.getFullMarketQuote(apiVersion, instrumentKey));
+    const response = await limiter.schedule(() =>
+      marketQuoteApi.getFullMarketQuote(apiVersion, instrumentKey)
+    );
     return response.data;
   }
 
@@ -1014,7 +1044,9 @@ class UpstoxService {
     const apiVersion = '2.0';
     const instrumentKey = instruments.join(',');
 
-    const response = await limiter.schedule(() => marketQuoteApi.getMarketQuoteOHLC(apiVersion, instrumentKey));
+    const response = await limiter.schedule(() =>
+      marketQuoteApi.getMarketQuoteOHLC(apiVersion, instrumentKey)
+    );
     return response.data;
   }
 
@@ -1084,12 +1116,8 @@ export const {
   getQuote: (instruments: string[]) => upstoxService.getQuote(instruments),
   getLTP: (instruments: string[]) => upstoxService.getLTP(instruments),
   getOHLC: (instruments: string[]) => upstoxService.getOHLC(instruments),
-  getHistoricalData: (
-    instrumentKey: string,
-    interval: string,
-    toDate: string,
-    fromDate?: string
-  ) => upstoxService.getHistoricalData(instrumentKey, interval, toDate, fromDate),
+  getHistoricalData: (instrumentKey: string, interval: string, toDate: string, fromDate?: string) =>
+    upstoxService.getHistoricalData(instrumentKey, interval, toDate, fromDate),
   placeOrder: (params: any) => upstoxService.placeOrder(params),
   modifyOrder: (orderId: string, params: any) => upstoxService.modifyOrder(orderId, params),
   cancelOrder: (orderId: string) => upstoxService.cancelOrder(orderId),

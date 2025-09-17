@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import axios from 'axios';
-import { useEffect, useState, memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import MultiTimeframeChart from './MultiTimeframeChart';
 
 interface TradingWindowProps {
@@ -367,7 +367,7 @@ const TradingWindow = memo(function TradingWindow({
           background: #ffffff;
           color: #333;
         }
-        
+
         :global(.dark) .trading-header {
           border-bottom: 1px solid #27272a !important;
           background: #18181b !important;
@@ -393,7 +393,7 @@ const TradingWindow = memo(function TradingWindow({
           max-width: 100%;
           background: #ffffff;
         }
-        
+
         :global(.dark) .trading-form {
           background: #09090b !important;
         }
@@ -420,7 +420,7 @@ const TradingWindow = memo(function TradingWindow({
           background: #ffffff;
           color: #333;
         }
-        
+
         :global(.dark) .form-input,
         :global(.dark) .form-select {
           border: 1px solid #27272a !important;
@@ -478,7 +478,7 @@ const TradingWindow = memo(function TradingWindow({
           border-radius: 4px;
           margin-bottom: 12px;
         }
-        
+
         :global(.dark) .order-summary {
           background: #27272a !important;
           color: #ffffff !important;

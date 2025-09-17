@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getAccountById } from '@/models/account';
-import upstoxService from '@/lib/upstox-service';
 import kiteConnectService from '@/lib/kiteconnect-service';
+import upstoxService from '@/lib/upstox-service';
+import { getAccountById } from '@/models/account';
+import { NextRequest, NextResponse } from 'next/server';
 
 interface UnifiedHoldingResponse {
   id: string;
@@ -25,7 +25,6 @@ interface UnifiedHoldingResponse {
 // Fetch Upstox holdings
 const fetchUpstoxHoldings = async (account: any): Promise<any> => {
   try {
-
     // Initialize Upstox service with account credentials
     const isSandbox = account.metadata?.sandbox === true;
     upstoxService.initializeWithCredentials(account.apiKey, account.apiSecret, isSandbox);
@@ -48,7 +47,6 @@ const fetchUpstoxHoldings = async (account: any): Promise<any> => {
 // Fetch Kite holdings
 const fetchKiteHoldings = async (account: any): Promise<any> => {
   try {
-
     if (!account.accessToken) {
       throw new Error('Access token not found. Please re-authenticate your Kite account.');
     }
@@ -62,7 +60,12 @@ const fetchKiteHoldings = async (account: any): Promise<any> => {
 };
 
 // Normalize holdings data to unified format
-const normalizeHoldingsData = (vendor: string, rawData: any, accountId: string, accountName: string): UnifiedHoldingResponse[] => {
+const normalizeHoldingsData = (
+  vendor: string,
+  rawData: any,
+  accountId: string,
+  accountName: string
+): UnifiedHoldingResponse[] => {
   const timestamp = new Date().toISOString();
 
   switch (vendor.toLowerCase()) {
@@ -73,7 +76,7 @@ const normalizeHoldingsData = (vendor: string, rawData: any, accountId: string, 
         const lastPrice = holding.last_price || 0;
         const currentValue = quantity * lastPrice;
         const investmentValue = quantity * avgPrice;
-        const pnl = holding.pnl || (currentValue - investmentValue);
+        const pnl = holding.pnl || currentValue - investmentValue;
         const pnlPercentage = investmentValue > 0 ? (pnl / investmentValue) * 100 : 0;
 
         return {
@@ -92,7 +95,7 @@ const normalizeHoldingsData = (vendor: string, rawData: any, accountId: string, 
           accountId,
           accountName,
           timestamp,
-          details: holding
+          details: holding,
         };
       });
 
@@ -103,7 +106,7 @@ const normalizeHoldingsData = (vendor: string, rawData: any, accountId: string, 
         const lastPrice = holding.last_price || 0;
         const currentValue = quantity * lastPrice;
         const investmentValue = quantity * avgPrice;
-        const pnl = holding.pnl || (currentValue - investmentValue);
+        const pnl = holding.pnl || currentValue - investmentValue;
         const pnlPercentage = investmentValue > 0 ? (pnl / investmentValue) * 100 : 0;
 
         return {
@@ -122,7 +125,7 @@ const normalizeHoldingsData = (vendor: string, rawData: any, accountId: string, 
           accountId,
           accountName,
           timestamp,
-          details: holding
+          details: holding,
         };
       });
 
@@ -158,9 +161,15 @@ export async function GET(request: NextRequest) {
       case 'upstox':
         try {
           holdingsData = await fetchUpstoxHoldings(account);
-          normalizedData = normalizeHoldingsData('upstox', holdingsData, accountId, account.accountName);
+          normalizedData = normalizeHoldingsData(
+            'upstox',
+            holdingsData,
+            accountId,
+            account.accountName
+          );
         } catch (error: any) {
-          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch Upstox holdings';
+          const errorMessage =
+            error instanceof Error ? error.message : 'Failed to fetch Upstox holdings';
 
           // Check if it's a token expiry error
           const statusCode = error.code === 'TOKEN_EXPIRED' || error.statusCode === 401 ? 401 : 500;
@@ -172,7 +181,7 @@ export async function GET(request: NextRequest) {
               accountName: account?.accountName,
               accountId: accountId,
               requiresReauth: statusCode === 401,
-              details: error instanceof Error ? error.stack : undefined
+              details: error instanceof Error ? error.stack : undefined,
             },
             { status: statusCode }
           );
@@ -182,12 +191,21 @@ export async function GET(request: NextRequest) {
       case 'kite':
         try {
           holdingsData = await fetchKiteHoldings(account);
-          normalizedData = normalizeHoldingsData('kite', holdingsData, accountId, account.accountName);
+          normalizedData = normalizeHoldingsData(
+            'kite',
+            holdingsData,
+            accountId,
+            account.accountName
+          );
         } catch (error: any) {
-          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch Kite holdings';
+          const errorMessage =
+            error instanceof Error ? error.message : 'Failed to fetch Kite holdings';
 
           // Check if it's a token expiry error
-          const statusCode = error.code === 'TOKEN_EXPIRED' || error.statusCode === 401 || error.statusCode === 403 ? 401 : 500;
+          const statusCode =
+            error.code === 'TOKEN_EXPIRED' || error.statusCode === 401 || error.statusCode === 403
+              ? 401
+              : 500;
 
           return NextResponse.json(
             {
@@ -196,7 +214,7 @@ export async function GET(request: NextRequest) {
               accountName: account?.accountName,
               accountId: accountId,
               requiresReauth: statusCode === 401,
-              details: error instanceof Error ? error.stack : undefined
+              details: error instanceof Error ? error.stack : undefined,
             },
             { status: statusCode }
           );
@@ -212,15 +230,14 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: normalizedData
+      data: normalizedData,
     });
-
   } catch (error) {
     return NextResponse.json(
       {
         success: false,
         error: 'Failed to fetch holdings data',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

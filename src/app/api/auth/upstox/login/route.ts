@@ -1,6 +1,6 @@
 import connectDB from '@/lib/mongodb';
-import Account from '@/models/account';
 import upstoxService from '@/lib/upstox-service';
+import Account from '@/models/account';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -16,10 +16,7 @@ export async function GET(request: NextRequest) {
     const accountId = searchParams.get('accountId');
 
     if (!accountId) {
-      return NextResponse.json(
-        { error: 'accountId parameter is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'accountId parameter is required' }, { status: 400 });
     }
 
     // Connect to database and fetch account
@@ -67,7 +64,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Failed to initiate Upstox login',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -84,10 +81,7 @@ export async function POST(request: NextRequest) {
     const { accountId } = body;
 
     if (!accountId) {
-      return NextResponse.json(
-        { error: 'accountId is required in request body' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'accountId is required in request body' }, { status: 400 });
     }
 
     // Connect to database and fetch account
@@ -125,7 +119,8 @@ export async function POST(request: NextRequest) {
       success: true,
       loginUrl,
       accountId,
-      message: 'Login URL generated successfully. Redirect user to loginUrl to complete authentication.',
+      message:
+        'Login URL generated successfully. Redirect user to loginUrl to complete authentication.',
     });
 
     // Set cookie to track which account is being authenticated
@@ -143,7 +138,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Failed to generate Upstox login URL',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

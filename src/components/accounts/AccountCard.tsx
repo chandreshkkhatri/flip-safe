@@ -69,7 +69,9 @@ export default function AccountCard({ account, onEdit, onDelete, onAuth }: Accou
         console.log('=== Upstox Debug Results ===');
         console.log('Account:', data.account);
         console.log('Debug Info:', data.debugInfo);
-        alert(`Debug completed! Check console for detailed results.\n\nEnvironment: ${data.debugInfo.environment}\nAPI Key Valid: ${data.debugInfo.apiKeyValid}\nRedirect URI Valid: ${data.debugInfo.redirectUriValid}`);
+        alert(
+          `Debug completed! Check console for detailed results.\n\nEnvironment: ${data.debugInfo.environment}\nAPI Key Valid: ${data.debugInfo.apiKeyValid}\nRedirect URI Valid: ${data.debugInfo.redirectUriValid}`
+        );
       } else {
         alert(`Debug failed: ${data.error}`);
       }
@@ -83,10 +85,11 @@ export default function AccountCard({ account, onEdit, onDelete, onAuth }: Accou
 
   // For Binance accounts, check if we have API credentials and they're working
   // For other accounts, check if we have access token
-  const isAuthenticated = account.accountType === 'binance' 
-    ? !!(account.apiKey && account.apiSecret && account.lastSyncAt)
-    : !!account.accessToken;
-  
+  const isAuthenticated =
+    account.accountType === 'binance'
+      ? !!(account.apiKey && account.apiSecret && account.lastSyncAt)
+      : !!account.accessToken;
+
   const lastSync = account.lastSyncAt ? new Date(account.lastSyncAt).toLocaleString() : 'Never';
 
   return (

@@ -1,14 +1,13 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import PageLayout from '@/components/layout/PageLayout';
+import { Button } from '@/components/ui/button';
 import TradingWindow from '@/components/watchlist/TradingWindow';
-import { useAuth } from '@/lib/auth-context';
 import { useAccount } from '@/lib/account-context';
+import { useAuth } from '@/lib/auth-context';
 import { binanceWebSocket } from '@/lib/binance-websocket';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-
 
 interface WatchlistItem {
   symbol: string;
@@ -24,7 +23,7 @@ export default function TradingPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const symbol = searchParams.get('symbol') || 'BTCUSDT';
-  
+
   const [currentPrice, setCurrentPrice] = useState(0);
   const [priceData, setPriceData] = useState<WatchlistItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,7 +42,7 @@ export default function TradingPage() {
     const initializePriceData = async () => {
       try {
         setLoading(true);
-        
+
         // Initialize with default data
         const initialData: WatchlistItem = {
           symbol,
@@ -59,11 +58,11 @@ export default function TradingPage() {
         setCurrentPrice(0);
 
         // Start WebSocket connection for real-time updates
-        binanceWebSocket.connect([symbol], (priceUpdate) => {
+        binanceWebSocket.connect([symbol], priceUpdate => {
           if (priceUpdate.symbol === symbol) {
             const newPrice = parseFloat(priceUpdate.price);
             setCurrentPrice(newPrice);
-            
+
             setPriceData(prev => {
               if (!prev) return null;
               return {
@@ -92,7 +91,6 @@ export default function TradingPage() {
       binanceWebSocket.disconnect();
     };
   }, [symbol]);
-
 
   const handleOrderPlaced = () => {
     // Could show success notification here
@@ -131,15 +129,12 @@ export default function TradingPage() {
             </Button>
             <h1>Trading - {symbol}</h1>
           </div>
-          
+
           <div className="no-accounts-message">
             <div className="message-content">
               <h2>No Binance Accounts Found</h2>
               <p>You need to connect a Binance account to start trading.</p>
-              <Button
-                variant="default"
-                onClick={() => router.push('/accounts')}
-              >
+              <Button variant="default" onClick={() => router.push('/accounts')}>
                 Add Binance Account
               </Button>
             </div>
@@ -166,8 +161,11 @@ export default function TradingPage() {
             {priceData && (
               <div className="price-info">
                 <span className="current-price">${currentPrice.toFixed(4)}</span>
-                <span className={`price-change ${priceData.priceChangePercent >= 0 ? 'positive' : 'negative'}`}>
-                  {priceData.priceChangePercent >= 0 ? '+' : ''}{priceData.priceChangePercent.toFixed(2)}%
+                <span
+                  className={`price-change ${priceData.priceChangePercent >= 0 ? 'positive' : 'negative'}`}
+                >
+                  {priceData.priceChangePercent >= 0 ? '+' : ''}
+                  {priceData.priceChangePercent.toFixed(2)}%
                 </span>
               </div>
             )}
@@ -280,7 +278,6 @@ export default function TradingPage() {
           color: #dc2626;
           background: rgba(220, 38, 38, 0.1);
         }
-
 
         .trading-content {
           background: #ffffff;

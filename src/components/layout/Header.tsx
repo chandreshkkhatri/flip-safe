@@ -1,9 +1,9 @@
 'use client';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/lib/auth-context';
-import { useAccount } from '@/lib/account-context';
-import { useTheme } from '@/lib/theme-context';
 import AccountSelector from '@/components/account-selector/AccountSelector';
+import { Button } from '@/components/ui/button';
+import { useAccount } from '@/lib/account-context';
+import { useAuth } from '@/lib/auth-context';
+import { useTheme } from '@/lib/theme-context';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
@@ -21,7 +21,12 @@ export function Header() {
   const pathname = usePathname();
   const { isDark, toggleTheme } = useTheme();
   const { isLoggedIn, logout } = useAuth();
-  const { selectedAccount, setSelectedAccount, accounts: tradingAccounts, loadingAccounts: accountsLoading } = useAccount();
+  const {
+    selectedAccount,
+    setSelectedAccount,
+    accounts: tradingAccounts,
+    loadingAccounts: accountsLoading,
+  } = useAccount();
   const [open, setOpen] = useState(false);
 
   return (
@@ -57,19 +62,16 @@ export function Header() {
               )}
             </svg>
           </button>
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2"
-          >
+          <Link href="/dashboard" className="flex items-center gap-2">
             {/* Logo with name for desktop */}
-            <img 
-              src="/flip-safe-logo-with-name.png" 
+            <img
+              src="/flip-safe-logo-with-name.png"
               alt="Flip Safe"
               className="hidden md:block h-8"
             />
             {/* Logo without name for mobile */}
-            <img 
-              src="/flip-safe-logo-without-name.png" 
+            <img
+              src="/flip-safe-logo-without-name.png"
               alt="Flip Safe"
               className="block md:hidden h-8 w-8"
             />
@@ -94,7 +96,12 @@ export function Header() {
 
         <div className="ml-auto flex items-center gap-2">
           {/* Account Selector - Show on dashboard and trading pages */}
-          {(pathname.startsWith('/dashboard') || pathname.startsWith('/market-watch') || pathname.startsWith('/holdings') || pathname.startsWith('/trading') || pathname.startsWith('/positions') || pathname.startsWith('/orders')) && (
+          {(pathname.startsWith('/dashboard') ||
+            pathname.startsWith('/market-watch') ||
+            pathname.startsWith('/holdings') ||
+            pathname.startsWith('/trading') ||
+            pathname.startsWith('/positions') ||
+            pathname.startsWith('/orders')) && (
             <div className="hidden md:block mr-2">
               <AccountSelector
                 accounts={tradingAccounts}
@@ -119,9 +126,9 @@ export function Header() {
             </span>
           </button>
           {isLoggedIn && (
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => logout()}
               className="hidden md:flex text-destructive hover:bg-destructive hover:text-destructive-foreground"
             >
@@ -138,7 +145,7 @@ export function Header() {
           onClick={() => setOpen(false)}
         />
       )}
-      
+
       {/* Mobile drawer */}
       <div
         className={`md:hidden fixed left-0 top-14 h-[calc(100vh-56px)] w-64 transform border-r border-border bg-background px-3 py-4 transition-transform duration-300 ease-out z-50 shadow-xl ${
@@ -148,9 +155,16 @@ export function Header() {
       >
         <div className="flex flex-col gap-0.5 text-sm">
           {/* Mobile Account Selector */}
-          {(pathname.startsWith('/dashboard') || pathname.startsWith('/market-watch') || pathname.startsWith('/holdings') || pathname.startsWith('/trading') || pathname.startsWith('/positions') || pathname.startsWith('/orders')) && (
+          {(pathname.startsWith('/dashboard') ||
+            pathname.startsWith('/market-watch') ||
+            pathname.startsWith('/holdings') ||
+            pathname.startsWith('/trading') ||
+            pathname.startsWith('/positions') ||
+            pathname.startsWith('/orders')) && (
             <div className="mb-3 px-3">
-              <div className="text-xs font-medium text-muted-foreground mb-2">Selected Account:</div>
+              <div className="text-xs font-medium text-muted-foreground mb-2">
+                Selected Account:
+              </div>
               <AccountSelector
                 accounts={tradingAccounts}
                 selectedAccount={selectedAccount}
@@ -159,7 +173,7 @@ export function Header() {
               />
             </div>
           )}
-          
+
           {navItems.map(item => (
             <Link
               key={item.href}

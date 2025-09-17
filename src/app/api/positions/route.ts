@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getAccountById } from '@/models/account';
-import upstoxService from '@/lib/upstox-service';
 import kiteConnectService from '@/lib/kiteconnect-service';
+import upstoxService from '@/lib/upstox-service';
+import { getAccountById } from '@/models/account';
+import { NextRequest, NextResponse } from 'next/server';
 
 interface UnifiedPositionResponse {
   id: string;
@@ -23,7 +23,6 @@ interface UnifiedPositionResponse {
 // Fetch Upstox positions
 const fetchUpstoxPositions = async (account: any): Promise<any> => {
   try {
-
     // Initialize Upstox service with account credentials
     const isSandbox = account.metadata?.sandbox === true;
     upstoxService.initializeWithCredentials(account.apiKey, account.apiSecret, isSandbox);
@@ -46,7 +45,6 @@ const fetchUpstoxPositions = async (account: any): Promise<any> => {
 // Fetch Kite positions
 const fetchKitePositions = async (account: any): Promise<any> => {
   try {
-
     if (!account.accessToken) {
       throw new Error('Access token not found. Please re-authenticate your Kite account.');
     }
@@ -62,7 +60,12 @@ const fetchKitePositions = async (account: any): Promise<any> => {
 };
 
 // Normalize positions data to unified format
-const normalizePositionsData = (vendor: string, rawData: any, accountId: string, accountName: string): UnifiedPositionResponse[] => {
+const normalizePositionsData = (
+  vendor: string,
+  rawData: any,
+  accountId: string,
+  accountName: string
+): UnifiedPositionResponse[] => {
   const timestamp = new Date().toISOString();
 
   switch (vendor.toLowerCase()) {
@@ -75,15 +78,18 @@ const normalizePositionsData = (vendor: string, rawData: any, accountId: string,
         averagePrice: position.average_price,
         lastPrice: position.last_price,
         pnl: position.pnl || position.unrealised || 0,
-        pnlPercentage: position.average_price > 0
-          ? ((position.pnl || position.unrealised || 0) / (position.average_price * Math.abs(position.quantity))) * 100
-          : 0,
+        pnlPercentage:
+          position.average_price > 0
+            ? ((position.pnl || position.unrealised || 0) /
+                (position.average_price * Math.abs(position.quantity))) *
+              100
+            : 0,
         product: position.product,
         vendor: 'upstox',
         accountId,
         accountName,
         timestamp,
-        details: position
+        details: position,
       }));
 
     case 'kite':
@@ -95,15 +101,16 @@ const normalizePositionsData = (vendor: string, rawData: any, accountId: string,
         averagePrice: position.average_price,
         lastPrice: position.last_price,
         pnl: position.pnl,
-        pnlPercentage: position.average_price > 0
-          ? (position.pnl / (position.average_price * Math.abs(position.quantity))) * 100
-          : 0,
+        pnlPercentage:
+          position.average_price > 0
+            ? (position.pnl / (position.average_price * Math.abs(position.quantity))) * 100
+            : 0,
         product: position.product,
         vendor: 'kite',
         accountId,
         accountName,
         timestamp,
-        details: position
+        details: position,
       }));
 
     default:
@@ -138,9 +145,15 @@ export async function GET(request: NextRequest) {
       case 'upstox':
         try {
           positionsData = await fetchUpstoxPositions(account);
-          normalizedData = normalizePositionsData('upstox', positionsData, accountId, account.accountName);
+          normalizedData = normalizePositionsData(
+            'upstox',
+            positionsData,
+            accountId,
+            account.accountName
+          );
         } catch (error: any) {
-          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch Upstox positions';
+          const errorMessage =
+            error instanceof Error ? error.message : 'Failed to fetch Upstox positions';
 
           // Check if it's a token expiry error
           const statusCode = error.code === 'TOKEN_EXPIRED' || error.statusCode === 401 ? 401 : 500;
@@ -152,7 +165,7 @@ export async function GET(request: NextRequest) {
               accountName: account?.accountName,
               accountId: accountId,
               requiresReauth: statusCode === 401,
-              details: error instanceof Error ? error.stack : undefined
+              details: error instanceof Error ? error.stack : undefined,
             },
             { status: statusCode }
           );
@@ -162,12 +175,21 @@ export async function GET(request: NextRequest) {
       case 'kite':
         try {
           positionsData = await fetchKitePositions(account);
-          normalizedData = normalizePositionsData('kite', positionsData, accountId, account.accountName);
+          normalizedData = normalizePositionsData(
+            'kite',
+            positionsData,
+            accountId,
+            account.accountName
+          );
         } catch (error: any) {
-          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch Kite positions';
+          const errorMessage =
+            error instanceof Error ? error.message : 'Failed to fetch Kite positions';
 
           // Check if it's a token expiry error
-          const statusCode = error.code === 'TOKEN_EXPIRED' || error.statusCode === 401 || error.statusCode === 403 ? 401 : 500;
+          const statusCode =
+            error.code === 'TOKEN_EXPIRED' || error.statusCode === 401 || error.statusCode === 403
+              ? 401
+              : 500;
 
           return NextResponse.json(
             {
@@ -176,7 +198,7 @@ export async function GET(request: NextRequest) {
               accountName: account?.accountName,
               accountId: accountId,
               requiresReauth: statusCode === 401,
-              details: error instanceof Error ? error.stack : undefined
+              details: error instanceof Error ? error.stack : undefined,
             },
             { status: statusCode }
           );
@@ -192,15 +214,14 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: normalizedData
+      data: normalizedData,
     });
-
   } catch (error) {
     return NextResponse.json(
       {
         success: false,
         error: 'Failed to fetch positions data',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

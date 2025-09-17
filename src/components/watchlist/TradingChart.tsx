@@ -1,6 +1,6 @@
 'use client';
 
-import { ColorType, createChart, UTCTimestamp, CandlestickSeries } from 'lightweight-charts';
+import { CandlestickSeries, ColorType, createChart, UTCTimestamp } from 'lightweight-charts';
 import React, { useEffect, useRef, useState } from 'react';
 
 interface TradingChartProps {
@@ -22,13 +22,16 @@ const TradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
     let chartHeight;
     if (autoScale) {
       // Use parent container height minus controls height
-      chartHeight = Math.max((chartContainerRef.current.parentElement?.clientHeight || 300) - 50, 150);
+      chartHeight = Math.max(
+        (chartContainerRef.current.parentElement?.clientHeight || 300) - 50,
+        150
+      );
     } else {
       chartHeight = isMobile ? 135 : 188;
     }
 
     const isDarkMode = document.documentElement.classList.contains('dark');
-    
+
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
       height: chartHeight,
@@ -75,7 +78,10 @@ const TradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
         const isMobile = window.innerWidth <= 768;
         let chartHeight;
         if (autoScale) {
-          chartHeight = Math.max((chartContainerRef.current.parentElement?.clientHeight || 300) - 50, 150);
+          chartHeight = Math.max(
+            (chartContainerRef.current.parentElement?.clientHeight || 300) - 50,
+            150
+          );
         } else {
           chartHeight = isMobile ? 135 : 188;
         }
@@ -136,7 +142,7 @@ const TradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
 
     try {
       const chart = chartRef.current.chart;
-      
+
       // Update scale mode
       const priceScale = chart.priceScale('right');
       if (priceScale) {
@@ -149,14 +155,19 @@ const TradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
       const isMobile = window.innerWidth <= 768;
       let chartHeight;
       if (autoScale) {
-        chartHeight = Math.max((chartContainerRef.current.parentElement?.clientHeight || 300) - 50, 150);
+        chartHeight = Math.max(
+          (chartContainerRef.current.parentElement?.clientHeight || 300) - 50,
+          150
+        );
       } else {
         chartHeight = isMobile ? 135 : 188;
       }
 
       chart.resize(chartContainerRef.current.clientWidth, chartHeight);
-      
-      console.log(`Updated trading chart: autoScale=${autoScale}, logScale=${isLogScale}, height=${chartHeight}`);
+
+      console.log(
+        `Updated trading chart: autoScale=${autoScale}, logScale=${isLogScale}, height=${chartHeight}`
+      );
     } catch (error) {
       console.error('Error updating trading chart settings:', error);
     }
@@ -194,7 +205,6 @@ const TradingChart: React.FC<TradingChartProps> = ({ symbol }) => {
       </div>
       <div ref={chartContainerRef} className="chart-container" />
       <style jsx>{`
-
         .chart-controls {
           padding: 8px;
           background: var(--muted);

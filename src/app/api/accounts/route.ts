@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         ...(redirectUri && { redirectUri }),
       },
     };
-    
+
     console.log('Creating account with API key length:', apiKey.trim().length);
 
     // Handle special fields based on account type

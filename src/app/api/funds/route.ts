@@ -1,8 +1,8 @@
-import connectDB from '@/lib/mongodb';
-import Account from '@/models/account';
 import { createBinanceClient } from '@/lib/binance';
 import kiteConnectService from '@/lib/kiteconnect-service';
+import connectDB from '@/lib/mongodb';
 import upstoxService from '@/lib/upstox-service';
+import Account from '@/models/account';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +20,11 @@ interface UnifiedFundsResponse {
 }
 
 // Binance funds fetcher - uses the existing BinanceAPI class
-const fetchBinanceFunds = async (apiKey: string, secretKey: string, testnet: boolean = false): Promise<any> => {
+const fetchBinanceFunds = async (
+  apiKey: string,
+  secretKey: string,
+  testnet: boolean = false
+): Promise<any> => {
   try {
     const binanceClient = createBinanceClient({ apiKey, apiSecret: secretKey, testnet });
     const accountInfo = await binanceClient.getAccountInfo();
@@ -41,7 +45,6 @@ const fetchBinanceFunds = async (apiKey: string, secretKey: string, testnet: boo
 // Kite Connect funds fetcher
 const fetchKiteFunds = async (account: any): Promise<any> => {
   try {
-
     // Initialize KiteConnect service with account credentials
     kiteConnectService.initializeWithCredentials(account.apiKey, account.apiSecret);
 
@@ -63,7 +66,6 @@ const fetchKiteFunds = async (account: any): Promise<any> => {
 // Upstox funds fetcher
 const fetchUpstoxFunds = async (account: any): Promise<any> => {
   try {
-
     // Initialize Upstox service with account credentials
     // Check if account is using sandbox environment
     const isSandbox = account.metadata?.sandbox === true;
@@ -85,7 +87,12 @@ const fetchUpstoxFunds = async (account: any): Promise<any> => {
 };
 
 // Normalize funds data to unified format
-const normalizeFundsData = (vendor: string, rawData: any, accountId: string, accountName: string): UnifiedFundsResponse => {
+const normalizeFundsData = (
+  vendor: string,
+  rawData: any,
+  accountId: string,
+  accountName: string
+): UnifiedFundsResponse => {
   let totalBalance = '0';
   let availableBalance = '0';
   let usedMargin = undefined;
@@ -197,8 +204,17 @@ export async function GET(request: NextRequest) {
 
         try {
           const isTestnet = account.metadata?.testnet || false;
-          fundsData = await fetchBinanceFunds(account.apiKey.trim(), account.apiSecret.trim(), isTestnet);
-          normalizedData = normalizeFundsData('binance', fundsData, accountId!, account.accountName);
+          fundsData = await fetchBinanceFunds(
+            account.apiKey.trim(),
+            account.apiSecret.trim(),
+            isTestnet
+          );
+          normalizedData = normalizeFundsData(
+            'binance',
+            fundsData,
+            accountId!,
+            account.accountName
+          );
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           if (errorMessage.includes('Invalid API') || errorMessage.includes('signature')) {
@@ -206,7 +222,7 @@ export async function GET(request: NextRequest) {
               {
                 success: false,
                 error: 'Invalid API credentials. Please check your API key and secret.',
-                details: errorMessage
+                details: errorMessage,
               },
               { status: 401 }
             );
@@ -218,17 +234,24 @@ export async function GET(request: NextRequest) {
       case 'kite':
       case 'kiteconnect':
         if (!account) {
-          return NextResponse.json({ error: 'Account not found for Kite Connect' }, { status: 404 });
+          return NextResponse.json(
+            { error: 'Account not found for Kite Connect' },
+            { status: 404 }
+          );
         }
 
         try {
           fundsData = await fetchKiteFunds(account);
           normalizedData = normalizeFundsData('kite', fundsData, accountId!, account.accountName);
         } catch (error: any) {
-          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch Kite funds';
+          const errorMessage =
+            error instanceof Error ? error.message : 'Failed to fetch Kite funds';
 
           // Check if it's a token expiry error (Kite returns 403 for invalid sessions)
-          const statusCode = error.code === 'TOKEN_EXPIRED' || error.statusCode === 401 || error.statusCode === 403 ? 401 : 500;
+          const statusCode =
+            error.code === 'TOKEN_EXPIRED' || error.statusCode === 401 || error.statusCode === 403
+              ? 401
+              : 500;
 
           return NextResponse.json(
             {
@@ -237,7 +260,7 @@ export async function GET(request: NextRequest) {
               accountName: account?.accountName,
               accountId: accountId,
               requiresReauth: statusCode === 401,
-              details: error instanceof Error ? error.stack : undefined
+              details: error instanceof Error ? error.stack : undefined,
             },
             { status: statusCode }
           );
@@ -253,7 +276,8 @@ export async function GET(request: NextRequest) {
           fundsData = await fetchUpstoxFunds(account);
           normalizedData = normalizeFundsData('upstox', fundsData, accountId!, account.accountName);
         } catch (error: any) {
-          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch Upstox funds';
+          const errorMessage =
+            error instanceof Error ? error.message : 'Failed to fetch Upstox funds';
 
           // Check if it's a token expiry error
           const statusCode = error.code === 'TOKEN_EXPIRED' || error.statusCode === 401 ? 401 : 500;
@@ -265,7 +289,7 @@ export async function GET(request: NextRequest) {
               accountName: account?.accountName,
               accountId: accountId,
               requiresReauth: statusCode === 401,
-              details: error instanceof Error ? error.stack : undefined
+              details: error instanceof Error ? error.stack : undefined,
             },
             { status: statusCode }
           );
@@ -283,13 +307,12 @@ export async function GET(request: NextRequest) {
       success: true,
       data: normalizedData,
     });
-
   } catch (error) {
     return NextResponse.json(
       {
         success: false,
         error: 'Failed to fetch funds data',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -343,7 +366,11 @@ export async function POST(request: NextRequest) {
 
         try {
           const isTestnet = account.metadata?.testnet || false;
-          fundsData = await fetchBinanceFunds(account.apiKey.trim(), account.apiSecret.trim(), isTestnet);
+          fundsData = await fetchBinanceFunds(
+            account.apiKey.trim(),
+            account.apiSecret.trim(),
+            isTestnet
+          );
           normalizedData = normalizeFundsData('binance', fundsData, accountId, account.accountName);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -352,7 +379,7 @@ export async function POST(request: NextRequest) {
               {
                 success: false,
                 error: 'Invalid API credentials. Please check your API key and secret.',
-                details: errorMessage
+                details: errorMessage,
               },
               { status: 401 }
             );
@@ -397,13 +424,12 @@ export async function POST(request: NextRequest) {
       success: true,
       data: normalizedData,
     });
-
   } catch (error) {
     return NextResponse.json(
       {
         success: false,
         error: 'Failed to fetch funds data',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

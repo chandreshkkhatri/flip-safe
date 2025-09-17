@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getAccountById } from '@/models/account';
-import upstoxService from '@/lib/upstox-service';
 import kiteConnectService from '@/lib/kiteconnect-service';
+import upstoxService from '@/lib/upstox-service';
+import { getAccountById } from '@/models/account';
+import { NextRequest, NextResponse } from 'next/server';
 
 interface UnifiedOrderResponse {
   id: string;
@@ -27,7 +27,6 @@ interface UnifiedOrderResponse {
 // Fetch Upstox orders
 const fetchUpstoxOrders = async (account: any): Promise<any> => {
   try {
-
     // Initialize Upstox service with account credentials
     const isSandbox = account.metadata?.sandbox === true;
     upstoxService.initializeWithCredentials(account.apiKey, account.apiSecret, isSandbox);
@@ -50,7 +49,6 @@ const fetchUpstoxOrders = async (account: any): Promise<any> => {
 // Fetch Kite orders
 const fetchKiteOrders = async (account: any): Promise<any> => {
   try {
-
     if (!account.accessToken) {
       throw new Error('Access token not found. Please re-authenticate your Kite account.');
     }
@@ -65,7 +63,12 @@ const fetchKiteOrders = async (account: any): Promise<any> => {
 };
 
 // Normalize orders data to unified format
-const normalizeOrdersData = (vendor: string, rawData: any, accountId: string, accountName: string): UnifiedOrderResponse[] => {
+const normalizeOrdersData = (
+  vendor: string,
+  rawData: any,
+  accountId: string,
+  accountName: string
+): UnifiedOrderResponse[] => {
   const timestamp = new Date().toISOString();
 
   switch (vendor.toLowerCase()) {
@@ -88,7 +91,7 @@ const normalizeOrdersData = (vendor: string, rawData: any, accountId: string, ac
         vendor: 'upstox',
         accountId,
         accountName,
-        details: order
+        details: order,
       }));
 
     case 'kite':
@@ -110,7 +113,7 @@ const normalizeOrdersData = (vendor: string, rawData: any, accountId: string, ac
         vendor: 'kite',
         accountId,
         accountName,
-        details: order
+        details: order,
       }));
 
     default:
@@ -145,9 +148,15 @@ export async function GET(request: NextRequest) {
       case 'upstox':
         try {
           ordersData = await fetchUpstoxOrders(account);
-          normalizedData = normalizeOrdersData('upstox', ordersData, accountId, account.accountName);
+          normalizedData = normalizeOrdersData(
+            'upstox',
+            ordersData,
+            accountId,
+            account.accountName
+          );
         } catch (error: any) {
-          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch Upstox orders';
+          const errorMessage =
+            error instanceof Error ? error.message : 'Failed to fetch Upstox orders';
 
           // Check if it's a token expiry error
           const statusCode = error.code === 'TOKEN_EXPIRED' || error.statusCode === 401 ? 401 : 500;
@@ -159,7 +168,7 @@ export async function GET(request: NextRequest) {
               accountName: account?.accountName,
               accountId: accountId,
               requiresReauth: statusCode === 401,
-              details: error instanceof Error ? error.stack : undefined
+              details: error instanceof Error ? error.stack : undefined,
             },
             { status: statusCode }
           );
@@ -171,10 +180,14 @@ export async function GET(request: NextRequest) {
           ordersData = await fetchKiteOrders(account);
           normalizedData = normalizeOrdersData('kite', ordersData, accountId, account.accountName);
         } catch (error: any) {
-          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch Kite orders';
+          const errorMessage =
+            error instanceof Error ? error.message : 'Failed to fetch Kite orders';
 
           // Check if it's a token expiry error
-          const statusCode = error.code === 'TOKEN_EXPIRED' || error.statusCode === 401 || error.statusCode === 403 ? 401 : 500;
+          const statusCode =
+            error.code === 'TOKEN_EXPIRED' || error.statusCode === 401 || error.statusCode === 403
+              ? 401
+              : 500;
 
           return NextResponse.json(
             {
@@ -183,7 +196,7 @@ export async function GET(request: NextRequest) {
               accountName: account?.accountName,
               accountId: accountId,
               requiresReauth: statusCode === 401,
-              details: error instanceof Error ? error.stack : undefined
+              details: error instanceof Error ? error.stack : undefined,
             },
             { status: statusCode }
           );
@@ -199,15 +212,14 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: normalizedData
+      data: normalizedData,
     });
-
   } catch (error) {
     return NextResponse.json(
       {
         success: false,
         error: 'Failed to fetch orders data',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

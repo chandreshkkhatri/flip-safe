@@ -1,9 +1,9 @@
 'use client';
 
-import PageLayout from '@/components/layout/PageLayout';
 import HoldingsCard from '@/components/holdings/HoldingsCard';
-import { useAuth } from '@/lib/auth-context';
+import PageLayout from '@/components/layout/PageLayout';
 import { useAccount } from '@/lib/account-context';
+import { useAuth } from '@/lib/auth-context';
 import { useEffect } from 'react';
 
 export default function HoldingsPage() {
@@ -21,8 +21,8 @@ export default function HoldingsPage() {
   }, [isLoggedIn, allowOfflineAccess, runOfflineMode, accounts, loadingAccounts, fetchAccounts]);
 
   // Filter only Upstox and Kite accounts
-  const tradingAccounts = accounts.filter(acc =>
-    acc.isActive && (acc.accountType === 'upstox' || acc.accountType === 'kite')
+  const tradingAccounts = accounts.filter(
+    acc => acc.isActive && (acc.accountType === 'upstox' || acc.accountType === 'kite')
   );
 
   if (loadingAccounts) {
@@ -84,7 +84,6 @@ export default function HoldingsPage() {
         :global(.dark) .page-header p {
           color: #a1a1aa !important;
         }
-
 
         .empty-state-container {
           display: flex;
@@ -162,60 +161,60 @@ export default function HoldingsPage() {
           border-radius: 12px;
           border: 1px solid var(--border);
         }
-        
+
         .binance-summary h2 {
           margin: 0 0 16px 0;
           font-size: 1.25rem;
           font-weight: 600;
           color: var(--foreground);
         }
-        
+
         .binance-cards {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
           gap: 16px;
           margin-bottom: 24px;
         }
-        
+
         .assets-breakdown h3 {
           margin: 0 0 12px 0;
           font-size: 1rem;
           font-weight: 600;
           color: var(--foreground);
         }
-        
+
         .assets-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
           gap: 12px;
         }
-        
+
         .asset-item {
           padding: 12px;
           background: var(--muted);
           border-radius: 8px;
           text-align: center;
         }
-        
+
         .asset-symbol {
           font-weight: 600;
           font-size: 0.9rem;
           color: var(--foreground);
           margin-bottom: 4px;
         }
-        
+
         .asset-balance {
           font-size: 0.8rem;
           color: var(--muted-foreground);
           margin-bottom: 2px;
         }
-        
+
         .asset-usd {
           font-weight: 500;
           font-size: 0.9rem;
           color: var(--foreground);
         }
-        
+
         .funds-loading {
           display: flex;
           align-items: center;
@@ -223,7 +222,7 @@ export default function HoldingsPage() {
           color: var(--muted-foreground);
           font-size: 0.9rem;
         }
-        
+
         .loading-spinner {
           width: 16px;
           height: 16px;
@@ -232,10 +231,14 @@ export default function HoldingsPage() {
           border-radius: 50%;
           animation: spin 1s linear infinite;
         }
-        
+
         @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
         }
 
         .portfolio-summary {

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import axios from 'axios';
-import { AlertTriangle, RefreshCw, Receipt, ShoppingCart } from 'lucide-react';
+import { AlertTriangle, Receipt, RefreshCw, ShoppingCart } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface TradingAccount {
@@ -85,18 +85,21 @@ export default function OrdersCard({ accounts, selectedAccountId, className }: O
         throw new Error(response.data?.error || 'Failed to fetch orders');
       }
     } catch (err: any) {
-
       // Check if it's a 401 error (authentication failure)
       if (err.response?.status === 401) {
         const errorData = err.response?.data;
         setAccountErrors(prev => {
           const filtered = prev.filter(e => e.accountId !== account._id);
-          return [...filtered, {
-            accountId: account._id!,
-            accountName: account.accountName,
-            requiresReauth: errorData?.requiresReauth || true,
-            message: errorData?.error || 'Authentication failed. Please re-authenticate your account.'
-          }];
+          return [
+            ...filtered,
+            {
+              accountId: account._id!,
+              accountName: account.accountName,
+              requiresReauth: errorData?.requiresReauth || true,
+              message:
+                errorData?.error || 'Authentication failed. Please re-authenticate your account.',
+            },
+          ];
         });
       } else {
         const errorMessage = err.response?.data?.error || err.message || 'Failed to fetch orders';
@@ -182,7 +185,12 @@ export default function OrdersCard({ accounts, selectedAccountId, className }: O
   }).length;
   const openOrders = ordersData.filter(order => {
     const status = order.status.toLowerCase();
-    return status === 'open' || status === 'pending' || status === 'placed' || status === 'trigger_pending';
+    return (
+      status === 'open' ||
+      status === 'pending' ||
+      status === 'placed' ||
+      status === 'trigger_pending'
+    );
   }).length;
 
   if (accountsToShow.length === 0) {
@@ -297,7 +305,7 @@ export default function OrdersCard({ accounts, selectedAccountId, className }: O
                         variant="default"
                         style={{
                           borderColor: getVendorColor(order.vendor),
-                          color: getVendorColor(order.vendor)
+                          color: getVendorColor(order.vendor),
                         }}
                       >
                         {order.vendor.toUpperCase()}
@@ -333,7 +341,9 @@ export default function OrdersCard({ accounts, selectedAccountId, className }: O
                 <div className="order-details">
                   <div className="detail-row">
                     <span className="detail-label">Type:</span>
-                    <span className={`detail-value ${order.transactionType.toLowerCase() === 'buy' ? 'buy-text' : 'sell-text'}`}>
+                    <span
+                      className={`detail-value ${order.transactionType.toLowerCase() === 'buy' ? 'buy-text' : 'sell-text'}`}
+                    >
                       {order.transactionType} {order.orderType}
                     </span>
                   </div>
@@ -355,7 +365,9 @@ export default function OrdersCard({ accounts, selectedAccountId, className }: O
                   )}
                   <div className="detail-row">
                     <span className="detail-label">Filled:</span>
-                    <span className="detail-value">{order.filledQuantity}/{order.quantity}</span>
+                    <span className="detail-value">
+                      {order.filledQuantity}/{order.quantity}
+                    </span>
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">Status:</span>

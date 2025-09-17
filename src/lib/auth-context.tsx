@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Only check auth if cache is expired or doesn't exist
     const now = Date.now();
-    const shouldCheckAuth = !lastAuthCheck || (now - parseInt(lastAuthCheck)) > authCacheTime;
+    const shouldCheckAuth = !lastAuthCheck || now - parseInt(lastAuthCheck) > authCacheTime;
 
     if (shouldCheckAuth) {
       // Run auth check in background without blocking render
@@ -83,24 +83,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Update cache timestamp
       sessionStorage.setItem('lastAuthCheck', Date.now().toString());
-      
+
       // Only update state if there's an actual change
       if (loggedIn !== isLoggedIn) {
         setIsLoggedIn(loggedIn);
         sessionStorage.setItem('isLoggedIn', String(loggedIn));
       }
-      
+
       if (login_url !== loginUrl) {
         setLoginUrl(login_url || null);
       }
-      
+
       setServiceUnavailable(false);
       setCheckedLoginStatus(true);
       // Clear failure count on success
       sessionStorage.removeItem('authFailureCount');
     } catch (error) {
-      console.warn('Auth status check failed (this is normal in development):',
-        error instanceof Error ? error.message : error);
+      console.warn(
+        'Auth status check failed (this is normal in development):',
+        error instanceof Error ? error.message : error
+      );
 
       // Only count non-timeout errors as failures
       const isTimeout = error instanceof Error && error.message.includes('timeout');
@@ -108,7 +110,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const failureCount = parseInt(sessionStorage.getItem('authFailureCount') || '0') + 1;
         sessionStorage.setItem('authFailureCount', failureCount.toString());
 
-        if (failureCount >= 5) { // Increased threshold
+        if (failureCount >= 5) {
+          // Increased threshold
           setServiceUnavailable(true);
         }
       }

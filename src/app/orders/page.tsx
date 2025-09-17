@@ -2,8 +2,8 @@
 
 import PageLayout from '@/components/layout/PageLayout';
 import OrdersCard from '@/components/orders/OrdersCard';
-import { useAuth } from '@/lib/auth-context';
 import { useAccount } from '@/lib/account-context';
+import { useAuth } from '@/lib/auth-context';
 import { Users } from 'lucide-react';
 
 export default function OrdersPage() {
@@ -31,22 +31,19 @@ export default function OrdersPage() {
               </div>
               <h2>Select Your Account</h2>
               <p className="empty-description">
-                Choose a trading account from the header dropdown to view your order history and manage active orders.
+                Choose a trading account from the header dropdown to view your order history and
+                manage active orders.
               </p>
               <div className="mt-4 text-sm text-gray-500">
                 {accounts.length > 0
                   ? `Found ${accounts.length} connected account${accounts.length > 1 ? 's' : ''}`
-                  : 'No accounts found. Add an account to get started.'
-                }
+                  : 'No accounts found. Add an account to get started.'}
               </div>
             </div>
           </div>
         ) : (
           /* Account Selected - Show Orders Card */
-          <OrdersCard
-            accounts={accounts}
-            selectedAccountId={selectedAccount._id}
-          />
+          <OrdersCard accounts={accounts} selectedAccountId={selectedAccount._id} />
         )}
       </PageLayout>
 

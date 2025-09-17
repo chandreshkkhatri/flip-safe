@@ -1,6 +1,6 @@
 import connectDB from '@/lib/mongodb';
-import Account from '@/models/account';
 import upstoxService from '@/lib/upstox-service';
+import Account from '@/models/account';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -25,23 +25,17 @@ export async function GET(request: NextRequest) {
     }
 
     if (state !== 'upstox_auth') {
-      return NextResponse.redirect(
-        new URL('/accounts?error=invalid_state', request.url)
-      );
+      return NextResponse.redirect(new URL('/accounts?error=invalid_state', request.url));
     }
 
     if (!authorizationCode) {
-      return NextResponse.redirect(
-        new URL('/accounts?error=no_authorization_code', request.url)
-      );
+      return NextResponse.redirect(new URL('/accounts?error=no_authorization_code', request.url));
     }
 
     // Get account ID from cookie
     const accountId = request.cookies.get('upstox_account_id')?.value;
     if (!accountId) {
-      return NextResponse.redirect(
-        new URL('/accounts?error=session_expired', request.url)
-      );
+      return NextResponse.redirect(new URL('/accounts?error=session_expired', request.url));
     }
 
     // Connect to database and fetch account
@@ -49,9 +43,7 @@ export async function GET(request: NextRequest) {
     const account = await Account.findById(accountId);
 
     if (!account) {
-      return NextResponse.redirect(
-        new URL('/accounts?error=account_not_found', request.url)
-      );
+      return NextResponse.redirect(new URL('/accounts?error=account_not_found', request.url));
     }
 
     // Initialize Upstox service with account credentials

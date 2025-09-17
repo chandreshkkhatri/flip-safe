@@ -1,7 +1,7 @@
 import { IAccount } from '@/models/account';
 import { BinanceAPI, createBinanceClient } from './binance';
-import upstoxService from './upstox-service';
 import kiteConnectService from './kiteconnect-service';
+import upstoxService from './upstox-service';
 
 export interface UnifiedOrder {
   id: string;
@@ -238,8 +238,7 @@ export class TradingService {
         await this.initializeClient(account);
         const positions = await this.getAccountPositions(account);
         allPositions.push(...positions);
-      } catch (error) {
-      }
+      } catch (error) {}
     }
 
     return allPositions.sort((a, b) => b.pnl - a.pnl);
@@ -277,9 +276,10 @@ export class TradingService {
           averagePrice: position.average_price,
           lastPrice: position.last_price,
           pnl: position.pnl,
-          pnlPercentage: position.average_price > 0
-            ? (position.pnl / (position.average_price * Math.abs(position.quantity))) * 100
-            : 0,
+          pnlPercentage:
+            position.average_price > 0
+              ? (position.pnl / (position.average_price * Math.abs(position.quantity))) * 100
+              : 0,
           product: position.product,
           rawData: position,
         })
@@ -361,8 +361,7 @@ export class TradingService {
         await this.initializeClient(account);
         const holdings = await this.getAccountHoldings(account);
         allHoldings.push(...holdings);
-      } catch (error) {
-      }
+      } catch (error) {}
     }
 
     return allHoldings.sort((a, b) => b.currentValue - a.currentValue);

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import axios from 'axios';
-import { AlertTriangle, RefreshCw, TrendingDown, TrendingUp, Briefcase } from 'lucide-react';
+import { AlertTriangle, Briefcase, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface TradingAccount {
@@ -48,7 +48,11 @@ interface AccountError {
   message: string;
 }
 
-export default function HoldingsCard({ accounts, selectedAccountId, className }: HoldingsCardProps) {
+export default function HoldingsCard({
+  accounts,
+  selectedAccountId,
+  className,
+}: HoldingsCardProps) {
   const [holdingsData, setHoldingsData] = useState<UnifiedHoldingResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -83,18 +87,21 @@ export default function HoldingsCard({ accounts, selectedAccountId, className }:
         throw new Error(response.data?.error || 'Failed to fetch holdings');
       }
     } catch (err: any) {
-
       // Check if it's a 401 error (authentication failure)
       if (err.response?.status === 401) {
         const errorData = err.response?.data;
         setAccountErrors(prev => {
           const filtered = prev.filter(e => e.accountId !== account._id);
-          return [...filtered, {
-            accountId: account._id!,
-            accountName: account.accountName,
-            requiresReauth: errorData?.requiresReauth || true,
-            message: errorData?.error || 'Authentication failed. Please re-authenticate your account.'
-          }];
+          return [
+            ...filtered,
+            {
+              accountId: account._id!,
+              accountName: account.accountName,
+              requiresReauth: errorData?.requiresReauth || true,
+              message:
+                errorData?.error || 'Authentication failed. Please re-authenticate your account.',
+            },
+          ];
         });
       } else {
         const errorMessage = err.response?.data?.error || err.message || 'Failed to fetch holdings';
@@ -151,20 +158,14 @@ export default function HoldingsCard({ accounts, selectedAccountId, className }:
     }
   };
 
-  const totalValue = holdingsData.reduce(
-    (sum, holding) => sum + holding.currentValue,
-    0
-  );
+  const totalValue = holdingsData.reduce((sum, holding) => sum + holding.currentValue, 0);
 
   const totalInvestment = holdingsData.reduce(
-    (sum, holding) => sum + (holding.averagePrice * holding.quantity),
+    (sum, holding) => sum + holding.averagePrice * holding.quantity,
     0
   );
 
-  const totalPnl = holdingsData.reduce(
-    (sum, holding) => sum + holding.pnl,
-    0
-  );
+  const totalPnl = holdingsData.reduce((sum, holding) => sum + holding.pnl, 0);
 
   const totalPnlPercentage = totalInvestment > 0 ? (totalPnl / totalInvestment) * 100 : 0;
 
@@ -289,7 +290,7 @@ export default function HoldingsCard({ accounts, selectedAccountId, className }:
                         variant="default"
                         style={{
                           borderColor: getVendorColor(holding.vendor),
-                          color: getVendorColor(holding.vendor)
+                          color: getVendorColor(holding.vendor),
                         }}
                       >
                         {holding.vendor.toUpperCase()}
@@ -337,11 +338,11 @@ export default function HoldingsCard({ accounts, selectedAccountId, className }:
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">P&L:</span>
-                    <span className={`detail-value pnl ${holding.pnl >= 0 ? 'positive' : 'negative'}`}>
+                    <span
+                      className={`detail-value pnl ${holding.pnl >= 0 ? 'positive' : 'negative'}`}
+                    >
                       {formatCurrency(holding.pnl)}
-                      <span className="pnl-percentage">
-                        ({holding.pnlPercentage.toFixed(2)}%)
-                      </span>
+                      <span className="pnl-percentage">({holding.pnlPercentage.toFixed(2)}%)</span>
                     </span>
                   </div>
                 </div>

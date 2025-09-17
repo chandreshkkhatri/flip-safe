@@ -67,18 +67,21 @@ export default function FundsCard({ accounts, selectedAccountId, className }: Fu
         throw new Error(response.data?.error || 'Failed to fetch funds');
       }
     } catch (err: any) {
-
       // Check if it's a 401 error (authentication failure)
       if (err.response?.status === 401) {
         const errorData = err.response?.data;
         setAccountErrors(prev => {
           const filtered = prev.filter(e => e.accountId !== account._id);
-          return [...filtered, {
-            accountId: account._id!,
-            accountName: account.accountName,
-            requiresReauth: errorData?.requiresReauth || true,
-            message: errorData?.error || 'Authentication failed. Please re-authenticate your account.'
-          }];
+          return [
+            ...filtered,
+            {
+              accountId: account._id!,
+              accountName: account.accountName,
+              requiresReauth: errorData?.requiresReauth || true,
+              message:
+                errorData?.error || 'Authentication failed. Please re-authenticate your account.',
+            },
+          ];
         });
       } else {
         const errorMessage = err.response?.data?.error || err.message || 'Failed to fetch funds';
@@ -292,9 +295,13 @@ export default function FundsCard({ accounts, selectedAccountId, className }: Fu
                       }}
                     >
                       <span className="account-type-icon">
-                        {account.accountType === 'kite' ? '🟠' :
-                         account.accountType === 'upstox' ? '🔵' :
-                         account.accountType === 'binance' ? '🟡' : '🔗'}
+                        {account.accountType === 'kite'
+                          ? '🟠'
+                          : account.accountType === 'upstox'
+                            ? '🔵'
+                            : account.accountType === 'binance'
+                              ? '🟡'
+                              : '🔗'}
                       </span>
                       {account.accountType.toUpperCase()}
                     </Badge>

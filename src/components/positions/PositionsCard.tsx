@@ -4,9 +4,8 @@ import EnhancedCard from '@/components/enhanced-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { API_ROUTES } from '@/lib/constants';
 import axios from 'axios';
-import { AlertTriangle, RefreshCw, TrendingDown, TrendingUp, Package } from 'lucide-react';
+import { AlertTriangle, Package, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface TradingAccount {
@@ -47,7 +46,11 @@ interface AccountError {
   message: string;
 }
 
-export default function PositionsCard({ accounts, selectedAccountId, className }: PositionsCardProps) {
+export default function PositionsCard({
+  accounts,
+  selectedAccountId,
+  className,
+}: PositionsCardProps) {
   const [positionsData, setPositionsData] = useState<UnifiedPositionResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,21 +85,25 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
         throw new Error(response.data?.error || 'Failed to fetch positions');
       }
     } catch (err: any) {
-
       // Check if it's a 401 error (authentication failure)
       if (err.response?.status === 401) {
         const errorData = err.response?.data;
         setAccountErrors(prev => {
           const filtered = prev.filter(e => e.accountId !== account._id);
-          return [...filtered, {
-            accountId: account._id!,
-            accountName: account.accountName,
-            requiresReauth: errorData?.requiresReauth || true,
-            message: errorData?.error || 'Authentication failed. Please re-authenticate your account.'
-          }];
+          return [
+            ...filtered,
+            {
+              accountId: account._id!,
+              accountName: account.accountName,
+              requiresReauth: errorData?.requiresReauth || true,
+              message:
+                errorData?.error || 'Authentication failed. Please re-authenticate your account.',
+            },
+          ];
         });
       } else {
-        const errorMessage = err.response?.data?.error || err.message || 'Failed to fetch positions';
+        const errorMessage =
+          err.response?.data?.error || err.message || 'Failed to fetch positions';
         setError(`${account.accountName}: ${errorMessage}`);
       }
     } finally {
@@ -150,13 +157,10 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
     }
   };
 
-  const totalPnl = positionsData.reduce(
-    (sum, position) => sum + position.pnl,
-    0
-  );
+  const totalPnl = positionsData.reduce((sum, position) => sum + position.pnl, 0);
 
   const totalValue = positionsData.reduce(
-    (sum, position) => sum + (position.lastPrice * Math.abs(position.quantity)),
+    (sum, position) => sum + position.lastPrice * Math.abs(position.quantity),
     0
   );
 
@@ -275,7 +279,7 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
                         variant="default"
                         style={{
                           borderColor: getVendorColor(position.vendor),
-                          color: getVendorColor(position.vendor)
+                          color: getVendorColor(position.vendor),
                         }}
                       >
                         {position.vendor.toUpperCase()}
@@ -317,11 +321,11 @@ export default function PositionsCard({ accounts, selectedAccountId, className }
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">P&L:</span>
-                    <span className={`detail-value pnl ${position.pnl >= 0 ? 'positive' : 'negative'}`}>
+                    <span
+                      className={`detail-value pnl ${position.pnl >= 0 ? 'positive' : 'negative'}`}
+                    >
                       {formatCurrency(position.pnl)}
-                      <span className="pnl-percentage">
-                        ({position.pnlPercentage.toFixed(2)}%)
-                      </span>
+                      <span className="pnl-percentage">({position.pnlPercentage.toFixed(2)}%)</span>
                     </span>
                   </div>
                 </div>

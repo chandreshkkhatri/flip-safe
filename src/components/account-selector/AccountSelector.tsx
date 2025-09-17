@@ -1,8 +1,8 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { ChevronDown, Check } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { Check, ChevronDown } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 interface TradingAccount {
   _id: string;
@@ -19,11 +19,11 @@ interface AccountSelectorProps {
   loading?: boolean;
 }
 
-export default function AccountSelector({ 
-  accounts, 
-  selectedAccount, 
+export default function AccountSelector({
+  accounts,
+  selectedAccount,
   onAccountSelect,
-  loading = false 
+  loading = false,
 }: AccountSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -57,7 +57,7 @@ export default function AccountSelector({
     return (
       <div className="no-accounts">
         <span>No accounts found</span>
-        <Button size="sm" variant="outline" onClick={() => window.location.href = '/accounts'}>
+        <Button size="sm" variant="outline" onClick={() => (window.location.href = '/accounts')}>
           Select Account
         </Button>
       </div>
@@ -66,18 +66,18 @@ export default function AccountSelector({
 
   return (
     <div className="account-selector" ref={dropdownRef}>
-      <Button
-        variant="outline"
-        onClick={() => setIsOpen(!isOpen)}
-        className="selector-button"
-      >
+      <Button variant="outline" onClick={() => setIsOpen(!isOpen)} className="selector-button">
         <div className="selected-account">
           <span className="account-type">
-            {selectedAccount ?
-              (selectedAccount.accountType === 'binance' ? '🟡' :
-               selectedAccount.accountType === 'kite' ? '🟠' :
-               selectedAccount.accountType === 'upstox' ? '🔵' : '🔗') :
-              '🔗'}
+            {selectedAccount
+              ? selectedAccount.accountType === 'binance'
+                ? '🟡'
+                : selectedAccount.accountType === 'kite'
+                  ? '🟠'
+                  : selectedAccount.accountType === 'upstox'
+                    ? '🔵'
+                    : '🔗'
+              : '🔗'}
           </span>
           <span className="account-name">
             {selectedAccount ? selectedAccount.accountName : 'Select Account'}
@@ -88,7 +88,7 @@ export default function AccountSelector({
 
       {isOpen && (
         <div className="dropdown-menu">
-          {accounts.map((account) => (
+          {accounts.map(account => (
             <div
               key={account._id}
               className={`dropdown-item ${selectedAccount?._id === account._id ? 'selected' : ''}`}
@@ -96,9 +96,13 @@ export default function AccountSelector({
             >
               <div className="account-info">
                 <span className="account-type">
-                  {account.accountType === 'binance' ? '🟡' :
-                   account.accountType === 'kite' ? '🟠' :
-                   account.accountType === 'upstox' ? '🔵' : '🔗'}
+                  {account.accountType === 'binance'
+                    ? '🟡'
+                    : account.accountType === 'kite'
+                      ? '🟠'
+                      : account.accountType === 'upstox'
+                        ? '🔵'
+                        : '🔗'}
                 </span>
                 <div className="account-details">
                   <span className="account-name">{account.accountName}</span>
@@ -107,9 +111,7 @@ export default function AccountSelector({
                   </span>
                 </div>
               </div>
-              {selectedAccount?._id === account._id && (
-                <Check size={16} className="check-icon" />
-              )}
+              {selectedAccount?._id === account._id && <Check size={16} className="check-icon" />}
             </div>
           ))}
         </div>
@@ -149,8 +151,12 @@ export default function AccountSelector({
         }
 
         @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
         }
 
         .no-accounts {

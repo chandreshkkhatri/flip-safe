@@ -22,9 +22,8 @@ export async function GET(request: NextRequest) {
       isLoggedIn: false, // No traditional login system
       allowOfflineAccess: true, // Always allow offline access
       login_url: null, // No single login URL - accounts handle their own auth
-      message: 'Offline mode available. Authenticate individual accounts as needed.'
+      message: 'Offline mode available. Authenticate individual accounts as needed.',
     });
-
   } catch (error) {
     console.error('Error checking auth status:', error);
     return NextResponse.json(
@@ -32,7 +31,7 @@ export async function GET(request: NextRequest) {
         isLoggedIn: false,
         allowOfflineAccess: true, // Fallback to offline mode
         login_url: null,
-        error: 'Failed to check auth status, allowing offline access'
+        error: 'Failed to check auth status, allowing offline access',
       },
       { status: 200 } // Return 200 to avoid auth context errors
     );

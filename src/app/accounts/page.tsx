@@ -1,8 +1,8 @@
 'use client';
 
 import AccountCard from '@/components/accounts/AccountCard';
-import RadixAccountModal from '@/components/accounts/RadixAccountModal';
 import EditAccountModal from '@/components/accounts/EditAccountModal';
+import RadixAccountModal from '@/components/accounts/RadixAccountModal';
 import EnhancedCard from '@/components/enhanced-card';
 import PageLayout from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
@@ -169,15 +169,19 @@ export default function AccountsPage() {
       const requestBody: any = { accountId };
 
       // For sandbox token authentication, include the token
-      if (account.accountType === 'upstox' && account.metadata?.sandbox === true && authEndpoint.includes('sandbox-token')) {
+      if (
+        account.accountType === 'upstox' &&
+        account.metadata?.sandbox === true &&
+        authEndpoint.includes('sandbox-token')
+      ) {
         const token = prompt(
           'Upstox Sandbox Authentication:\n\n' +
-          'For sandbox accounts, please generate an access token directly from your Upstox Developer Portal:\n' +
-          '1. Go to your Upstox Developer Apps page\n' +
-          '2. Navigate to your sandbox app\n' +
-          '3. Click "Generate" to create a new access token\n' +
-          '4. Copy the generated token and paste it below:\n\n' +
-          'Enter your sandbox access token:'
+            'For sandbox accounts, please generate an access token directly from your Upstox Developer Portal:\n' +
+            '1. Go to your Upstox Developer Apps page\n' +
+            '2. Navigate to your sandbox app\n' +
+            '3. Click "Generate" to create a new access token\n' +
+            '4. Copy the generated token and paste it below:\n\n' +
+            'Enter your sandbox access token:'
         );
 
         if (!token || !token.trim()) {
@@ -204,10 +208,11 @@ export default function AccountsPage() {
         } else {
           // Direct validation successful (for Binance) or OAuth success
           await fetchAccounts();
-          
+
           // Use a more user-friendly notification instead of alert
-          const accountTypeName = account.accountType.charAt(0).toUpperCase() + account.accountType.slice(1);
-          
+          const accountTypeName =
+            account.accountType.charAt(0).toUpperCase() + account.accountType.slice(1);
+
           // For Binance, show validation success message
           if (account.accountType === 'binance') {
             console.log(`✅ ${accountTypeName} API credentials validated successfully!`);

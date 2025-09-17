@@ -1,6 +1,6 @@
+import kiteConnectService from '@/lib/kiteconnect-service';
 import connectDB from '@/lib/mongodb';
 import Account from '@/models/account';
-import kiteConnectService from '@/lib/kiteconnect-service';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';

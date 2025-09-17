@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { binanceWebSocket } from '@/lib/binance-websocket';
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import TradingWindow from './TradingWindow';
 
 export interface WatchlistItem {
@@ -29,9 +29,13 @@ interface WatchlistProps {
   marketType?: string;
 }
 
-export default function Watchlist({ binanceAccounts, selectedAccount, marketType = 'binance-futures' }: WatchlistProps) {
+export default function Watchlist({
+  binanceAccounts,
+  selectedAccount,
+  marketType = 'binance-futures',
+}: WatchlistProps) {
   console.log('Watchlist component rendering, binanceAccounts length:', binanceAccounts?.length);
-  
+
   const [watchlistItems, setWatchlistItems] = useState<WatchlistItem[]>([]);
   const [selectedSymbol, setSelectedSymbol] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -39,8 +43,8 @@ export default function Watchlist({ binanceAccounts, selectedAccount, marketType
   const [watchlistSymbols, setWatchlistSymbols] = useState<string[]>([]);
 
   // Memoized values that were previously in JSX
-  const currentPrice = useMemo(() => 
-    watchlistItems.find(item => item.symbol === selectedSymbol)?.lastPrice || 0,
+  const currentPrice = useMemo(
+    () => watchlistItems.find(item => item.symbol === selectedSymbol)?.lastPrice || 0,
     [watchlistItems, selectedSymbol]
   );
 
@@ -60,7 +64,7 @@ export default function Watchlist({ binanceAccounts, selectedAccount, marketType
       try {
         setLoading(true);
         setError(null);
-        
+
         // Fetch symbols from API based on selected account and market
         const response = await fetch(
           `/api/watchlist/symbols?accountId=${selectedAccount._id}&marketType=${marketType}`
@@ -69,7 +73,7 @@ export default function Watchlist({ binanceAccounts, selectedAccount, marketType
 
         if (data.success && data.symbols && data.symbols.length > 0) {
           setWatchlistSymbols(data.symbols);
-          
+
           // Initialize watchlist items
           const initialData: WatchlistItem[] = data.symbols.map((symbol: string) => ({
             symbol,
@@ -112,7 +116,7 @@ export default function Watchlist({ binanceAccounts, selectedAccount, marketType
           setWatchlistItems([]);
           setWatchlistSymbols([]);
         }
-        
+
         setLoading(false);
       } catch (err) {
         console.error('Failed to fetch watchlist symbols:', err);
@@ -144,7 +148,7 @@ export default function Watchlist({ binanceAccounts, selectedAccount, marketType
       setWatchlistItems(prev => [...prev, newItem]);
       setWatchlistSymbols(prev => [...prev, symbol]);
       binanceWebSocket.addSymbol(symbol);
-      
+
       // Save to database
       if (selectedAccount) {
         try {
@@ -171,7 +175,7 @@ export default function Watchlist({ binanceAccounts, selectedAccount, marketType
     if (selectedSymbol === symbol && watchlistItems.length > 1) {
       setSelectedSymbol(watchlistItems.find(item => item.symbol !== symbol)?.symbol || '');
     }
-    
+
     // Save to database
     if (selectedAccount) {
       try {
@@ -300,7 +304,7 @@ export default function Watchlist({ binanceAccounts, selectedAccount, marketType
           overflow: hidden;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
-        
+
         :global(.dark) .watchlist-container {
           background: #18181b !important;
           color: #ffffff !important;
@@ -346,7 +350,7 @@ export default function Watchlist({ binanceAccounts, selectedAccount, marketType
           flex-direction: column;
           background: #ffffff;
         }
-        
+
         :global(.dark) .watchlist-panel {
           border-right: 1px solid #27272a !important;
           background: #18181b !important;
@@ -361,7 +365,7 @@ export default function Watchlist({ binanceAccounts, selectedAccount, marketType
           background: #f8f9fa;
           color: #333;
         }
-        
+
         :global(.dark) .watchlist-header {
           border-bottom: 1px solid #27272a !important;
           background: #09090b !important;
@@ -483,7 +487,7 @@ export default function Watchlist({ binanceAccounts, selectedAccount, marketType
           display: flex;
           flex-direction: column;
         }
-        
+
         :global(.dark) .trading-panel {
           background: #09090b !important;
           color: #ffffff !important;

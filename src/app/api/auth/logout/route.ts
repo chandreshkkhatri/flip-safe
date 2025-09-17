@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     // Clear any session cookies if they exist
     const response = NextResponse.json({
       success: true,
-      message: 'Logged out successfully'
+      message: 'Logged out successfully',
     });
 
     // Clear any authentication cookies
@@ -20,13 +20,12 @@ export async function GET(request: NextRequest) {
     // response.cookies.delete('session');
 
     return response;
-
   } catch (error) {
     console.error('Error during logout:', error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Logout failed'
+        error: 'Logout failed',
       },
       { status: 500 }
     );

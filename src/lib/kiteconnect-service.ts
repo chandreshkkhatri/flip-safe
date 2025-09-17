@@ -386,7 +386,10 @@ class KiteConnectService {
   /**
    * Modify an order
    */
-  async modifyOrder(orderId: string, params: Partial<KiteOrderParams>): Promise<{ order_id: string }> {
+  async modifyOrder(
+    orderId: string,
+    params: Partial<KiteOrderParams>
+  ): Promise<{ order_id: string }> {
     const variety = 'regular';
     return limiter.schedule(() => this.kc.modifyOrder(variety, orderId, params));
   }
@@ -555,8 +558,16 @@ export const {
     fromDate: string,
     toDate: string,
     continuous: number = 0
-  ) => kiteConnectService.getHistoricalData(instrumentToken, interval, fromDate, toDate, continuous === 1),
-  getInstruments: (exchange?: string) => kiteConnectService.getInstruments(exchange ? [exchange] : undefined),
+  ) =>
+    kiteConnectService.getHistoricalData(
+      instrumentToken,
+      interval,
+      fromDate,
+      toDate,
+      continuous === 1
+    ),
+  getInstruments: (exchange?: string) =>
+    kiteConnectService.getInstruments(exchange ? [exchange] : undefined),
   placeOrder: (params: any) => kiteConnectService.placeOrder(params),
   modifyOrder: (orderId: string, params: any) => kiteConnectService.modifyOrder(orderId, params),
   cancelOrder: (orderId: string) => kiteConnectService.cancelOrder(orderId),
