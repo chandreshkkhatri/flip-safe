@@ -123,10 +123,18 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
             }
           }
         }
-      } catch (error) {
+      } catch (error: any) {
+        console.error('Error fetching accounts:', error);
         if (!isBackground) {
-          setError('Failed to fetch accounts');
-          setAccounts([]);
+          // More detailed error messaging
+          const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch accounts';
+          setError(errorMessage);
+          console.log('Account fetch failed:', errorMessage, 'Auth status:', { isLoggedIn, allowOfflineAccess });
+
+          // Don't clear accounts if it's just a network error - keep cached data
+          if (!error.message?.includes('Network')) {
+            setAccounts([]);
+          }
         }
       } finally {
         if (!isBackground) setLoadingAccounts(false);
@@ -155,10 +163,13 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
     const cachedData = sessionStorage.getItem(cacheKey);
     const savedAccountId = sessionStorage.getItem('selectedAccountId');
 
+    let hasCachedData = false;
     if (cachedData) {
       try {
         const cachedAccounts = JSON.parse(cachedData) as TradingAccount[];
         setAccounts(cachedAccounts);
+        hasCachedData = true;
+        // Only set loading to false if we have cached data
         setLoadingAccounts(false);
 
         if (savedAccountId && cachedAccounts.length > 0) {
@@ -167,13 +178,21 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
             setSelectedAccountState(savedAccount);
           }
         }
-      } catch (error) {}
+      } catch (error) {
+        console.error('Error parsing cached accounts:', error);
+      }
     }
 
     // Fetch fresh data only if logged in or offline access allowed
     if (isLoggedIn || allowOfflineAccess) {
-      // Small delay to allow for immediate rendering
-      setTimeout(() => fetchAccounts(), 50);
+      // If no cache, fetch immediately; otherwise delay for background fetch
+      const delay = hasCachedData ? 50 : 0;
+      setTimeout(() => fetchAccounts(), delay);
+    } else {
+      // If not logged in and no cache, set loading to false
+      if (!hasCachedData) {
+        setLoadingAccounts(false);
+      }
     }
   }, [isLoggedIn, allowOfflineAccess, fetchAccounts]);
 
