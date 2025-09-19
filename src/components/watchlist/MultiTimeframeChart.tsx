@@ -16,9 +16,6 @@ interface MultiTimeframeChartProps {
 
 const DEFAULT_TIMEFRAMES = [
   { interval: '1h', label: '1 Hour', index: 0 },
-  { interval: '4h', label: '4 Hour', index: 1 },
-  { interval: '1d', label: '1 Day', index: 2 },
-  { interval: '1w', label: '1 Week', index: 3 },
 ];
 
 const AVAILABLE_TIMEFRAMES = [

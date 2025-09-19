@@ -2,9 +2,8 @@
 
 import { Button } from '@/components/ui/button';
 import { binanceWebSocket } from '@/lib/binance-websocket';
-import { ChevronDown, Plus } from 'lucide-react';
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import SymbolSearchModal from './SymbolSearchModal';
+import { ChevronDown } from 'lucide-react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import TradingWindow from './TradingWindow';
 
 export interface WatchlistItem {
@@ -38,21 +37,17 @@ const Watchlist = memo(function Watchlist({
   selectedAccount,
   marketType = 'binance-futures',
 }: WatchlistProps) {
-
   const [watchlistItems, setWatchlistItems] = useState<WatchlistItem[]>([]);
   const [selectedSymbol, setSelectedSymbol] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [watchlistSymbols, setWatchlistSymbols] = useState<string[]>([]);
-  const [showSymbolSearch, setShowSymbolSearch] = useState(false);
   const [watchlists, setWatchlists] = useState<
     Array<{ id: string; name: string; isDefault: boolean }>
   >([]);
   const [currentWatchlistId, setCurrentWatchlistId] = useState<string | null>(null);
   const [currentWatchlistName, setCurrentWatchlistName] = useState<string>('Default Watchlist');
   const [showWatchlistDropdown, setShowWatchlistDropdown] = useState(false);
-  const [showCreateWatchlist, setShowCreateWatchlist] = useState(false);
-  const [newWatchlistName, setNewWatchlistName] = useState('');
 
   const currentPrice = watchlistItems.find(item => item.symbol === selectedSymbol)?.lastPrice || 0;
 
@@ -154,58 +149,7 @@ const Watchlist = memo(function Watchlist({
         binanceWebSocket.disconnect();
       }
     };
-  }, [selectedAccount, marketType, currentWatchlistId]);
-
-  // Close dropdowns when modal opens
-  useEffect(() => {
-    if (showSymbolSearch) {
-      setShowWatchlistDropdown(false);
-      setShowCreateWatchlist(false);
-    }
-  }, [showSymbolSearch]);
-
-  const addSymbol = async (symbol: string) => {
-    if (!watchlistItems.find(item => item.symbol === symbol)) {
-      const newItem: WatchlistItem = {
-        symbol,
-        lastPrice: 0,
-        priceChange: 0,
-        priceChangePercent: 0,
-        volume: 0,
-        high24h: 0,
-        low24h: 0,
-      };
-      setWatchlistItems(prev => [...prev, newItem]);
-      setWatchlistSymbols(prev => [...prev, symbol]);
-      // Only use WebSocket for Binance accounts
-      if (selectedAccount?.accountType === 'binance') {
-        binanceWebSocket.addSymbol(symbol);
-      }
-
-      // Save to database
-      if (selectedAccount) {
-        try {
-          const body: any = {
-            accountId: selectedAccount._id,
-            marketType,
-            symbols: [...watchlistSymbols, symbol],
-          };
-
-          if (currentWatchlistId) {
-            body.watchlistId = currentWatchlistId;
-          }
-
-          await fetch('/api/watchlist/symbols', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-          });
-        } catch (err) {
-          console.error('Failed to save symbol to watchlist:', err);
-        }
-      }
-    }
-  };
+  }, [selectedAccount, marketType, currentWatchlistId, selectedSymbol]);
 
   const removeSymbol = async (symbol: string) => {
     setWatchlistItems(prev => prev.filter(item => item.symbol !== symbol));
@@ -242,66 +186,16 @@ const Watchlist = memo(function Watchlist({
     }
   };
 
-  const createNewWatchlist = async () => {
-    if (!newWatchlistName.trim() || !selectedAccount) return;
-
-    try {
-      const response = await fetch('/api/watchlist/symbols', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          accountId: selectedAccount._id,
-          action: 'create',
-          name: newWatchlistName,
-          marketType,
-        }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        // Refresh watchlists
-        const fetchResponse = await fetch(
-          `/api/watchlist/symbols?accountId=${selectedAccount._id}&marketType=${marketType}`
-        );
-        const fetchData = await fetchResponse.json();
-        if (fetchData.watchlists) {
-          setWatchlists(fetchData.watchlists);
-        }
-
-        // Switch to new watchlist
-        if (data.watchlist) {
-          setCurrentWatchlistId(data.watchlist.id);
-          setCurrentWatchlistName(data.watchlist.name);
-        }
-
-        setNewWatchlistName('');
-        setShowCreateWatchlist(false);
-      }
-    } catch (err) {
-      console.error('Failed to create watchlist:', err);
-    }
-  };
-
   const switchWatchlist = useCallback((watchlistId: string, watchlistName: string) => {
     setCurrentWatchlistId(watchlistId);
     setCurrentWatchlistName(watchlistName);
     setShowWatchlistDropdown(false);
   }, []);
 
-  const handleAddButtonClick = useCallback(() => {
-    // Close any open dropdowns when opening the modal
-    setShowWatchlistDropdown(false);
-    setShowCreateWatchlist(false);
-    setShowSymbolSearch(true);
-  }, []);
-
-  const handleModalClose = useCallback(() => setShowSymbolSearch(false), []);
-
   const handleOrderPlaced = useCallback(() => {
     // Handle order placed event - could refresh data, show notification, etc.
     console.log('Order placed successfully');
   }, []);
-
 
   if (loading) {
     return (
@@ -318,7 +212,11 @@ const Watchlist = memo(function Watchlist({
           <h3>Market Watch</h3>
           <p>Select an account to view your watchlist</p>
           {accounts.length === 0 && (
-            <Button variant="trading" size="sm" onClick={() => window.location.href = '/accounts'}>
+            <Button
+              variant="trading"
+              size="sm"
+              onClick={() => (window.location.href = '/accounts')}
+            >
               Add Trading Account
             </Button>
           )}
@@ -352,60 +250,10 @@ const Watchlist = memo(function Watchlist({
                   </div>
                 ))}
                 <div className="dropdown-divider"></div>
-                <div
-                  className="dropdown-item create-new"
-                  onClick={() => {
-                    setShowCreateWatchlist(true);
-                    setShowWatchlistDropdown(false);
-                  }}
-                >
-                  <Plus size={16} /> Create New Watchlist
-                </div>
               </div>
             )}
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleAddButtonClick}
-          >
-            <Plus size={16} /> Add
-          </Button>
         </div>
-
-        {showCreateWatchlist && (
-          <div className="create-watchlist-form">
-            <input
-              type="text"
-              placeholder="Enter watchlist name"
-              value={newWatchlistName}
-              onChange={e => setNewWatchlistName(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter') createNewWatchlist();
-                if (e.key === 'Escape') {
-                  setShowCreateWatchlist(false);
-                  setNewWatchlistName('');
-                }
-              }}
-              autoFocus
-            />
-            <div className="form-actions">
-              <Button size="sm" onClick={createNewWatchlist}>
-                Create
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setShowCreateWatchlist(false);
-                  setNewWatchlistName('');
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
 
         {error && <div className="error-message">{error}</div>}
 
@@ -462,22 +310,13 @@ const Watchlist = memo(function Watchlist({
         />
       </div>
 
-      {selectedAccount && (
-        <SymbolSearchModal
-          isOpen={showSymbolSearch}
-          onClose={handleModalClose}
-          onSelectSymbol={addSymbol}
-          accountType={selectedAccount.accountType || 'binance'}
-        />
-      )}
-
-
       <style jsx>{`
         .watchlist-container {
           display: grid;
           grid-template-columns: 300px 1fr;
           gap: 16px;
-          height: 600px;
+          height: 100%;
+          min-height: 0;
           background: #ffffff;
           color: #000000;
           border-radius: 8px;
@@ -521,8 +360,6 @@ const Watchlist = memo(function Watchlist({
           color: #666;
           font-size: 0.9rem;
         }
-
-        /* Add account button migrated to Button */
 
         .watchlist-panel {
           border-right: 1px solid #e9ecef;
@@ -625,11 +462,6 @@ const Watchlist = memo(function Watchlist({
           background: #1e3a8a;
         }
 
-        .dropdown-item.create-new {
-          color: #3b82f6;
-          font-weight: 500;
-        }
-
         .dropdown-divider {
           height: 1px;
           background: #e5e5e5;
@@ -648,42 +480,6 @@ const Watchlist = memo(function Watchlist({
           border-radius: 4px;
           margin-left: auto;
         }
-
-        .create-watchlist-form {
-          padding: 12px 16px;
-          background: #f3f4f6;
-          border-bottom: 1px solid #e5e5e5;
-        }
-
-        :global(.dark) .create-watchlist-form {
-          background: #27272a;
-          border-bottom-color: #3f3f46;
-        }
-
-        .create-watchlist-form input {
-          width: 100%;
-          padding: 8px 12px;
-          border: 1px solid #e5e5e5;
-          border-radius: 4px;
-          font-size: 0.9rem;
-          background: white;
-          color: #333;
-          outline: none;
-        }
-
-        :global(.dark) .create-watchlist-form input {
-          background: #18181b;
-          border-color: #3f3f46;
-          color: white;
-        }
-
-        .form-actions {
-          display: flex;
-          gap: 8px;
-          margin-top: 8px;
-        }
-
-        /* Add symbol button migrated to Button */
 
         .error-message {
           background: #fff3cd;
@@ -754,8 +550,6 @@ const Watchlist = memo(function Watchlist({
           color: var(--foreground);
         }
 
-        /* Remove symbol button migrated to Button */
-
         .price-info {
           display: flex;
           flex-direction: column;
@@ -791,6 +585,8 @@ const Watchlist = memo(function Watchlist({
           color: #333;
           display: flex;
           flex-direction: column;
+          overflow-y: auto;
+          height: 100%;
         }
 
         :global(.dark) .trading-panel {
@@ -810,8 +606,8 @@ const Watchlist = memo(function Watchlist({
           .watchlist-container {
             grid-template-columns: 1fr;
             grid-template-rows: auto;
-            height: auto;
-            min-height: 100vh;
+            height: 100%;
+            min-height: 0;
             border-radius: 0;
             box-shadow: none;
           }
@@ -832,7 +628,8 @@ const Watchlist = memo(function Watchlist({
           }
 
           .trading-panel {
-            min-height: 60vh;
+            min-height: 0;
+            max-height: none;
           }
 
           .watchlist-header {
