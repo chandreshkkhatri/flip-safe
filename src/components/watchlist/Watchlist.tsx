@@ -50,10 +50,14 @@ const Watchlist = memo(function Watchlist({
   const [currentWatchlistName, setCurrentWatchlistName] = useState<string>('Default Watchlist');
   const [showWatchlistDropdown, setShowWatchlistDropdown] = useState(false);
   const [showSymbolSearchModal, setShowSymbolSearchModal] = useState(false);
-  const [addAnchorRect, setAddAnchorRect] = useState<
-    | { top: number; left: number; bottom: number; right: number; width: number; height: number }
-    | null
-  >(null);
+  const [addAnchorRect, setAddAnchorRect] = useState<{
+    top: number;
+    left: number;
+    bottom: number;
+    right: number;
+    width: number;
+    height: number;
+  } | null>(null);
 
   const currentPrice = watchlistItems.find(item => item.symbol === selectedSymbol)?.lastPrice || 0;
 
@@ -378,9 +382,10 @@ const Watchlist = memo(function Watchlist({
                   <span className="last-price">
                     {selectedAccount?.accountType === 'binance'
                       ? `$${item.lastPrice.toFixed(2)}`
-                      : selectedAccount?.accountType === 'upstox' || selectedAccount?.accountType === 'kite'
-                      ? `₹${item.lastPrice.toFixed(2)}`
-                      : item.lastPrice.toFixed(2)}
+                      : selectedAccount?.accountType === 'upstox' ||
+                          selectedAccount?.accountType === 'kite'
+                        ? `₹${item.lastPrice.toFixed(2)}`
+                        : item.lastPrice.toFixed(2)}
                   </span>
                   <span
                     className={`price-change ${item.priceChange >= 0 ? 'positive' : 'negative'}`}
@@ -406,13 +411,13 @@ const Watchlist = memo(function Watchlist({
       </div>
 
       {/* Symbol Search Modal */}
-    {showSymbolSearchModal && selectedAccount && (
+      {showSymbolSearchModal && selectedAccount && (
         <SymbolSearchModal
           isOpen={showSymbolSearchModal}
           onClose={() => setShowSymbolSearchModal(false)}
           onSelectSymbol={addSymbol}
           accountType={selectedAccount.accountType}
-      anchorRect={addAnchorRect || undefined}
+          anchorRect={addAnchorRect || undefined}
         />
       )}
 

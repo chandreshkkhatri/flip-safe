@@ -23,12 +23,20 @@ async function searchSymbolsInDatabase(
     await connectDB();
     const InstrumentModel = getInstrumentModel(vendor);
 
+
     // Create regex for case-insensitive search
     const searchRegex = new RegExp(query, 'i');
 
-    // Build search criteria
+    // Build search criteria - search across multiple fields
     const searchCriteria: any = {
-      $or: [{ tradingsymbol: searchRegex }, { name: searchRegex }],
+      $or: [
+        { trading_symbol: searchRegex },
+        { tradingsymbol: searchRegex }, // fallback for other vendors
+        { name: searchRegex },
+        { asset_symbol: searchRegex },
+        { underlying_symbol: searchRegex },
+        { short_name: searchRegex }
+      ],
     };
 
     // Add exchange filter if provided
@@ -48,12 +56,12 @@ async function searchSymbolsInDatabase(
 
     // Map to SymbolSearchResult format
     return instruments.map((instrument: any) => ({
-      symbol: instrument.tradingsymbol || instrument.symbol || '',
-      name: instrument.name || instrument.tradingsymbol || '',
+      symbol: instrument.trading_symbol || instrument.tradingsymbol || instrument.asset_symbol || instrument.symbol || '',
+      name: instrument.name || instrument.short_name || instrument.trading_symbol || instrument.tradingsymbol || '',
       exchange: instrument.exchange || vendor.toUpperCase(),
       instrument_type: instrument.instrument_type || '',
       segment: instrument.segment || '',
-      token: instrument.instrument_token || instrument.token || '',
+      token: instrument.instrument_token || instrument.exchange_token || instrument.token || '',
     }));
   } catch (error) {
     console.error(`Error searching ${vendor} symbols in database:`, error);
@@ -74,8 +82,9 @@ async function searchSymbolsWithTextSearch(
     await connectDB();
     const InstrumentModel = getInstrumentModel(vendor);
 
-    // Build search criteria
-    const searchCriteria: any = { $text: { $search: query } };
+    // For text search, we need simpler criteria since text search doesn't work well with complex $or queries
+    // We'll just use the text search and apply filters afterwards
+    let searchCriteria: any = { $text: { $search: query } };
 
     // Add exchange filter if provided
     if (exchange && exchange !== 'ALL') {
@@ -99,18 +108,17 @@ async function searchSymbolsWithTextSearch(
         .lean();
     } catch (textSearchError) {
       // Fall back to regex search if text search fails
-      console.log('Text search not available, using regex search');
       return searchSymbolsInDatabase(vendor, query, exchange, segment, limit);
     }
 
     // Map to SymbolSearchResult format
     return instruments.map((instrument: any) => ({
-      symbol: instrument.tradingsymbol || instrument.symbol || '',
-      name: instrument.name || instrument.tradingsymbol || '',
+      symbol: instrument.trading_symbol || instrument.tradingsymbol || instrument.asset_symbol || instrument.symbol || '',
+      name: instrument.name || instrument.short_name || instrument.trading_symbol || instrument.tradingsymbol || '',
       exchange: instrument.exchange || vendor.toUpperCase(),
       instrument_type: instrument.instrument_type || '',
       segment: instrument.segment || '',
-      token: instrument.instrument_token || instrument.token || '',
+      token: instrument.instrument_token || instrument.exchange_token || instrument.token || '',
     }));
   } catch (error) {
     console.error(`Error with text search for ${vendor} symbols:`, error);
@@ -155,8 +163,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Search in database using the vendor-specific collection
-    // Try text search first for better performance, fall back to regex if needed
-    const results = await searchSymbolsWithTextSearch(
+    // Use regex search for now as text search seems to have issues with the index
+    const results = await searchSymbolsInDatabase(
       vendor.toLowerCase(),
       query,
       exchange,
