@@ -2,8 +2,9 @@
 
 import { Button } from '@/components/ui/button';
 import { binanceWebSocket } from '@/lib/binance-websocket';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Plus } from 'lucide-react';
 import { memo, useCallback, useEffect, useState } from 'react';
+import SymbolSearchModal from './SymbolSearchModal';
 import TradingWindow from './TradingWindow';
 
 export interface WatchlistItem {
@@ -48,6 +49,11 @@ const Watchlist = memo(function Watchlist({
   const [currentWatchlistId, setCurrentWatchlistId] = useState<string | null>(null);
   const [currentWatchlistName, setCurrentWatchlistName] = useState<string>('Default Watchlist');
   const [showWatchlistDropdown, setShowWatchlistDropdown] = useState(false);
+  const [showSymbolSearchModal, setShowSymbolSearchModal] = useState(false);
+  const [addAnchorRect, setAddAnchorRect] = useState<
+    | { top: number; left: number; bottom: number; right: number; width: number; height: number }
+    | null
+  >(null);
 
   const currentPrice = watchlistItems.find(item => item.symbol === selectedSymbol)?.lastPrice || 0;
 
@@ -151,6 +157,70 @@ const Watchlist = memo(function Watchlist({
     };
   }, [selectedAccount, marketType, currentWatchlistId, selectedSymbol]);
 
+  const addSymbol = async (symbol: string) => {
+    // Check if symbol already exists
+    if (watchlistSymbols.includes(symbol)) {
+      setError(`${symbol} is already in your watchlist`);
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
+    // Add to local state
+    const newSymbols = [...watchlistSymbols, symbol];
+    setWatchlistSymbols(newSymbols);
+
+    // Add to watchlist items with initial values
+    setWatchlistItems(prev => [
+      ...prev,
+      {
+        symbol,
+        lastPrice: 0,
+        priceChange: 0,
+        priceChangePercent: 0,
+        volume: 0,
+        high24h: 0,
+        low24h: 0,
+      },
+    ]);
+
+    // If no symbol selected, select the new one
+    if (!selectedSymbol) {
+      setSelectedSymbol(symbol);
+    }
+
+    // Save to database
+    if (selectedAccount) {
+      try {
+        const body: any = {
+          accountId: selectedAccount._id,
+          marketType,
+          symbols: newSymbols,
+        };
+
+        if (currentWatchlistId) {
+          body.watchlistId = currentWatchlistId;
+        }
+
+        await fetch('/api/watchlist/symbols', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        // For Binance, add to WebSocket subscription
+        if (selectedAccount.accountType === 'binance') {
+          binanceWebSocket.addSymbol(symbol);
+        }
+      } catch (err) {
+        console.error('Failed to add symbol to watchlist:', err);
+        setError('Failed to add symbol to watchlist');
+        // Revert on error
+        setWatchlistSymbols(prev => prev.filter(s => s !== symbol));
+        setWatchlistItems(prev => prev.filter(item => item.symbol !== symbol));
+      }
+    }
+  };
+
   const removeSymbol = async (symbol: string) => {
     setWatchlistItems(prev => prev.filter(item => item.symbol !== symbol));
     setWatchlistSymbols(prev => prev.filter(s => s !== symbol));
@@ -253,6 +323,25 @@ const Watchlist = memo(function Watchlist({
               </div>
             )}
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={e => {
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+              setAddAnchorRect({
+                top: rect.top,
+                left: rect.left,
+                bottom: rect.bottom,
+                right: rect.right,
+                width: rect.width,
+                height: rect.height,
+              });
+              setShowSymbolSearchModal(true);
+            }}
+            title="Add Symbol"
+          >
+            <Plus size={18} />
+          </Button>
         </div>
 
         {error && <div className="error-message">{error}</div>}
@@ -286,7 +375,13 @@ const Watchlist = memo(function Watchlist({
                   </Button>
                 </div>
                 <div className="price-info">
-                  <span className="last-price">${item.lastPrice.toFixed(2)}</span>
+                  <span className="last-price">
+                    {selectedAccount?.accountType === 'binance'
+                      ? `$${item.lastPrice.toFixed(2)}`
+                      : selectedAccount?.accountType === 'upstox' || selectedAccount?.accountType === 'kite'
+                      ? `₹${item.lastPrice.toFixed(2)}`
+                      : item.lastPrice.toFixed(2)}
+                  </span>
                   <span
                     className={`price-change ${item.priceChange >= 0 ? 'positive' : 'negative'}`}
                   >
@@ -309,6 +404,17 @@ const Watchlist = memo(function Watchlist({
           onOrderPlaced={handleOrderPlaced}
         />
       </div>
+
+      {/* Symbol Search Modal */}
+    {showSymbolSearchModal && selectedAccount && (
+        <SymbolSearchModal
+          isOpen={showSymbolSearchModal}
+          onClose={() => setShowSymbolSearchModal(false)}
+          onSelectSymbol={addSymbol}
+          accountType={selectedAccount.accountType}
+      anchorRect={addAnchorRect || undefined}
+        />
+      )}
 
       <style jsx>{`
         .watchlist-container {
@@ -381,6 +487,7 @@ const Watchlist = memo(function Watchlist({
           border-bottom: 1px solid #e9ecef;
           background: #f8f9fa;
           color: #333;
+          gap: 8px;
         }
 
         :global(.dark) .watchlist-header {
@@ -391,6 +498,7 @@ const Watchlist = memo(function Watchlist({
 
         .watchlist-title-row {
           position: relative;
+          flex: 1;
         }
 
         .watchlist-selector {

@@ -15,6 +15,8 @@ interface SymbolSearchResult {
 async function searchSymbolsInDatabase(
   vendor: string,
   query: string,
+  exchange?: string,
+  segment?: string,
   limit: number = 20
 ): Promise<SymbolSearchResult[]> {
   try {
@@ -24,10 +26,23 @@ async function searchSymbolsInDatabase(
     // Create regex for case-insensitive search
     const searchRegex = new RegExp(query, 'i');
 
-    // Search in both tradingsymbol and name fields
-    const instruments = await InstrumentModel.find({
+    // Build search criteria
+    const searchCriteria: any = {
       $or: [{ tradingsymbol: searchRegex }, { name: searchRegex }],
-    })
+    };
+
+    // Add exchange filter if provided
+    if (exchange && exchange !== 'ALL') {
+      searchCriteria.exchange = exchange;
+    }
+
+    // Add segment filter if provided
+    if (segment && segment !== 'ALL') {
+      searchCriteria.segment = segment;
+    }
+
+    // Search with filters
+    const instruments = await InstrumentModel.find(searchCriteria)
       .limit(limit)
       .lean();
 
@@ -36,7 +51,8 @@ async function searchSymbolsInDatabase(
       symbol: instrument.tradingsymbol || instrument.symbol || '',
       name: instrument.name || instrument.tradingsymbol || '',
       exchange: instrument.exchange || vendor.toUpperCase(),
-      instrument_type: instrument.instrument_type || instrument.segment || '',
+      instrument_type: instrument.instrument_type || '',
+      segment: instrument.segment || '',
       token: instrument.instrument_token || instrument.token || '',
     }));
   } catch (error) {
@@ -50,17 +66,32 @@ async function searchSymbolsInDatabase(
 async function searchSymbolsWithTextSearch(
   vendor: string,
   query: string,
+  exchange?: string,
+  segment?: string,
   limit: number = 20
 ): Promise<SymbolSearchResult[]> {
   try {
     await connectDB();
     const InstrumentModel = getInstrumentModel(vendor);
 
+    // Build search criteria
+    const searchCriteria: any = { $text: { $search: query } };
+
+    // Add exchange filter if provided
+    if (exchange && exchange !== 'ALL') {
+      searchCriteria.exchange = exchange;
+    }
+
+    // Add segment filter if provided
+    if (segment && segment !== 'ALL') {
+      searchCriteria.segment = segment;
+    }
+
     // Try text search first (requires text index)
     let instruments: any[];
     try {
       instruments = await InstrumentModel.find(
-        { $text: { $search: query } },
+        searchCriteria,
         { score: { $meta: 'textScore' } }
       )
         .sort({ score: { $meta: 'textScore' } })
@@ -69,7 +100,7 @@ async function searchSymbolsWithTextSearch(
     } catch (textSearchError) {
       // Fall back to regex search if text search fails
       console.log('Text search not available, using regex search');
-      return searchSymbolsInDatabase(vendor, query, limit);
+      return searchSymbolsInDatabase(vendor, query, exchange, segment, limit);
     }
 
     // Map to SymbolSearchResult format
@@ -77,12 +108,13 @@ async function searchSymbolsWithTextSearch(
       symbol: instrument.tradingsymbol || instrument.symbol || '',
       name: instrument.name || instrument.tradingsymbol || '',
       exchange: instrument.exchange || vendor.toUpperCase(),
-      instrument_type: instrument.instrument_type || instrument.segment || '',
+      instrument_type: instrument.instrument_type || '',
+      segment: instrument.segment || '',
       token: instrument.instrument_token || instrument.token || '',
     }));
   } catch (error) {
     console.error(`Error with text search for ${vendor} symbols:`, error);
-    return searchSymbolsInDatabase(vendor, query, limit);
+    return searchSymbolsInDatabase(vendor, query, exchange, segment, limit);
   }
 }
 
@@ -91,6 +123,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('query');
     const vendor = searchParams.get('vendor');
+    const exchange = searchParams.get('exchange') || undefined;
+    const segment = searchParams.get('segment') || undefined;
     const limit = parseInt(searchParams.get('limit') || '20');
 
     if (!query) {
@@ -125,6 +159,8 @@ export async function GET(request: NextRequest) {
     const results = await searchSymbolsWithTextSearch(
       vendor.toLowerCase(),
       query,
+      exchange,
+      segment,
       Math.min(limit, 100) // Cap at 100 results
     );
 
@@ -133,6 +169,10 @@ export async function GET(request: NextRequest) {
       results,
       query,
       vendor,
+      filters: {
+        exchange: exchange || 'ALL',
+        segment: segment || 'ALL',
+      },
     });
   } catch (error) {
     console.error('Error searching symbols:', error);
