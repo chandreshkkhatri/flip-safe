@@ -1,3 +1,5 @@
+import connectDB from '@/lib/mongodb';
+import Watchlist from '@/models/watchlist';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -7,6 +9,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const accountId = searchParams.get('accountId');
     const marketType = searchParams.get('marketType');
+    const watchlistId = searchParams.get('watchlistId');
+    const userId = searchParams.get('userId') || 'default_user';
 
     if (!accountId) {
       return NextResponse.json(
@@ -19,19 +23,83 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // TODO: Replace this with actual database query
-    // Example: const watchlist = await db.collection('watchlists').findOne({ accountId, marketType });
+    await connectDB();
 
-    // For now, return empty array to force dynamic loading from actual database
-    // In production, this should query the database based on accountId and marketType
-    const symbols: string[] = [];
+    // Get all watchlists for the user and account
+    const watchlists = await Watchlist.find({ userId, accountId });
 
-    return NextResponse.json({
-      success: true,
-      symbols,
-      marketType,
-      accountId,
-    });
+    if (watchlistId) {
+      // Get specific watchlist
+      const watchlist = await Watchlist.findOne({ _id: watchlistId, userId, accountId });
+      if (!watchlist) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Watchlist not found',
+            symbols: [],
+          },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        symbols: watchlist.symbols.map(s => s.symbol),
+        watchlist: {
+          id: watchlist._id,
+          name: watchlist.name,
+          isDefault: watchlist.isDefault,
+        },
+        watchlists: watchlists.map(w => ({
+          id: w._id,
+          name: w.name,
+          isDefault: w.isDefault,
+        })),
+        marketType: watchlist.marketType,
+        accountId,
+      });
+    } else {
+      // Get default watchlist or create one if it doesn't exist
+      let defaultWatchlist = await Watchlist.findOne({ userId, accountId, isDefault: true });
+
+      if (!defaultWatchlist) {
+        // Create default watchlist
+        defaultWatchlist = await Watchlist.create({
+          userId,
+          accountId,
+          name: 'Default Watchlist',
+          marketType: marketType || 'binance-futures',
+          symbols: [],
+          isDefault: true,
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        symbols: defaultWatchlist.symbols.map(s => s.symbol),
+        watchlist: {
+          id: defaultWatchlist._id,
+          name: defaultWatchlist.name,
+          isDefault: defaultWatchlist.isDefault,
+        },
+        watchlists:
+          watchlists.length > 0
+            ? watchlists.map(w => ({
+                id: w._id,
+                name: w.name,
+                isDefault: w.isDefault,
+              }))
+            : [
+                {
+                  id: defaultWatchlist._id,
+                  name: defaultWatchlist.name,
+                  isDefault: defaultWatchlist.isDefault,
+                },
+              ],
+        marketType: defaultWatchlist.marketType,
+        accountId,
+      });
+    }
   } catch (error) {
     console.error('Error fetching watchlist symbols:', error);
     return NextResponse.json(
@@ -48,22 +116,122 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { accountId, marketType, symbols } = body;
+    const { accountId, marketType, symbols, watchlistId, userId = 'default_user', action } = body;
 
-    if (!accountId || !marketType || !symbols) {
+    if (!accountId) {
+      return NextResponse.json(
+        { success: false, error: 'Account ID is required' },
+        { status: 400 }
+      );
+    }
+
+    await connectDB();
+
+    // Handle creating a new watchlist
+    if (action === 'create') {
+      const { name } = body;
+      if (!name) {
+        return NextResponse.json(
+          { success: false, error: 'Watchlist name is required' },
+          { status: 400 }
+        );
+      }
+
+      const newWatchlist = await Watchlist.create({
+        userId,
+        accountId,
+        name,
+        marketType: marketType || 'binance-futures',
+        symbols: [],
+        isDefault: false,
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Watchlist created successfully',
+        watchlist: {
+          id: newWatchlist._id,
+          name: newWatchlist.name,
+          isDefault: newWatchlist.isDefault,
+        },
+      });
+    }
+
+    // Handle deleting a watchlist
+    if (action === 'delete') {
+      if (!watchlistId) {
+        return NextResponse.json(
+          { success: false, error: 'Watchlist ID is required for deletion' },
+          { status: 400 }
+        );
+      }
+
+      const watchlist = await Watchlist.findOne({ _id: watchlistId, userId, accountId });
+      if (!watchlist) {
+        return NextResponse.json({ success: false, error: 'Watchlist not found' }, { status: 404 });
+      }
+
+      if (watchlist.isDefault) {
+        return NextResponse.json(
+          { success: false, error: 'Cannot delete default watchlist' },
+          { status: 400 }
+        );
+      }
+
+      await Watchlist.deleteOne({ _id: watchlistId });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Watchlist deleted successfully',
+      });
+    }
+
+    // Handle updating symbols in a watchlist
+    if (!symbols || !marketType) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    // TODO: Save user's watchlist to database
-    // For example: await db.watchlists.upsert({ accountId, marketType, symbols })
+    let watchlist;
+    if (watchlistId) {
+      watchlist = await Watchlist.findOne({ _id: watchlistId, userId, accountId });
+    } else {
+      watchlist = await Watchlist.findOne({ userId, accountId, isDefault: true });
+      if (!watchlist) {
+        watchlist = await Watchlist.create({
+          userId,
+          accountId,
+          name: 'Default Watchlist',
+          marketType,
+          symbols: [],
+          isDefault: true,
+        });
+      }
+    }
+
+    if (!watchlist) {
+      return NextResponse.json({ success: false, error: 'Watchlist not found' }, { status: 404 });
+    }
+
+    // Update symbols
+    watchlist.symbols = symbols.map((symbol: string) => ({
+      symbol,
+      addedAt: new Date(),
+    }));
+    watchlist.marketType = marketType;
+    await watchlist.save();
 
     return NextResponse.json({
       success: true,
       message: 'Watchlist updated successfully',
       symbols,
+      watchlist: {
+        id: watchlist._id,
+        name: watchlist.name,
+        isDefault: watchlist.isDefault,
+      },
     });
   } catch (error) {
     console.error('Error updating watchlist:', error);

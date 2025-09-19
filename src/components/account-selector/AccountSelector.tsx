@@ -28,6 +28,8 @@ export default function AccountSelector({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -53,12 +55,13 @@ export default function AccountSelector({
     );
   }
 
+  // Only show "no accounts" state when we're definitely not loading and have no accounts
   if (accounts.length === 0) {
     return (
       <div className="no-accounts">
         <span>No accounts found</span>
         <Button size="sm" variant="outline" onClick={() => (window.location.href = '/accounts')}>
-          Select Account
+          Add Account
         </Button>
       </div>
     );

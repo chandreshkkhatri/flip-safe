@@ -9,9 +9,10 @@ import MultiTimeframeChart from './MultiTimeframeChart';
 interface TradingWindowProps {
   symbol: string;
   currentPrice: number;
-  binanceAccounts: Array<{
+  accounts: Array<{
     _id: string;
     accountName: string;
+    accountType: 'binance' | 'kite' | 'upstox';
     isActive: boolean;
   }>;
   onOrderPlaced: () => void;
@@ -31,11 +32,11 @@ interface OrderForm {
 const TradingWindow = memo(function TradingWindow({
   symbol,
   currentPrice,
-  binanceAccounts,
+  accounts,
   onOrderPlaced,
 }: TradingWindowProps) {
   const [orderForm, setOrderForm] = useState<OrderForm>({
-    accountId: binanceAccounts[0]?._id || '',
+    accountId: accounts[0]?._id || '',
     side: 'BUY',
     type: 'LIMIT',
     quantity: '0.001',
@@ -97,7 +98,7 @@ const TradingWindow = memo(function TradingWindow({
 
   const submitOrder = async () => {
     if (!orderForm.accountId) {
-      setError('Please select a Binance account');
+      setError('Please select a trading account');
       return;
     }
 
@@ -153,10 +154,10 @@ const TradingWindow = memo(function TradingWindow({
     }
   };
 
-  if (binanceAccounts.length === 0) {
+  if (accounts.length === 0) {
     return (
       <div className="trading-window-empty">
-        <p>No Binance accounts available</p>
+        <p>No trading accounts available</p>
       </div>
     );
   }
@@ -178,7 +179,7 @@ const TradingWindow = memo(function TradingWindow({
             onChange={e => handleInputChange('accountId', e.target.value)}
             className="form-select"
           >
-            {binanceAccounts.map(account => (
+            {accounts.map((account: any) => (
               <option key={account._id} value={account._id}>
                 {account.accountName}
               </option>

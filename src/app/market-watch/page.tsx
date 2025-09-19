@@ -2,14 +2,12 @@
 
 import PageLayout from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
+import Watchlist from '@/components/watchlist/Watchlist';
 import { useAccount } from '@/lib/account-context';
 import { useAuth } from '@/lib/auth-context';
 import { Activity, ShieldCheck, TrendingUp, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { lazy, Suspense, useEffect, useState } from 'react';
-
-// Dynamic import for heavy components
-const Watchlist = lazy(() => import('@/components/watchlist/Watchlist'));
+import { useEffect, useState } from 'react';
 
 // Funds data interface (migrated from funds-service)
 interface FundsData {
@@ -44,14 +42,33 @@ export default function MarketWatchPage() {
   const [fundsData, setFundsData] = useState<FundsData | null>(null);
   const [fundsLoading, setFundsLoading] = useState(true);
   const [fundsError, setFundsError] = useState<string | null>(null);
-  const [marketType] = useState('binance-futures');
+  const [marketType, setMarketType] = useState('binance-futures');
   const { isLoggedIn, allowOfflineAccess, runOfflineMode } = useAuth();
   const {
     selectedAccount,
     setSelectedAccount,
-    accounts: binanceAccounts,
+    accounts,
     loadingAccounts: accountsLoading,
   } = useAccount();
+
+  // Update market type based on selected account
+  useEffect(() => {
+    if (selectedAccount) {
+      switch (selectedAccount.accountType) {
+        case 'binance':
+          setMarketType('binance-futures');
+          break;
+        case 'upstox':
+          setMarketType('upstox-equity');
+          break;
+        case 'kite':
+          setMarketType('kite-equity');
+          break;
+        default:
+          setMarketType('binance-futures');
+      }
+    }
+  }, [selectedAccount]);
 
   // Rotate trading tips every 10 seconds
   useEffect(() => {
@@ -76,9 +93,10 @@ export default function MarketWatchPage() {
           setFundsLoading(true);
           setFundsError(null);
 
-          // Use the new unified funds API
+          // Use the new unified funds API with correct vendor
+          const vendor = selectedAccount.accountType;
           const response = await fetch(
-            `/api/funds?vendor=binance&accountId=${selectedAccount._id}`
+            `/api/funds?vendor=${vendor}&accountId=${selectedAccount._id}`
           );
           const result = await response.json();
 
@@ -86,46 +104,63 @@ export default function MarketWatchPage() {
             throw new Error(result.error || result.details || 'Failed to fetch funds');
           }
 
-          // Extract and process the funds data
+          // Extract and process the funds data based on vendor
           const rawData = result.data.details;
+          let fundsData: FundsData;
 
-          // Get current crypto prices for USD calculations
-          const assetSymbols = rawData.assets.map((asset: any) => asset.asset).join(',');
-          const priceResponse = await fetch(`/api/binance/prices?symbols=${assetSymbols}`);
-          const priceData = await priceResponse.json();
-          const prices = priceData.success ? priceData.prices : {};
+          if (vendor === 'binance') {
+            // Binance-specific processing
+            const assetSymbols = rawData.assets?.map((asset: any) => asset.asset).join(',') || '';
+            const priceResponse = await fetch(`/api/binance/prices?symbols=${assetSymbols}`);
+            const priceData = await priceResponse.json();
+            const prices = priceData.success ? priceData.prices : {};
 
-          // Calculate USD values for each asset
-          const assetsWithUsdValue = rawData.assets.map((asset: any) => {
-            const price = prices[asset.asset] || 0;
-            const walletBalance = parseFloat(asset.walletBalance);
-            const usdValue = walletBalance * price;
+            const assetsWithUsdValue =
+              rawData.assets?.map((asset: any) => {
+                const price = prices[asset.asset] || 0;
+                const walletBalance = parseFloat(asset.walletBalance || 0);
+                const usdValue = walletBalance * price;
 
-            return {
-              asset: asset.asset,
-              walletBalance: walletBalance,
-              unrealizedProfit: parseFloat(asset.unrealizedProfit),
-              marginBalance: parseFloat(asset.marginBalance),
-              availableBalance: parseFloat(asset.availableBalance),
-              usdValue,
+                return {
+                  asset: asset.asset,
+                  walletBalance: walletBalance,
+                  unrealizedProfit: parseFloat(asset.unrealizedProfit || 0),
+                  marginBalance: parseFloat(asset.marginBalance || 0),
+                  availableBalance: parseFloat(asset.availableBalance || 0),
+                  usdValue,
+                };
+              }) || [];
+
+            const totalUsdValue = assetsWithUsdValue.reduce(
+              (total: number, asset: any) => total + asset.usdValue,
+              0
+            );
+
+            fundsData = {
+              totalWalletBalance: parseFloat(rawData.totalWalletBalance || 0),
+              totalMarginBalance: parseFloat(rawData.totalMarginBalance || 0),
+              totalUnrealizedProfit: parseFloat(rawData.totalUnrealizedProfit || 0),
+              availableBalance: parseFloat(rawData.availableBalance || 0),
+              maxWithdrawAmount: parseFloat(rawData.maxWithdrawAmount || 0),
+              assets: assetsWithUsdValue,
+              totalUsdValue,
             };
-          });
+          } else {
+            // For Upstox/Kite - use direct values from result.data
+            const totalBalance = parseFloat(result.data.totalBalance || 0);
+            const availableBalance = parseFloat(result.data.availableBalance || 0);
+            const unrealizedPnl = parseFloat(result.data.unrealizedPnl || 0);
 
-          // Calculate total USD value
-          const totalUsdValue = assetsWithUsdValue.reduce(
-            (total: number, asset: any) => total + asset.usdValue,
-            0
-          );
-
-          const fundsData: FundsData = {
-            totalWalletBalance: parseFloat(rawData.totalWalletBalance),
-            totalMarginBalance: parseFloat(rawData.totalMarginBalance),
-            totalUnrealizedProfit: parseFloat(rawData.totalUnrealizedProfit),
-            availableBalance: parseFloat(rawData.availableBalance),
-            maxWithdrawAmount: parseFloat(rawData.maxWithdrawAmount),
-            assets: assetsWithUsdValue,
-            totalUsdValue,
-          };
+            fundsData = {
+              totalWalletBalance: totalBalance,
+              totalMarginBalance: 0,
+              totalUnrealizedProfit: unrealizedPnl,
+              availableBalance: availableBalance,
+              maxWithdrawAmount: availableBalance,
+              assets: [],
+              totalUsdValue: totalBalance, // For Indian markets, assume INR is the base
+            };
+          }
 
           setFundsData(fundsData);
         } catch (error: any) {
@@ -149,10 +184,10 @@ export default function MarketWatchPage() {
         } finally {
           setFundsLoading(false);
         }
-      } else if (binanceAccounts.length === 0) {
+      } else if (accounts.length === 0) {
         // No accounts found
         setFundsLoading(false);
-        setFundsError('No Binance accounts found. Please add an account in the Accounts page.');
+        setFundsError('No trading accounts found. Please add an account in the Accounts page.');
       } else {
         // Accounts exist but none selected
         setFundsLoading(false);
@@ -162,7 +197,20 @@ export default function MarketWatchPage() {
     };
 
     fetchFunds();
-  }, [selectedAccount, binanceAccounts]);
+  }, [selectedAccount, accounts]);
+
+  // Helper function to get currency symbol based on account type
+  const getCurrencySymbol = (accountType?: string) => {
+    switch (accountType) {
+      case 'binance':
+        return '$';
+      case 'upstox':
+      case 'kite':
+        return '₹';
+      default:
+        return '$';
+    }
+  };
 
   return (
     <PageLayout>
@@ -187,23 +235,14 @@ export default function MarketWatchPage() {
           {/* Watchlist Section or Market Overview */}
           <div className="watchlist-section">
             {selectedAccount ? (
-              <Suspense
-                fallback={
-                  <div className="watchlist-loading">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-center text-gray-600">Loading market data...</p>
-                  </div>
-                }
-              >
-                <Watchlist
-                  binanceAccounts={binanceAccounts}
-                  selectedAccount={selectedAccount}
-                  marketType={marketType}
-                />
-              </Suspense>
+              <Watchlist
+                accounts={accounts}
+                selectedAccount={selectedAccount}
+                marketType={marketType}
+              />
             ) : (
               <div className="no-account-view">
-                {binanceAccounts.length === 0 ? (
+                {accounts.length === 0 ? (
                   /* No Accounts Available */
                   <div className="empty-state">
                     <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -211,7 +250,7 @@ export default function MarketWatchPage() {
                     </div>
                     <h2>Welcome to Market Watch</h2>
                     <p className="empty-description">
-                      Connect your Binance account to start monitoring your personalized watchlist
+                      Connect your trading account to start monitoring your personalized watchlist
                       with real-time market data.
                     </p>
 
@@ -239,7 +278,7 @@ export default function MarketWatchPage() {
                       onClick={() => router.push('/accounts')}
                       className="cta-button mt-6"
                     >
-                      Add Binance Account
+                      Add Trading Account
                     </Button>
                   </div>
                 ) : (
@@ -259,8 +298,8 @@ export default function MarketWatchPage() {
                     </div>
 
                     <div className="mt-6 text-sm text-gray-500">
-                      Found {binanceAccounts.length} connected account
-                      {binanceAccounts.length > 1 ? 's' : ''}
+                      Found {accounts.length} connected account
+                      {accounts.length > 1 ? 's' : ''}
                     </div>
                   </div>
                 )}
@@ -316,7 +355,7 @@ export default function MarketWatchPage() {
                   <div className="portfolio-item">
                     <span className="label">Total Balance:</span>
                     <span className="value">
-                      $
+                      {getCurrencySymbol(selectedAccount?.accountType)}
                       {fundsData.totalUsdValue.toLocaleString('en-US', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
@@ -326,7 +365,7 @@ export default function MarketWatchPage() {
                   <div className="portfolio-item">
                     <span className="label">Available Balance:</span>
                     <span className="value">
-                      $
+                      {getCurrencySymbol(selectedAccount?.accountType)}
                       {fundsData.availableBalance.toLocaleString('en-US', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
@@ -338,13 +377,17 @@ export default function MarketWatchPage() {
                     <span
                       className={`value ${fundsData.totalUnrealizedProfit >= 0 ? 'positive' : 'negative'}`}
                     >
-                      ${fundsData.totalUnrealizedProfit >= 0 ? '+' : ''}$
+                      {fundsData.totalUnrealizedProfit >= 0 ? '+' : ''}
+                      {getCurrencySymbol(selectedAccount?.accountType)}
                       {fundsData.totalUnrealizedProfit.toFixed(2)}
                     </span>
                   </div>
                   <div className="portfolio-item">
                     <span className="label">Max Risk (2%):</span>
-                    <span className="value">${(fundsData.totalUsdValue * 0.02).toFixed(2)}</span>
+                    <span className="value">
+                      {getCurrencySymbol(selectedAccount?.accountType)}
+                      {(fundsData.totalUsdValue * 0.02).toFixed(2)}
+                    </span>
                   </div>
                 </>
               ) : (
@@ -365,19 +408,22 @@ export default function MarketWatchPage() {
                 <div className="risk-example">
                   <span className="risk-label">1% Risk:</span>
                   <span className="risk-amount">
-                    ${fundsData ? (fundsData.totalUsdValue * 0.01).toFixed(2) : '0.00'}
+                    {getCurrencySymbol(selectedAccount?.accountType)}
+                    {fundsData ? (fundsData.totalUsdValue * 0.01).toFixed(2) : '0.00'}
                   </span>
                 </div>
                 <div className="risk-example">
                   <span className="risk-label">2% Risk:</span>
                   <span className="risk-amount">
-                    ${fundsData ? (fundsData.totalUsdValue * 0.02).toFixed(2) : '0.00'}
+                    {getCurrencySymbol(selectedAccount?.accountType)}
+                    {fundsData ? (fundsData.totalUsdValue * 0.02).toFixed(2) : '0.00'}
                   </span>
                 </div>
                 <div className="risk-example">
                   <span className="risk-label">3% Risk:</span>
                   <span className="risk-amount">
-                    ${fundsData ? (fundsData.totalUsdValue * 0.03).toFixed(2) : '0.00'}
+                    {getCurrencySymbol(selectedAccount?.accountType)}
+                    {fundsData ? (fundsData.totalUsdValue * 0.03).toFixed(2) : '0.00'}
                   </span>
                 </div>
               </div>

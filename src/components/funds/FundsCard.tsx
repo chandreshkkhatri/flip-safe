@@ -234,9 +234,9 @@ export default function FundsCard({ accounts, selectedAccountId, className }: Fu
                   onClick={() => {
                     // Handle re-authentication based on account type
                     if (account.accountType === 'upstox') {
-                      window.location.href = `/api/auth/upstox?accountId=${account._id}`;
+                      window.location.href = `/api/auth/upstox/login?accountId=${account._id}`;
                     } else if (account.accountType === 'kite') {
-                      window.location.href = `/api/auth/kite?accountId=${account._id}`;
+                      window.location.href = `/api/auth/kite/login?accountId=${account._id}`;
                     }
                   }}
                 >

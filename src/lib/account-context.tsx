@@ -66,7 +66,7 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
         const now = Date.now();
         if (now - parseInt(cacheTimestamp) < cacheTime) {
           // Use cached data for immediate rendering
-          const cachedAccounts = JSON.parse(cachedData) as BinanceAccount[];
+          const cachedAccounts = JSON.parse(cachedData) as TradingAccount[];
           setAccounts(cachedAccounts);
 
           // Restore selected account from cache

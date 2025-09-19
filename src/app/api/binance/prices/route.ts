@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch prices from Binance - try batch first, then individual on failure
-    let prices: Record<string, number> = {};
+    const prices: Record<string, number> = {};
 
     if (cryptoSymbols.length > 0) {
       try {
