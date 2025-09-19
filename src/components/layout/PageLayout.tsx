@@ -37,7 +37,7 @@ export default function PageLayout({
           color: var(--foreground);
         }
         .main-content {
-          margin-top: 64px;
+          margin-top: 16px;
           padding-bottom: 32px;
         }
         .container {

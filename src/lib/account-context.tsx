@@ -7,6 +7,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import { useAuth } from './auth-context';
@@ -46,7 +47,7 @@ interface AccountProviderProps {
 export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) => {
   const [selectedAccount, setSelectedAccountState] = useState<TradingAccount | null>(null);
   const [accounts, setAccounts] = useState<TradingAccount[]>([]);
-  const [loadingAccounts, setLoadingAccounts] = useState(false); // Start as false for immediate rendering
+  const [loadingAccounts, setLoadingAccounts] = useState(true); // Start as true to avoid flashing "No accounts found"
   const [error, setError] = useState<string | null>(null);
   const { isLoggedIn, allowOfflineAccess } = useAuth();
 
@@ -68,6 +69,7 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
           // Use cached data for immediate rendering
           const cachedAccounts = JSON.parse(cachedData) as TradingAccount[];
           setAccounts(cachedAccounts);
+          setLoadingAccounts(false);
 
           // Restore selected account from cache
           const savedAccountId = sessionStorage.getItem('selectedAccountId');
@@ -85,9 +87,7 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
       }
 
       try {
-        if (!isBackground) {
-          setLoadingAccounts(true);
-        }
+        if (!isBackground) setLoadingAccounts(true);
         setError(null);
 
         const response = await axios.get(`${API_ROUTES.accounts.getAccounts}?userId=${userId}`, {
@@ -129,9 +129,7 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
           setAccounts([]);
         }
       } finally {
-        if (!isBackground) {
-          setLoadingAccounts(false);
-        }
+        if (!isBackground) setLoadingAccounts(false);
       }
     },
     [selectedAccount]
@@ -148,7 +146,10 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
   }, []);
 
   // Initialize from cache immediately, then fetch fresh data in background
+  const hasInitialized = useRef(false);
   useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
     // Load from cache first for immediate rendering
     const cacheKey = 'accountsCache';
     const cachedData = sessionStorage.getItem(cacheKey);
@@ -158,6 +159,7 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
       try {
         const cachedAccounts = JSON.parse(cachedData) as TradingAccount[];
         setAccounts(cachedAccounts);
+        setLoadingAccounts(false);
 
         if (savedAccountId && cachedAccounts.length > 0) {
           const savedAccount = cachedAccounts.find(acc => acc._id === savedAccountId);
@@ -173,7 +175,7 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
       // Small delay to allow for immediate rendering
       setTimeout(() => fetchAccounts(), 50);
     }
-  }, []); // Only run on mount
+  }, [isLoggedIn, allowOfflineAccess, fetchAccounts]);
 
   // Only refetch when auth status actually changes (not on every auth check)
   useEffect(() => {
@@ -181,7 +183,7 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
       // Use background fetch to avoid blocking UI
       fetchAccounts(true);
     }
-  }, [isLoggedIn, allowOfflineAccess]);
+  }, [isLoggedIn, allowOfflineAccess, fetchAccounts]);
 
   const value: AccountContextType = {
     selectedAccount,

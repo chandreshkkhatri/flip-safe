@@ -27,18 +27,11 @@ interface FundsData {
   totalUsdValue: number;
 }
 
-const TRADING_TIPS = [
-  '📊 Never risk more than 2% of your portfolio on a single trade',
-  '🎯 Set stop-loss orders for every position to limit downside risk',
-  '📈 Diversify across different sectors to reduce concentration risk',
-  '⏰ Avoid emotional trading during high volatility periods',
-  '📝 Keep a trading journal to learn from wins and losses',
-  '💰 Take partial profits when targets are reached',
-];
+// Tip banner removed
 
 export default function MarketWatchPage() {
   const router = useRouter();
-  const [selectedTip, setSelectedTip] = useState(0);
+  // Tip banner removed
   const [fundsData, setFundsData] = useState<FundsData | null>(null);
   const [fundsLoading, setFundsLoading] = useState(true);
   const [fundsError, setFundsError] = useState<string | null>(null);
@@ -70,13 +63,7 @@ export default function MarketWatchPage() {
     }
   }, [selectedAccount]);
 
-  // Rotate trading tips every 10 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSelectedTip(prev => (prev + 1) % TRADING_TIPS.length);
-    }, 10000);
-    return () => clearInterval(interval);
-  }, []);
+  // Tip banner removed
 
   // Handle offline mode
   useEffect(() => {
@@ -215,13 +202,7 @@ export default function MarketWatchPage() {
   return (
     <PageLayout>
       <div className="market-watch-container">
-        {/* Trading Tip Banner */}
-        <div className="tip-banner">
-          <div className="tip-content">
-            <span className="tip-icon">💡</span>
-            <span className="tip-text">{TRADING_TIPS[selectedTip]}</span>
-          </div>
-        </div>
+        {/* Tip banner removed */}
 
         <div className="main-content">
           {/* Watchlist Section or Market Overview */}
@@ -304,7 +285,7 @@ export default function MarketWatchPage() {
           .market-watch-container {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 4px;
             width: 100%;
             height: 100%;
             padding-top: 0;
@@ -312,9 +293,9 @@ export default function MarketWatchPage() {
 
           /* Make the page content fill the viewport and remove bottom padding */
           :global(.page-layout .main-content) {
-            margin-top: 56px; /* header is h-14 (56px) */
+            margin-top: 4px; /* very small gap */
             padding-bottom: 0;
-            height: calc(100vh - 56px);
+            height: calc(100vh - 60px); /* 56px navbar + 4px gap */
             display: flex;
             align-items: stretch;
           }
@@ -330,29 +311,7 @@ export default function MarketWatchPage() {
             min-height: 0; /* allow children to flex */
           }
 
-          .tip-banner {
-            background: linear-gradient(135deg, #3b82f6, #1e40af);
-            border-radius: 10px;
-            padding: 8px 12px;
-            color: white;
-          }
-
-          .tip-content {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-align: center;
-            justify-content: center;
-          }
-
-          .tip-icon {
-            font-size: 1rem;
-          }
-
-          .tip-text {
-            font-weight: 500;
-            font-size: 0.95rem;
-          }
+          /* Tip banner removed */
 
           .main-content {
             display: flex;
@@ -496,23 +455,16 @@ export default function MarketWatchPage() {
           @media (max-width: 768px) {
             /* Override PageLayout spacing for mobile market watch */
             :global(.page-layout .main-content) {
-              margin-top: 56px;
+              margin-top: 4px;
               padding-bottom: 0;
-              height: calc(100vh - 56px);
+              height: calc(100vh - 60px); /* 56px navbar + 4px gap */
             }
 
             :global(.page-layout .container) {
               padding: 0 0.75rem;
             }
 
-            .tip-banner {
-              padding: 8px 12px;
-            }
-
-            .tip-content {
-              flex-direction: column;
-              gap: 6px;
-            }
+            /* Tip banner removed */
 
             .no-account-view {
               padding: 20px;
