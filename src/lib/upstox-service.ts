@@ -958,7 +958,7 @@ class UpstoxService {
     const apiVersion = '2.0';
 
     const response = await limiter.schedule(() => orderApi.getOrderDetails(apiVersion, orderId));
-    return response.data;
+    return (response as any).data;
   }
 
   /**
@@ -969,7 +969,7 @@ class UpstoxService {
     const apiVersion = '2.0';
 
     const response = await limiter.schedule(() => orderApi.getTradeBook(apiVersion));
-    return response.data;
+    return (response as any).data;
   }
 
   /**
@@ -980,7 +980,7 @@ class UpstoxService {
     const apiVersion = '2.0';
 
     const response = await limiter.schedule(() => orderApi.placeOrder(apiVersion, params));
-    return response.data;
+    return (response as any).data;
   }
 
   /**
@@ -996,7 +996,7 @@ class UpstoxService {
     const response = await limiter.schedule(() =>
       orderApi.modifyOrder(apiVersion, orderId, params)
     );
-    return response.data;
+    return (response as any).data;
   }
 
   /**
@@ -1007,7 +1007,7 @@ class UpstoxService {
     const apiVersion = '2.0';
 
     const response = await limiter.schedule(() => orderApi.cancelOrder(apiVersion, orderId));
-    return response.data;
+    return (response as any).data;
   }
 
   /**
@@ -1021,7 +1021,7 @@ class UpstoxService {
     const response = await limiter.schedule(() =>
       marketQuoteApi.getFullMarketQuote(apiVersion, instrumentKey)
     );
-    return response.data;
+    return (response as any).data;
   }
 
   /**
@@ -1033,7 +1033,7 @@ class UpstoxService {
     const instrumentKey = instruments.join(',');
 
     const response = await limiter.schedule(() => marketQuoteApi.getLtp(apiVersion, instrumentKey));
-    return response.data;
+    return (response as any).data;
   }
 
   /**
@@ -1047,7 +1047,7 @@ class UpstoxService {
     const response = await limiter.schedule(() =>
       marketQuoteApi.getMarketQuoteOHLC(apiVersion, instrumentKey)
     );
-    return response.data;
+    return (response as any).data;
   }
 
   /**
@@ -1059,13 +1059,124 @@ class UpstoxService {
     toDate: string,
     fromDate?: string
   ): Promise<any> {
-    const historyApi = new UpstoxClient.HistoryApi(this.client);
-    const apiVersion = '2.0';
+    if (!this.accessToken) {
+      throw new Error('Access token not set. Call setAccessToken() first.');
+    }
 
-    const response = await limiter.schedule(() =>
-      historyApi.getHistoricalCandleData1(apiVersion, instrumentKey, interval, toDate, fromDate)
-    );
-    return response.data;
+    // Ensure fromDate exists; default to 30 days before toDate
+    const to = toDate;
+    const from =
+      fromDate ||
+      new Date(new Date(to).getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    const url = `https://api.upstox.com/v2/historical-candle/${encodeURIComponent(
+      instrumentKey
+    )}/${encodeURIComponent(interval)}/${encodeURIComponent(to)}/${encodeURIComponent(from)}`;
+
+    const resp = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${this.accessToken}`,
+        'Api-Version': '2.0',
+      },
+    });
+
+    const data = await resp.json().catch(() => ({}));
+
+    if (!resp.ok) {
+      // Bubble up a meaningful error
+      let message = 'Failed to fetch historical data';
+      if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+        message = data.errors[0].message || message;
+      } else if (data?.message) {
+        message = data.message;
+      } else if (data?.error) {
+        message = data.error;
+      }
+
+      // Map auth issues to a clearer code
+      if (resp.status === 401) {
+        const err: any = new Error(
+          `Authentication failed: ${message}. Please re-authenticate your Upstox account.`
+        );
+        err.code = 'TOKEN_EXPIRED';
+        err.statusCode = 401;
+        throw err;
+      }
+
+      throw new Error(`Upstox API error: ${resp.status} - ${message}`);
+    }
+
+    // V2 returns { data: { candles: [...] } }
+    return data?.data?.candles || [];
+  }
+
+  /**
+   * Get historical data V3 (unit + interval)
+   * Supports minutes(1..300), hours(1..5), days(1), weeks(1), months(1)
+   */
+  async getHistoricalDataV3(
+    instrumentKey: string,
+    unit: 'minutes' | 'hours' | 'days' | 'weeks' | 'months',
+    interval: string | number,
+    toDate: string,
+    fromDate?: string
+  ): Promise<any[]> {
+    if (!this.accessToken) {
+      throw new Error('Access token not set. Call setAccessToken() first.');
+    }
+
+    const to = toDate;
+    const from =
+      fromDate ||
+      new Date(new Date(to).getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    const base = this.isSandbox ? 'https://api-sandbox.upstox.com' : 'https://api.upstox.com';
+    const url = `${base}/v3/historical-candle/${encodeURIComponent(
+      instrumentKey
+    )}/${encodeURIComponent(unit)}/${encodeURIComponent(String(interval))}/${encodeURIComponent(
+      to
+    )}/${encodeURIComponent(from)}`;
+
+    const resp = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${this.accessToken}`,
+      },
+    });
+
+    let data: any = null;
+    try {
+      data = await resp.json();
+    } catch {
+      data = null;
+    }
+
+    if (!resp.ok) {
+      let message = 'Failed to fetch historical data (v3)';
+      if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+        message = data.errors[0].message || message;
+      } else if (data?.message) {
+        message = data.message;
+      } else if (data?.error) {
+        message = data.error;
+      }
+
+      if (resp.status === 401) {
+        const err: any = new Error(
+          `Authentication failed: ${message}. Please re-authenticate your Upstox account.`
+        );
+        err.code = 'TOKEN_EXPIRED';
+        err.statusCode = 401;
+        throw err;
+      }
+
+      throw new Error(`Upstox API v3 error: ${resp.status} - ${message}`);
+    }
+
+    return data?.data?.candles || [];
   }
 
   /**
@@ -1082,7 +1193,7 @@ class UpstoxService {
     const apiVersion = '2.0';
 
     const response = await limiter.schedule(() => portfolioApi.convertPosition(apiVersion, params));
-    return response.data;
+    return (response as any).data;
   }
 }
 

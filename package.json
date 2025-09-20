@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
+    "dev:debug": "NODE_OPTIONS='--inspect=9229' next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
+    "start:debug": "NODE_OPTIONS='--inspect=9229' next start -p 3000",
     "lint": "next lint --max-warnings 50",
     "lint:fix": "next lint --fix --max-warnings 50",
     "lint:strict": "next lint --max-warnings 10",

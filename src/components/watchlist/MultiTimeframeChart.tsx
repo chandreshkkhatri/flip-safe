@@ -12,6 +12,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 interface MultiTimeframeChartProps {
   symbol: string;
+  accountId?: string;
 }
 
 const DEFAULT_TIMEFRAMES = [
@@ -35,7 +36,7 @@ const AVAILABLE_TIMEFRAMES = [
   { interval: '1M', label: '1 Month' },
 ];
 
-const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
+const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId }) => {
   const [selectedTimeframes, setSelectedTimeframes] = useState(DEFAULT_TIMEFRAMES);
   const [showTimeframeSelector, setShowTimeframeSelector] = useState(false);
   const containerRefs = useRef<(HTMLDivElement | null)[]>(
@@ -174,19 +175,44 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
 
   const fetchChartData = async (interval: string): Promise<CandlestickData[]> => {
     try {
-      // Determine vendor based on symbol (USDT = Binance, others = Kite)
-      const vendor = symbol.endsWith('USDT') ? 'binance' : 'kite';
-      const response = await fetch(
-        `/api/historical-data?vendor=${vendor}&symbol=${symbol}&interval=${interval}`
-      );
+      // Determine vendor based on symbol (USDT = Binance, others = Upstox/Kite)
+      const vendor = symbol.endsWith('USDT') ? 'binance' : 'upstox';
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch ${interval} data: ${response.status}`);
+      // Build URL with required parameters
+      let url = `/api/historical-data?vendor=${vendor}&symbol=${symbol}&interval=${interval}`;
+
+      // Add accountId for non-binance vendors
+      if (vendor !== 'binance' && accountId) {
+        url += `&accountId=${accountId}`;
       }
 
-      const data = await response.json();
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        let errorMessage = `Failed to fetch ${interval} data: ${response.status}`;
+
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch {
+          if (errorText) {
+            errorMessage += ` - ${errorText}`;
+          }
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+
+      // Handle API response format - check if data is in result.data or directly in result
+      const data = result.data || result;
 
       if (!Array.isArray(data) || data.length === 0) {
+        console.warn(`No data received for ${symbol} ${interval}:`, result);
         return [];
       }
 
@@ -267,6 +293,8 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol }) => {
             return { chart, series };
           } catch (chartError) {
             console.error(`Failed to create chart for ${timeframe.label}:`, chartError);
+            const errorMessage = chartError instanceof Error ? chartError.message : 'Unknown error';
+            setError(`Failed to load ${timeframe.label}: ${errorMessage}`);
             return null;
           }
         });

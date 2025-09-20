@@ -164,7 +164,7 @@ const TradingWindow = memo(function TradingWindow({
 
   return (
     <div className="trading-window">
-      <MultiTimeframeChart symbol={symbol} />
+      <MultiTimeframeChart symbol={symbol} accountId={orderForm.accountId} />
       <div className="trading-header">
         <h3>{symbol} Trading</h3>
         <div className="current-price">${currentPrice.toFixed(2)}</div>
