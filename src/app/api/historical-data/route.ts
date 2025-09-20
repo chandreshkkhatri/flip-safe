@@ -202,7 +202,6 @@ const fetchUpstoxHistoricalData = async (params: {
 
         if (instrument) {
           instrumentKey = instrument.instrument_token || instrument.instrument_key;
-          console.log(`Found instrument token for ${params.symbol}:`, instrumentKey);
         } else {
           throw new Error(
             `Instrument token not found for symbol: ${params.symbol}. Please make sure the symbol exists in the instruments database.`
@@ -258,17 +257,6 @@ const fetchUpstoxHistoricalData = async (params: {
       return false;
     })();
 
-    console.log('=== Upstox Historical Data Request ===');
-    console.log('Parameters:', {
-      instrumentKey,
-      toDate,
-      fromDate,
-      originalSymbol: params.symbol,
-      originalInterval: params.interval,
-      path: useV3Direct ? 'V3 direct' : 'V2 fallback with aggregation',
-      v3Unit: upstoxParams.unit,
-      v3Interval: upstoxParams.interval,
-    });
 
     try {
       if (useV3Direct) {
@@ -279,7 +267,6 @@ const fetchUpstoxHistoricalData = async (params: {
           toDate,
           fromDate
         );
-        console.log('Upstox V3 returned candles:', v3Candles?.length ?? 0);
         const formatted = v3Candles.map((c: any[]) => ({
           date: new Date(c[0]).toISOString(),
           open: parseFloat(c[1]),
@@ -291,7 +278,7 @@ const fetchUpstoxHistoricalData = async (params: {
         return normalizeCandlesAsc(formatted);
       }
     } catch (e) {
-      console.log('Upstox V3 failed; will fallback to V2 + aggregation. Error:', e);
+      // V3 failed, fallback to V2 + aggregation
     }
 
     // Fallback: V2 + aggregation

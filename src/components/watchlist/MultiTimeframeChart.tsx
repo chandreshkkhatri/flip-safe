@@ -51,10 +51,6 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
 
   const setContainerRef = useCallback(
     (index: number) => (el: HTMLDivElement | null) => {
-      console.log(
-        `Setting container ref for index ${index}:`,
-        el ? 'element found' : 'element is null'
-      );
       containerRefs.current[index] = el;
     },
     []
@@ -152,11 +148,9 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
     // Force resize after creation to ensure dimensions are applied
     setTimeout(() => {
       chart.resize(containerWidth, chartHeight);
-      console.log(`Forced resize to: ${containerWidth}x${chartHeight}`);
     }, 100);
 
     // Use the correct v5 API: addSeries(CandlestickSeries, options)
-    console.log('Creating candlestick series with v5 API...');
     const candlestickOptions = {
       upColor: '#26a69a',
       downColor: '#ef5350',
@@ -167,8 +161,6 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
     };
 
     const series = chart.addSeries(CandlestickSeries, candlestickOptions);
-
-    console.log('Candlestick series created:', series, typeof series);
 
     return { chart, series };
   };
@@ -212,7 +204,6 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
       const data = result.data || result;
 
       if (!Array.isArray(data) || data.length === 0) {
-        console.warn(`No data received for ${symbol} ${interval}:`, result);
         return [];
       }
 
@@ -230,8 +221,6 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
   };
 
   useEffect(() => {
-    console.log('Initializing charts for symbol:', symbol);
-
     const initializeCharts = async () => {
       try {
         setLoading(true);
@@ -243,7 +232,7 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
             try {
               chart.remove();
             } catch (e) {
-              console.warn('Error removing chart:', e);
+              // Silently handle chart removal errors
             }
           }
         });
@@ -256,16 +245,8 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
         const promises = selectedTimeframes.map(async (timeframe, index) => {
           const container = containerRefs.current[index];
           if (!container) {
-            console.warn(`Container not available for ${timeframe.label}`);
             return null;
           }
-
-          console.log(
-            `Container found for ${timeframe.label}, dimensions:`,
-            container.clientWidth,
-            'x',
-            container.clientHeight
-          );
 
           try {
             const { chart, series } = createSingleChart(container);
@@ -275,24 +256,13 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
             const actualTimeframe = chartTimeframes[index] || timeframe.interval;
             const data = await fetchChartData(actualTimeframe);
 
-            console.log(`Series object for ${timeframe.label}:`, series);
-            console.log(`Data points:`, data.length);
-
             if (data.length > 0 && series && typeof series.setData === 'function') {
               series.setData(data);
               chart.timeScale().fitContent();
-              console.log(
-                `Chart ${timeframe.label} loaded successfully with ${data.length} data points`
-              );
-            } else {
-              console.warn(
-                `Cannot set data for ${timeframe.label}: series=${!!series}, setData=${typeof series?.setData}, dataLength=${data.length}`
-              );
             }
 
             return { chart, series };
           } catch (chartError) {
-            console.error(`Failed to create chart for ${timeframe.label}:`, chartError);
             const errorMessage = chartError instanceof Error ? chartError.message : 'Unknown error';
             setError(`Failed to load ${timeframe.label}: ${errorMessage}`);
             return null;
@@ -302,7 +272,6 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
         await Promise.all(promises);
         setLoading(false);
       } catch (err) {
-        console.error('Error initializing charts:', err);
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
         setError(`Failed to load charts: ${errorMessage}`);
         setLoading(false);
@@ -318,7 +287,7 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
           try {
             chart.remove();
           } catch (e) {
-            console.warn('Error removing chart on cleanup:', e);
+            // Silently handle chart removal errors
           }
         }
       });
@@ -330,6 +299,8 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
     if (Object.keys(chartTimeframes).length === 0) return;
 
     const reloadChartData = async () => {
+      setError(null); // Clear any previous errors
+
       for (const [indexStr, timeframe] of Object.entries(chartTimeframes)) {
         const index = parseInt(indexStr);
         const chartRef = chartRefs.current[index];
@@ -340,17 +311,17 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
             if (data.length > 0 && typeof chartRef.series.setData === 'function') {
               chartRef.series.setData(data);
               chartRef.chart.timeScale().fitContent();
-              console.log(`Chart ${index} updated with ${timeframe} data: ${data.length} points`);
             }
           } catch (error) {
-            console.error(`Error updating chart ${index} with timeframe ${timeframe}:`, error);
+            const errorMessage = error instanceof Error ? error.message : 'Failed to load chart data';
+            setError(errorMessage);
           }
         }
       }
     };
 
     reloadChartData();
-  }, [chartTimeframes]);
+  }, [chartTimeframes, fetchChartData]);
 
   // Effect to handle auto-scale and log-scale changes
   useEffect(() => {
@@ -381,12 +352,8 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
             }
 
             chart.resize(Math.max(container.clientWidth || 300, 300), chartHeight);
-
-            console.log(
-              `Updated chart ${index}: autoScale=${autoScale}, logScale=${isLogScale}, height=${chartHeight}`
-            );
           } catch (error) {
-            console.error(`Error updating chart ${index} settings:`, error);
+            // Silently handle chart settings update errors
           }
         }
       });
@@ -394,8 +361,6 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
 
     updateChartSettings();
   }, [autoScale, isLogScale]);
-
-  console.log('Component render state:', { loading, error });
 
   return (
     <div className="multi-timeframe-charts">
