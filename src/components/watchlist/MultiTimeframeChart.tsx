@@ -15,9 +15,7 @@ interface MultiTimeframeChartProps {
   accountId?: string;
 }
 
-const DEFAULT_TIMEFRAMES = [
-  { interval: '1h', label: '1 Hour', index: 0 },
-];
+const DEFAULT_TIMEFRAMES = [{ interval: '1h', label: '1 Hour', index: 0 }];
 
 const AVAILABLE_TIMEFRAMES = [
   { interval: '1m', label: '1 Minute' },
@@ -48,6 +46,7 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
   const [chartTimeframes, setChartTimeframes] = useState<{ [index: number]: string }>({});
   const [autoScale, setAutoScale] = useState(false);
   const [isLogScale, setIsLogScale] = useState(false);
+  const runIdRef = useRef(0);
 
   const setContainerRef = useCallback(
     (index: number) => (el: HTMLDivElement | null) => {
@@ -99,128 +98,138 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
     }));
   };
 
-  const createSingleChart = (container: HTMLDivElement) => {
-    const isDarkMode = document.documentElement.classList.contains('dark');
-    const isMobile = window.innerWidth <= 768;
+  const createSingleChart = useCallback(
+    (container: HTMLDivElement) => {
+      const isDarkMode = document.documentElement.classList.contains('dark');
+      const isMobile = window.innerWidth <= 768;
 
-    // Calculate chart height based on auto-scale setting
-    let chartHeight;
-    if (autoScale) {
-      // Use container height minus some padding for header
-      chartHeight = Math.max((container.parentElement?.clientHeight || 400) - 60, 200);
-    } else {
-      chartHeight = isMobile ? 225 : 300;
-    }
-
-    const containerWidth = Math.max(container.clientWidth || 300, 300);
-
-    console.log(
-      `Creating chart with dimensions: ${containerWidth}x${chartHeight} (autoScale: ${autoScale})`
-    );
-
-    const chart = createChart(container, {
-      width: containerWidth,
-      height: chartHeight,
-      autoSize: autoScale, // Enable auto-sizing when auto-scale is on
-      layout: {
-        background: { type: ColorType.Solid, color: isDarkMode ? '#18181b' : '#ffffff' },
-        textColor: isDarkMode ? '#e4e4e7' : '#333',
-      },
-      grid: {
-        vertLines: { color: isDarkMode ? '#27272a' : '#f0f0f0' },
-        horzLines: { color: isDarkMode ? '#27272a' : '#f0f0f0' },
-      },
-      crosshair: {
-        mode: 1,
-      },
-      rightPriceScale: {
-        borderColor: isDarkMode ? '#3f3f46' : '#e0e0e0',
-        scaleMargins: { top: 0.1, bottom: 0.1 },
-        mode: isLogScale ? 1 : 0, // 1 = logarithmic, 0 = normal
-      },
-      timeScale: {
-        borderColor: isDarkMode ? '#3f3f46' : '#e0e0e0',
-        rightOffset: isMobile ? 3 : 8,
-        barSpacing: isMobile ? 2 : 4,
-      },
-    });
-
-    // Force resize after creation to ensure dimensions are applied
-    setTimeout(() => {
-      chart.resize(containerWidth, chartHeight);
-    }, 100);
-
-    // Use the correct v5 API: addSeries(CandlestickSeries, options)
-    const candlestickOptions = {
-      upColor: '#26a69a',
-      downColor: '#ef5350',
-      borderDownColor: '#ef5350',
-      borderUpColor: '#26a69a',
-      wickDownColor: '#ef5350',
-      wickUpColor: '#26a69a',
-    };
-
-    const series = chart.addSeries(CandlestickSeries, candlestickOptions);
-
-    return { chart, series };
-  };
-
-  const fetchChartData = async (interval: string): Promise<CandlestickData[]> => {
-    try {
-      // Determine vendor based on symbol (USDT = Binance, others = Upstox/Kite)
-      const vendor = symbol.endsWith('USDT') ? 'binance' : 'upstox';
-
-      // Build URL with required parameters
-      let url = `/api/historical-data?vendor=${vendor}&symbol=${symbol}&interval=${interval}`;
-
-      // Add accountId for non-binance vendors
-      if (vendor !== 'binance' && accountId) {
-        url += `&accountId=${accountId}`;
+      // Calculate chart height based on auto-scale setting
+      let chartHeight;
+      if (autoScale) {
+        // Use container height minus some padding for header
+        chartHeight = Math.max((container.parentElement?.clientHeight || 400) - 60, 200);
+      } else {
+        chartHeight = isMobile ? 225 : 300;
       }
 
-      const response = await fetch(url);
+      const containerWidth = Math.max(container.clientWidth || 300, 300);
 
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => '');
-        let errorMessage = `Failed to fetch ${interval} data: ${response.status}`;
+      console.log(
+        `Creating chart with dimensions: ${containerWidth}x${chartHeight} (autoScale: ${autoScale})`
+      );
 
-        try {
-          const errorData = JSON.parse(errorText);
-          if (errorData.error) {
-            errorMessage = errorData.error;
-          }
-        } catch {
-          if (errorText) {
-            errorMessage += ` - ${errorText}`;
-          }
+      const chart = createChart(container, {
+        width: containerWidth,
+        height: chartHeight,
+        autoSize: autoScale, // Enable auto-sizing when auto-scale is on
+        layout: {
+          background: { type: ColorType.Solid, color: isDarkMode ? '#18181b' : '#ffffff' },
+          textColor: isDarkMode ? '#e4e4e7' : '#333',
+        },
+        grid: {
+          vertLines: { color: isDarkMode ? '#27272a' : '#f0f0f0' },
+          horzLines: { color: isDarkMode ? '#27272a' : '#f0f0f0' },
+        },
+        crosshair: {
+          mode: 1,
+        },
+        rightPriceScale: {
+          borderColor: isDarkMode ? '#3f3f46' : '#e0e0e0',
+          scaleMargins: { top: 0.1, bottom: 0.1 },
+          mode: isLogScale ? 1 : 0, // 1 = logarithmic, 0 = normal
+        },
+        timeScale: {
+          borderColor: isDarkMode ? '#3f3f46' : '#e0e0e0',
+          rightOffset: isMobile ? 3 : 8,
+          barSpacing: isMobile ? 2 : 4,
+        },
+      });
+
+      // Force resize after creation to ensure dimensions are applied
+      setTimeout(() => {
+        chart.resize(containerWidth, chartHeight);
+      }, 100);
+
+      // Use the correct v5 API: addSeries(CandlestickSeries, options)
+      const candlestickOptions = {
+        upColor: '#26a69a',
+        downColor: '#ef5350',
+        borderDownColor: '#ef5350',
+        borderUpColor: '#26a69a',
+        wickDownColor: '#ef5350',
+        wickUpColor: '#26a69a',
+      };
+
+      const series = chart.addSeries(CandlestickSeries, candlestickOptions);
+
+      return { chart, series };
+    },
+    [autoScale, isLogScale]
+  );
+
+  const fetchChartData = useCallback(
+    async (interval: string): Promise<CandlestickData[]> => {
+      try {
+        // Determine vendor based on symbol (USDT = Binance, others = Upstox/Kite)
+        const vendor = symbol.endsWith('USDT') ? 'binance' : 'upstox';
+
+        // Build URL with required parameters
+        let url = `/api/historical-data?vendor=${vendor}&symbol=${symbol}&interval=${interval}`;
+
+        // Add accountId for non-binance vendors
+        if (vendor !== 'binance' && accountId) {
+          url += `&accountId=${accountId}`;
         }
 
-        throw new Error(errorMessage);
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => '');
+          let errorMessage = `Failed to fetch ${interval} data: ${response.status}`;
+
+          try {
+            const errorData = JSON.parse(errorText);
+            if (errorData.error) {
+              errorMessage = errorData.error;
+            }
+          } catch {
+            if (errorText) {
+              errorMessage += ` - ${errorText}`;
+            }
+          }
+
+          throw new Error(errorMessage);
+        }
+
+        const result = await response.json();
+
+        // Handle API response format - check if data is in result.data or directly in result
+        const data = result.data || result;
+
+        if (!Array.isArray(data) || data.length === 0) {
+          return [];
+        }
+
+        return data.map((d: any) => ({
+          time: (new Date(d.date).getTime() / 1000) as UTCTimestamp,
+          open: d.open,
+          high: d.high,
+          low: d.low,
+          close: d.close,
+        }));
+      } catch (error) {
+        console.error(`Error fetching chart data for ${interval}:`, error);
+        throw error;
       }
-
-      const result = await response.json();
-
-      // Handle API response format - check if data is in result.data or directly in result
-      const data = result.data || result;
-
-      if (!Array.isArray(data) || data.length === 0) {
-        return [];
-      }
-
-      return data.map((d: any) => ({
-        time: (new Date(d.date).getTime() / 1000) as UTCTimestamp,
-        open: d.open,
-        high: d.high,
-        low: d.low,
-        close: d.close,
-      }));
-    } catch (error) {
-      console.error(`Error fetching chart data for ${interval}:`, error);
-      throw error;
-    }
-  };
+    },
+    [symbol, accountId]
+  );
 
   useEffect(() => {
+    // Increment run id to invalidate any in-flight async work from the previous render
+    const thisRun = runIdRef.current + 1;
+    runIdRef.current = thisRun;
+
     const initializeCharts = async () => {
       try {
         setLoading(true);
@@ -256,6 +265,9 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
             const actualTimeframe = chartTimeframes[index] || timeframe.interval;
             const data = await fetchChartData(actualTimeframe);
 
+            // Bail out if a new run has started (unmounted or symbol changed)
+            if (runIdRef.current !== thisRun) return null;
+
             if (data.length > 0 && series && typeof series.setData === 'function') {
               series.setData(data);
               chart.timeScale().fitContent();
@@ -270,18 +282,26 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
         });
 
         await Promise.all(promises);
+        if (runIdRef.current !== thisRun) return;
         setLoading(false);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        if (runIdRef.current !== thisRun) return;
         setError(`Failed to load charts: ${errorMessage}`);
         setLoading(false);
       }
     };
 
-    const timeoutId = setTimeout(initializeCharts, 500);
+    const timeoutId = window.setTimeout(() => {
+      // Bail out if a new run has started (unmounted or symbol changed)
+      if (runIdRef.current !== thisRun) return;
+      initializeCharts();
+    }, 500);
 
     return () => {
       clearTimeout(timeoutId);
+      // Invalidate this run to prevent any pending async work from touching disposed charts
+      runIdRef.current = thisRun + 1;
       chartRefs.current.forEach(({ chart }) => {
         if (chart) {
           try {
@@ -292,13 +312,15 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
         }
       });
     };
-  }, [symbol]);
+  }, [symbol, selectedTimeframes, chartTimeframes, createSingleChart, fetchChartData]);
 
   // Effect to reload data when individual chart timeframes change
   useEffect(() => {
     if (Object.keys(chartTimeframes).length === 0) return;
 
     const reloadChartData = async () => {
+      const thisRun = runIdRef.current + 1;
+      runIdRef.current = thisRun;
       setError(null); // Clear any previous errors
 
       for (const [indexStr, timeframe] of Object.entries(chartTimeframes)) {
@@ -308,12 +330,14 @@ const MultiTimeframeChart = memo<MultiTimeframeChartProps>(({ symbol, accountId 
         if (chartRef && chartRef.series) {
           try {
             const data = await fetchChartData(timeframe);
+            if (runIdRef.current !== thisRun) return;
             if (data.length > 0 && typeof chartRef.series.setData === 'function') {
               chartRef.series.setData(data);
               chartRef.chart.timeScale().fitContent();
             }
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Failed to load chart data';
+            const errorMessage =
+              error instanceof Error ? error.message : 'Failed to load chart data';
             setError(errorMessage);
           }
         }

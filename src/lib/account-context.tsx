@@ -90,9 +90,29 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
         if (!isBackground) setLoadingAccounts(true);
         setError(null);
 
-        const response = await axios.get(`${API_ROUTES.accounts.getAccounts}?userId=${userId}`, {
-          timeout: 5000, // Add timeout
-        });
+        // Add basic retry with exponential backoff to handle slow local dev starts
+        const maxRetries = 2;
+        let attempt = 0;
+        let lastError: any = null;
+        let response: any = null;
+        while (attempt <= maxRetries) {
+          try {
+            response = await axios.get(`${API_ROUTES.accounts.getAccounts}?userId=${userId}`, {
+              timeout: 12000,
+            });
+            break;
+          } catch (err: any) {
+            lastError = err;
+            const isTimeout = err.code === 'ECONNABORTED' || err.message?.includes('timeout');
+            if (!isTimeout || attempt === maxRetries) break;
+            const delay = 500 * Math.pow(2, attempt);
+            await new Promise(res => setTimeout(res, delay));
+            attempt += 1;
+          }
+        }
+        if (!response) {
+          throw lastError || new Error('Failed to fetch accounts');
+        }
 
         if (response.data?.success) {
           const allAccounts = response.data.accounts as TradingAccount[];
@@ -127,20 +147,22 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
         console.error('Error fetching accounts:', error);
         if (!isBackground) {
           // More detailed error messaging
-          const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch accounts';
+          const errorMessage =
+            error.response?.data?.error || error.message || 'Failed to fetch accounts';
           setError(errorMessage);
-          console.log('Account fetch failed:', errorMessage, 'Auth status:', { isLoggedIn, allowOfflineAccess });
+          console.log('Account fetch failed:', errorMessage, 'Auth status:', {
+            isLoggedIn,
+            allowOfflineAccess,
+          });
 
           // Don't clear accounts if it's just a network error - keep cached data
-          if (!error.message?.includes('Network')) {
-            setAccounts([]);
-          }
+          // Keep existing accounts to avoid UI churn on transient failures
         }
       } finally {
         if (!isBackground) setLoadingAccounts(false);
       }
     },
-    [selectedAccount]
+    [selectedAccount, isLoggedIn, allowOfflineAccess]
   );
 
   // Custom setter that also updates sessionStorage

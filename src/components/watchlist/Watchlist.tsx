@@ -2,8 +2,9 @@
 
 import { Button } from '@/components/ui/button';
 import { binanceWebSocket } from '@/lib/binance-websocket';
+import { upstoxWebSocket } from '@/lib/upstox-websocket';
 import { ChevronDown, Plus } from 'lucide-react';
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import SymbolSearchModal from './SymbolSearchModal';
 import TradingWindow from './TradingWindow';
 
@@ -61,8 +62,21 @@ const Watchlist = memo(function Watchlist({
 
   const currentPrice = watchlistItems.find(item => item.symbol === selectedSymbol)?.lastPrice || 0;
 
+  // Track previous account to avoid unnecessary disconnects on watchlist changes
+  const prevAccountIdRef = useRef<string | null>(null);
+  const prevAccountTypeRef = useRef<'binance' | 'kite' | 'upstox' | null>(null);
+  const shouldDisconnectRef = useRef<boolean>(false);
+
   // Fetch watchlist symbols from database when account changes
   useEffect(() => {
+    // Determine if the trading account actually changed
+    const prevId = prevAccountIdRef.current;
+    const prevType = prevAccountTypeRef.current;
+    const currId = selectedAccount?._id || null;
+    const currType = selectedAccount?.accountType || null;
+    const accountChanged = prevId !== currId || prevType !== currType;
+    shouldDisconnectRef.current = accountChanged;
+
     const fetchWatchlistSymbols = async () => {
       if (!selectedAccount) {
         setLoading(false);
@@ -112,7 +126,7 @@ const Watchlist = memo(function Watchlist({
               setSelectedSymbol(data.symbols[0]);
             }
 
-            // Start WebSocket connection for real-time updates (Binance only)
+            // Start WebSocket connection for real-time updates
             if (selectedAccount?.accountType === 'binance') {
               binanceWebSocket.connect(data.symbols, priceUpdate => {
                 setWatchlistItems(prev =>
@@ -134,6 +148,30 @@ const Watchlist = memo(function Watchlist({
                   })
                 );
               });
+            } else if (selectedAccount?.accountType === 'upstox') {
+              // Upstox: connect via v3 websocket using accountId and 'ltpc' for light feed in watchlist
+              upstoxWebSocket.connect(
+                data.symbols,
+                priceUpdate => {
+                  setWatchlistItems(prev =>
+                    prev.map(item => {
+                      if (item.symbol === priceUpdate.symbol) {
+                        return {
+                          ...item,
+                          lastPrice: priceUpdate.lastPrice,
+                          priceChange: priceUpdate.priceChange,
+                          priceChangePercent: priceUpdate.priceChangePercent,
+                          volume: priceUpdate.volume,
+                          high24h: priceUpdate.high24h,
+                          low24h: priceUpdate.low24h,
+                        };
+                      }
+                      return item;
+                    })
+                  );
+                },
+                { accountId: selectedAccount._id, mode: 'ltpc' }
+              );
             }
           } else {
             // No symbols in watchlist
@@ -153,13 +191,24 @@ const Watchlist = memo(function Watchlist({
 
     fetchWatchlistSymbols();
 
-    // Cleanup WebSocket on component unmount or account change (Binance only)
+    // Cleanup WebSocket on component unmount or account change
     return () => {
-      if (selectedAccount?.accountType === 'binance') {
+      if (!shouldDisconnectRef.current) return;
+      if (prevAccountTypeRef.current === 'binance') {
         binanceWebSocket.disconnect();
+      } else if (prevAccountTypeRef.current === 'upstox') {
+        upstoxWebSocket.disconnect();
       }
     };
-  }, [selectedAccount, marketType, currentWatchlistId, selectedSymbol]);
+    // We intentionally exclude selectedSymbol to avoid reconnecting the feed on selection changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccount, marketType, currentWatchlistId]);
+
+  // After each effect run, update previous account refs
+  useEffect(() => {
+    prevAccountIdRef.current = selectedAccount?._id || null;
+    prevAccountTypeRef.current = selectedAccount?.accountType || null;
+  }, [selectedAccount]);
 
   const addSymbol = async (symbol: string) => {
     // Check if symbol already exists
@@ -211,9 +260,11 @@ const Watchlist = memo(function Watchlist({
           body: JSON.stringify(body),
         });
 
-        // For Binance, add to WebSocket subscription
+        // Add to WebSocket subscription
         if (selectedAccount.accountType === 'binance') {
           binanceWebSocket.addSymbol(symbol);
+        } else if (selectedAccount.accountType === 'upstox') {
+          upstoxWebSocket.addSymbol(symbol);
         }
       } catch (err) {
         console.error('Failed to add symbol to watchlist:', err);
@@ -228,9 +279,11 @@ const Watchlist = memo(function Watchlist({
   const removeSymbol = async (symbol: string) => {
     setWatchlistItems(prev => prev.filter(item => item.symbol !== symbol));
     setWatchlistSymbols(prev => prev.filter(s => s !== symbol));
-    // Only use WebSocket for Binance accounts
+    // Remove from WebSocket subscription
     if (selectedAccount?.accountType === 'binance') {
       binanceWebSocket.removeSymbol(symbol);
+    } else if (selectedAccount?.accountType === 'upstox') {
+      upstoxWebSocket.removeSymbol(symbol);
     }
     if (selectedSymbol === symbol && watchlistItems.length > 1) {
       setSelectedSymbol(watchlistItems.find(item => item.symbol !== symbol)?.symbol || '');
