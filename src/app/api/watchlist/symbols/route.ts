@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         symbols: watchlist.symbols.map(s => s.symbol),
+        items: watchlist.symbols,
         watchlist: {
           id: watchlist._id,
           name: watchlist.name,
@@ -77,6 +78,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         symbols: defaultWatchlist.symbols.map(s => s.symbol),
+        items: defaultWatchlist.symbols,
         watchlist: {
           id: defaultWatchlist._id,
           name: defaultWatchlist.name,
@@ -116,7 +118,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { accountId, marketType, symbols, watchlistId, userId = 'default_user', action } = body;
+    const { accountId, marketType, symbols, items, watchlistId, userId = 'default_user', action } = body;
 
     if (!accountId) {
       return NextResponse.json(
@@ -186,8 +188,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Handle updating symbols in a watchlist
-    if (!symbols || !marketType) {
+    // Handle updating items in a watchlist
+    // Support both 'items' (new) and 'symbols' (for backward compatibility if needed)
+    const watchlistItems = items || symbols;
+    if (!watchlistItems || !marketType) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
         { status: 400 }
@@ -215,18 +219,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Watchlist not found' }, { status: 404 });
     }
 
-    // Update symbols
-    watchlist.symbols = symbols.map((symbol: string) => ({
-      symbol,
-      addedAt: new Date(),
-    }));
+    // Update symbols - handle both items array and symbols array
+    if (items && Array.isArray(items)) {
+      // New format with full item data
+      watchlist.symbols = items.map((item: any) => ({
+        symbol: item.symbol || item,
+        name: item.name,
+        exchange: item.exchange,
+        token: item.token,
+        segment: item.segment,
+        instrument_type: item.instrument_type,
+        isin: item.isin,
+        addedAt: new Date(),
+      }));
+    } else if (symbols && Array.isArray(symbols)) {
+      // Old format for backward compatibility
+      watchlist.symbols = symbols.map((symbol: string) => ({
+        symbol,
+        addedAt: new Date(),
+      }));
+    }
     watchlist.marketType = marketType;
     await watchlist.save();
 
     return NextResponse.json({
       success: true,
       message: 'Watchlist updated successfully',
-      symbols,
+      symbols: watchlist.symbols.map(s => s.symbol),
+      items: watchlist.symbols,
       watchlist: {
         id: watchlist._id,
         name: watchlist.name,

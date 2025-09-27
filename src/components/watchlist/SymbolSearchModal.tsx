@@ -12,12 +12,13 @@ interface SymbolSearchResult {
   instrument_type?: string;
   segment?: string;
   token?: string;
+  isin?: string;
 }
 
 interface SymbolSearchModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectSymbol: (symbol: string) => void;
+  onSelectSymbol: (item: SymbolSearchResult) => void;
   accountType: string;
   anchorRect?: {
     top: number;
@@ -109,8 +110,8 @@ const SymbolSearchModal = memo(function SymbolSearchModal({
     return () => clearTimeout(t);
   }, [searchQuery, selectedExchange, selectedSegment, searchSymbols]);
 
-  const handleSelectSymbol = (symbol: string) => {
-    onSelectSymbol(symbol);
+  const handleSelectSymbol = (item: SymbolSearchResult) => {
+    onSelectSymbol(item);
     setSearchQuery('');
     setSearchResults([]);
     onClose();
@@ -248,7 +249,7 @@ const SymbolSearchModal = memo(function SymbolSearchModal({
               <div
                 key={result.symbol}
                 className="search-result-item"
-                onClick={() => handleSelectSymbol(result.symbol)}
+                onClick={() => handleSelectSymbol(result)}
               >
                 <div className="symbol-info">
                   <div className="symbol-name">{result.symbol}</div>

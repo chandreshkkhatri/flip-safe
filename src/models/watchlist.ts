@@ -5,6 +5,9 @@ export interface IWatchlistItem {
   name?: string;
   exchange?: string;
   token?: string;
+  segment?: string;
+  instrument_type?: string;
+  isin?: string;
   addedAt: Date;
 }
 
@@ -24,6 +27,9 @@ const WatchlistItemSchema = new Schema<IWatchlistItem>({
   name: { type: String },
   exchange: { type: String },
   token: { type: String },
+  segment: { type: String },
+  instrument_type: { type: String },
+  isin: { type: String },
   addedAt: { type: Date, default: Date.now },
 });
 
