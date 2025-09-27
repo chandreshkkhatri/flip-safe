@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     // Get all watchlists for the user and account
-    const watchlists = await Watchlist.find({ userId, accountId });
+    const watchlists = await Watchlist.find({ userId, accountId }) || [];
 
     if (watchlistId) {
       // Get specific watchlist
@@ -44,18 +44,18 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        symbols: watchlist.symbols.map(s => s.symbol),
-        items: watchlist.symbols,
+        symbols: watchlist.symbols ? watchlist.symbols.map((s: any) => s.symbol) : [],
+        items: watchlist.symbols || [],
         watchlist: {
           id: watchlist._id,
           name: watchlist.name,
           isDefault: watchlist.isDefault,
         },
-        watchlists: watchlists.map(w => ({
+        watchlists: Array.isArray(watchlists) ? watchlists.map((w: any) => ({
           id: w._id,
           name: w.name,
           isDefault: w.isDefault,
-        })),
+        })) : [],
         marketType: watchlist.marketType,
         accountId,
       });
@@ -77,16 +77,16 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        symbols: defaultWatchlist.symbols.map(s => s.symbol),
-        items: defaultWatchlist.symbols,
+        symbols: defaultWatchlist.symbols ? defaultWatchlist.symbols.map((s: any) => s.symbol) : [],
+        items: defaultWatchlist.symbols || [],
         watchlist: {
           id: defaultWatchlist._id,
           name: defaultWatchlist.name,
           isDefault: defaultWatchlist.isDefault,
         },
         watchlists:
-          watchlists.length > 0
-            ? watchlists.map(w => ({
+          Array.isArray(watchlists) && watchlists.length > 0
+            ? watchlists.map((w: any) => ({
                 id: w._id,
                 name: w.name,
                 isDefault: w.isDefault,
@@ -245,8 +245,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Watchlist updated successfully',
-      symbols: watchlist.symbols.map(s => s.symbol),
-      items: watchlist.symbols,
+      symbols: watchlist.symbols ? watchlist.symbols.map((s: any) => s.symbol) : [],
+      items: watchlist.symbols || [],
       watchlist: {
         id: watchlist._id,
         name: watchlist.name,

@@ -107,6 +107,12 @@ export const getAccountsByUserId = async (userId: string): Promise<IAccount[]> =
 export const getAccountById = async (accountId: string): Promise<IAccount | null> => {
   try {
     await connectDB();
+
+    // Validate ObjectId format before querying
+    if (!mongoose.Types.ObjectId.isValid(accountId)) {
+      return null;
+    }
+
     const account = await Account.findById(accountId);
     return account ? account.toObject() : null;
   } catch (error) {

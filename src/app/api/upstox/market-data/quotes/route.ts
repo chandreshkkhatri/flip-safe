@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     const account = await getAccountById(accountId);
     if (!account) {
-      return NextResponse.json({ success: false, error: 'Account not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Account not found' }, { status: 400 });
     }
     if (account.accountType !== 'upstox') {
       return NextResponse.json(
