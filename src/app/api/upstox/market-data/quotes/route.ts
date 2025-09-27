@@ -45,30 +45,13 @@ export async function POST(request: NextRequest) {
     }
     upstoxService.setAccessToken(account.accessToken);
 
-    // Build quotes URL
-    const base = isSandbox ? 'https://api-sandbox.upstox.com' : 'https://api.upstox.com';
-    // Upstox accepts comma separated instrument keys
-    const keys = instrumentKeys.map(k => k.toUpperCase()).join(',');
-    const endpoint = `${base}/v3/market/quotes?instrument_keys=${encodeURIComponent(keys)}`;
-
-    const resp = await fetch(endpoint, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${account.accessToken}`,
-        Accept: 'application/json',
-      },
-      cache: 'no-store',
-    });
-
-    const data = await resp.json().catch(() => ({}) as any);
-    if (!resp.ok) {
-      const message = data?.errors?.[0]?.message || data?.message || 'Failed to fetch quotes';
-      return NextResponse.json({ success: false, error: message }, { status: resp.status });
-    }
+    // Use SDK method instead of direct API call
+    const quotes = await upstoxService.getQuote(instrumentKeys);
+    const data = { data: quotes };
 
     // Normalize into a simpler map keyed by instrumentKey
     const out: Record<string, any> = {};
-    const items = data?.data || data?.result || [];
+    const items = data?.data || [];
     // Response shapes can vary; try to extract conservatively
     // Common shapes:
     // data: [ { instrument_key, last_price/ltp, ohlc: { open, high, low, close }, depth: { buy/ sell }, vtt } ]

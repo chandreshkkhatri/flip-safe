@@ -495,82 +495,16 @@ class UpstoxService {
     }
 
     try {
-      // For production mode, use direct fetch to avoid superagent issues
+      // Use SDK method instead of direct API call
+      const userApi = new UpstoxClient.UserApi(this.client);
       const apiVersion = '2.0';
-      const fundEndpoint = this.isSandbox
-        ? `https://api-sandbox.upstox.com/v2/user/get-funds-and-margin`
-        : `https://api.upstox.com/v2/user/get-funds-and-margin`;
 
-      const response = await fetch(fundEndpoint, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          Authorization: `Bearer ${this.accessToken}`,
-          'Api-Version': apiVersion,
-        },
-      });
+      const response = await limiter.schedule(() =>
+        userApi.getUserFundMargin(apiVersion)
+      );
 
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        // Check for token expiry or invalid token error (401 Unauthorized)
-        if (response.status === 401 && responseData.errors) {
-          const tokenError = responseData.errors.find(
-            (e: any) =>
-              e.errorCode === 'UDAPI100050' || // Invalid token
-              e.errorCode === 'UDAPI100051' || // Token expired
-              e.errorCode === 'UDAPI100052' // Token not found
-          );
-          if (tokenError) {
-            const error = new Error(
-              `Authentication failed: ${tokenError.message}. Please re-authenticate your Upstox account.`
-            );
-            (error as any).code = 'TOKEN_EXPIRED';
-            (error as any).statusCode = 401;
-            throw error;
-          }
-        }
-
-        // Check for time restriction error
-        if (response.status === 423 && responseData.errors) {
-          const timeError = responseData.errors.find((e: any) => e.errorCode === 'UDAPI100072');
-          if (timeError) {
-            // Return placeholder data with a flag indicating service hours restriction
-            return {
-              equity: {
-                used_margin: 0,
-                payin_amount: 0,
-                span_margin: 0,
-                adhoc_margin: 0,
-                notional_cash: 0,
-                available_margin: 0,
-                exposure_margin: 0,
-                option_premium: 0,
-                collateral_amount: 0,
-                coverage_margin: 0,
-                liquidity_before: 0,
-                cash_deposit: 0,
-                liquid_collateral: 0,
-                stock_collateral: 0,
-                unrealized_mtm: 0,
-                realized_mtm: 0,
-                opening_balance: 0,
-                payin_amount_t1: 0,
-                payin_amount_t0: 0,
-                additional_leverage_amount: 0,
-                utilized_amount: 0,
-                available_credits: 0,
-              },
-              _serviceHoursError: true,
-              _errorMessage: timeError.message,
-            };
-          }
-        }
-
-        throw new Error(responseData.message || responseData.error || 'Failed to fetch funds');
-      }
-
-      return responseData.data || responseData;
+      // SDK methods throw errors for HTTP failures, so we can directly use the response
+      return (response as any).data;
     } catch (error) {
       throw error;
     }
@@ -626,45 +560,18 @@ class UpstoxService {
     }
 
     try {
-      // Direct API call for better error handling
-      const positionsEndpoint = `https://api.upstox.com/v2/portfolio/short-term-positions`;
+      // Use SDK method instead of direct API call
+      const portfolioApi = new UpstoxClient.PortfolioApi(this.client);
+      const apiVersion = '2.0';
 
-      const response = await fetch(positionsEndpoint, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          Authorization: `Bearer ${this.accessToken}`,
-          'Api-Version': '2.0',
-        },
-      });
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        // Check for token expiry or invalid token error
-        if (response.status === 401 && responseData.errors) {
-          const tokenError = responseData.errors.find(
-            (e: any) =>
-              e.errorCode === 'UDAPI100050' || // Invalid token
-              e.errorCode === 'UDAPI100051' || // Token expired
-              e.errorCode === 'UDAPI100052' // Token not found
-          );
-          if (tokenError) {
-            const error = new Error(
-              `Authentication failed: ${tokenError.message}. Please re-authenticate your Upstox account.`
-            );
-            (error as any).code = 'TOKEN_EXPIRED';
-            (error as any).statusCode = 401;
-            throw error;
-          }
-        }
-
-        throw new Error(responseData.message || responseData.error || 'Failed to fetch positions');
-      }
+      const response = await limiter.schedule(() =>
+        portfolioApi.getPositions(apiVersion)
+      );
 
       // Return the positions array from the response
-      if (responseData.data) {
-        return Array.isArray(responseData.data) ? responseData.data : [];
+      const responseData = (response as any).data;
+      if (responseData) {
+        return Array.isArray(responseData) ? responseData : [];
       }
 
       return [];
@@ -732,45 +639,18 @@ class UpstoxService {
     }
 
     try {
-      // Direct API call for better error handling
-      const holdingsEndpoint = `https://api.upstox.com/v2/portfolio/long-term-holdings`;
+      // Use SDK method instead of direct API call
+      const portfolioApi = new UpstoxClient.PortfolioApi(this.client);
+      const apiVersion = '2.0';
 
-      const response = await fetch(holdingsEndpoint, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          Authorization: `Bearer ${this.accessToken}`,
-          'Api-Version': '2.0',
-        },
-      });
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        // Check for token expiry or invalid token error
-        if (response.status === 401 && responseData.errors) {
-          const tokenError = responseData.errors.find(
-            (e: any) =>
-              e.errorCode === 'UDAPI100050' || // Invalid token
-              e.errorCode === 'UDAPI100051' || // Token expired
-              e.errorCode === 'UDAPI100052' // Token not found
-          );
-          if (tokenError) {
-            const error = new Error(
-              `Authentication failed: ${tokenError.message}. Please re-authenticate your Upstox account.`
-            );
-            (error as any).code = 'TOKEN_EXPIRED';
-            (error as any).statusCode = 401;
-            throw error;
-          }
-        }
-
-        throw new Error(responseData.message || responseData.error || 'Failed to fetch holdings');
-      }
+      const response = await limiter.schedule(() =>
+        portfolioApi.getHoldings(apiVersion)
+      );
 
       // Return the holdings array from the response
-      if (responseData.data) {
-        return Array.isArray(responseData.data) ? responseData.data : [];
+      const responseData = (response as any).data;
+      if (responseData) {
+        return Array.isArray(responseData) ? responseData : [];
       }
 
       return [];
@@ -879,69 +759,18 @@ class UpstoxService {
     }
 
     try {
-      // Direct API call for better error handling
-      const ordersEndpoint = `https://api.upstox.com/v2/order/retrieve-all`;
+      // Use SDK method instead of direct API call
+      const orderApi = new UpstoxClient.OrderApi(this.client);
+      const apiVersion = '2.0';
 
-      const response = await fetch(ordersEndpoint, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          Authorization: `Bearer ${this.accessToken}`,
-          'Api-Version': '2.0',
-        },
-      });
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        // Check for authentication errors
-        if (response.status === 401 || response.status === 403) {
-          if (responseData.errors) {
-            const tokenError = responseData.errors.find(
-              (e: any) =>
-                e.errorCode === 'UDAPI100050' || // Invalid token
-                e.errorCode === 'UDAPI100051' || // Token expired
-                e.errorCode === 'UDAPI100052' // Token not found
-            );
-            if (tokenError) {
-              const error = new Error(
-                `Authentication failed: ${tokenError.message}. Please re-authenticate your Upstox account.`
-              );
-              (error as any).code = 'TOKEN_EXPIRED';
-              (error as any).statusCode = 401;
-              throw error;
-            }
-          }
-
-          // Generic auth error
-          const error = new Error(
-            'Authentication failed. Access token may be invalid or expired. Please re-authenticate your Upstox account.'
-          );
-          (error as any).code = 'TOKEN_EXPIRED';
-          (error as any).statusCode = 401;
-          throw error;
-        }
-
-        // 404 could also indicate invalid credentials in some cases
-        if (response.status === 404) {
-          const error = new Error(
-            'API endpoint not found. This may indicate invalid credentials or account configuration. Please re-authenticate your Upstox account.'
-          );
-          (error as any).code = 'TOKEN_EXPIRED';
-          (error as any).statusCode = 401;
-          throw error;
-        }
-
-        throw new Error(
-          responseData.message ||
-            responseData.error ||
-            `API request failed with status ${response.status}`
-        );
-      }
+      const response = await limiter.schedule(() =>
+        orderApi.getOrderBook(apiVersion)
+      );
 
       // Return the orders array from the response
-      if (responseData.data) {
-        return Array.isArray(responseData.data) ? responseData.data : [];
+      const responseData = (response as any).data;
+      if (responseData) {
+        return Array.isArray(responseData) ? responseData : [];
       }
 
       return [];
@@ -1011,41 +840,38 @@ class UpstoxService {
   }
 
   /**
-   * Get quote for instruments
+   * Get quote for instruments (v3 API)
    */
   async getQuote(instruments: string[]): Promise<any> {
     const marketQuoteApi = new UpstoxClient.MarketQuoteApi(this.client);
-    const apiVersion = '2.0';
     const instrumentKey = instruments.join(',');
 
     const response = await limiter.schedule(() =>
-      marketQuoteApi.getFullMarketQuote(apiVersion, instrumentKey)
+      marketQuoteApi.getFullMarketQuote(instrumentKey)
     );
     return (response as any).data;
   }
 
   /**
-   * Get LTP for instruments
+   * Get LTP for instruments (v3 API)
    */
   async getLTP(instruments: string[]): Promise<any> {
     const marketQuoteApi = new UpstoxClient.MarketQuoteApi(this.client);
-    const apiVersion = '2.0';
     const instrumentKey = instruments.join(',');
 
-    const response = await limiter.schedule(() => marketQuoteApi.getLtp(apiVersion, instrumentKey));
+    const response = await limiter.schedule(() => marketQuoteApi.getLtp(instrumentKey));
     return (response as any).data;
   }
 
   /**
-   * Get OHLC for instruments
+   * Get OHLC for instruments (v3 API)
    */
   async getOHLC(instruments: string[]): Promise<any> {
     const marketQuoteApi = new UpstoxClient.MarketQuoteApi(this.client);
-    const apiVersion = '2.0';
     const instrumentKey = instruments.join(',');
 
     const response = await limiter.schedule(() =>
-      marketQuoteApi.getMarketQuoteOHLC(apiVersion, instrumentKey)
+      marketQuoteApi.getMarketQuoteOHLC(instrumentKey)
     );
     return (response as any).data;
   }
